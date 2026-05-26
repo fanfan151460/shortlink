@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.exception.ClientException;
-import com.nageoffer.shortlink.admin.dao.entity.UserDo;
+import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.nageoffer.shortlink.admin.dao.mapper.UsersMapper;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterDTO;
@@ -40,16 +40,16 @@ import static com.nageoffer.shortlink.admin.common.enums.UserErrorCode.USER_HAD;
  */
 @Service
 @RequiredArgsConstructor
-public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDo> implements IUsersService {
+public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implements IUsersService {
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public UserDTO getByUerName(String userName) {
-        LambdaQueryWrapper<UserDo> wrapper = Wrappers.lambdaQuery(UserDo.class)
-                .eq(UserDo::getUsername, userName);
-        UserDo userDo = baseMapper.selectOne(wrapper);
+        LambdaQueryWrapper<UserDO> wrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, userName);
+        UserDO userDo = baseMapper.selectOne(wrapper);
         if (userDo == null||userName == null) {
             throw new ClientException("用户为空");
         }
@@ -70,7 +70,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDo> implement
 
         try {
             if (lock.tryLock()) {
-                int insert = baseMapper.insert(BeanUtil.copyProperties(userRegisterDTO, UserDo.class));
+                int insert = baseMapper.insert(BeanUtil.copyProperties(userRegisterDTO, UserDO.class));
                 if (insert < 1) {
                     throw new ClientException(USER_REGISTER_ERROR);
                 }
@@ -84,17 +84,17 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDo> implement
 
     @Override
     public void updateUser(UserUpdateDTO userUpdateDTO) {
-        LambdaUpdateWrapper<UserDo> wrapper = Wrappers.lambdaUpdate(UserDo.class)
-                .eq(UserDo::getUsername, userUpdateDTO.getUsername());
-        baseMapper.update(BeanUtil.copyProperties(userUpdateDTO, UserDo.class), wrapper);
+        LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)
+                .eq(UserDO::getUsername, userUpdateDTO.getUsername());
+        baseMapper.update(BeanUtil.copyProperties(userUpdateDTO, UserDO.class), wrapper);
     }
 
     @Override
     public UserLoginRespDTO Login(UserLoginDTO userLoginDTO) {
-        LambdaQueryWrapper<UserDo> wrapper = Wrappers.lambdaQuery(UserDo.class).eq(UserDo::getUsername, userLoginDTO.getUsername())
-                .eq(UserDo::getPassword, userLoginDTO.getPassword())
-                .eq(UserDo::getDelFlag, 0);
-        UserDo userDo = baseMapper.selectOne(wrapper);
+        LambdaQueryWrapper<UserDO> wrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, userLoginDTO.getUsername())
+                .eq(UserDO::getPassword, userLoginDTO.getPassword())
+                .eq(UserDO::getDelFlag, 0);
+        UserDO userDo = baseMapper.selectOne(wrapper);
         if (userDo == null) {
             throw new ClientException("账号或密码错误");
         }

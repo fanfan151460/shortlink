@@ -1,7 +1,7 @@
 package com.nageoffer.shortlink.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.nageoffer.shortlink.admin.dao.entity.UserDo;
+import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserUpdateDTO;
@@ -16,7 +16,7 @@ import com.nageoffer.shortlink.admin.dto.resp.UserLoginRespDTO;
  * @author author
  * @since 2026-05-20
  */
-public interface IUsersService extends IService<UserDo> {
+public interface IUsersService extends IService<UserDO> {
 
     /**
      * 返回userDTO

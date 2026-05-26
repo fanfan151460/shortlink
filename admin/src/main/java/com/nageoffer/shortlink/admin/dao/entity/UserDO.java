@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("users")
-public class UserDo implements Serializable {
+public class UserDO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -29,22 +29,16 @@ public class UserDo implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @TableField("username")
     private String username;
 
-    @TableField("password")
     private String password;
 
-    @TableField("real_name")
     private String realName;
 
-    @TableField("phone")
     private String phone;
 
-    @TableField("mail")
     private String mail;
 
-    @TableField("deletion_time")
     private Long deletionTime;
 
     @TableField(value = "create_time", fill = FieldFill.INSERT)

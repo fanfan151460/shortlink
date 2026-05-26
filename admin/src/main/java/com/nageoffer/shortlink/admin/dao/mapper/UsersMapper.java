@@ -1,6 +1,6 @@
 package com.nageoffer.shortlink.admin.dao.mapper;
 
-import com.nageoffer.shortlink.admin.dao.entity.UserDo;
+import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -12,6 +12,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @since 2026-05-20
  */
 
-public interface UsersMapper extends BaseMapper<UserDo> {
+public interface UsersMapper extends BaseMapper<UserDO> {
 
 }
