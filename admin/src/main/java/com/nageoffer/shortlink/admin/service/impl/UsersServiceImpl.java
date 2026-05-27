@@ -78,6 +78,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
                 throw new ClientException(USER_HAD);
             }
         }finally {
+            userRegisterCachePenetrationBloomFilter.add(userRegisterDTO.getUsername());
             lock.unlock();
         }
     }

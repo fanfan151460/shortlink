@@ -35,7 +35,6 @@ public class UserReflushInterceptor implements HandlerInterceptor {
         UserContext.setUser(userInfoDTO);
         //刷新有效期
         stringRedisTemplate.expire(LOGIN + username, 30, TimeUnit.HOURS);
-
         return true;
     }
 
