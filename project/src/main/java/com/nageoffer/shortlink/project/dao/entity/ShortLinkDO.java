@@ -75,7 +75,6 @@ public class ShortLinkDO implements Serializable {
     /**
      * 描述
      */
-    @TableField("`describe`")
     private String description;
 
     /**
@@ -95,4 +94,9 @@ public class ShortLinkDO implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
+
+    /**
+     * 网站图标
+     */
+    private String favicon;
 }
