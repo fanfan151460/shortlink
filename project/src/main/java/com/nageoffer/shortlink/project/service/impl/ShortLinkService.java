@@ -121,57 +121,66 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
     }
 
     @Override
-    public void gotoUrl(String shortLinkUri, ServletRequest request, ServletResponse response) {
+    public void gotoOriginUrl(String shortLinkUri, ServletRequest request, ServletResponse response) {
         String domain = request.getServerName();
         String fullShortUrl = domain + "/" + shortLinkUri;
         String originUrl = stringRedisTemplate.opsForValue()
                 .get(String.format(FULL_SHORT_LINK, fullShortUrl));
         //有缓存
         if (!StrUtil.isBlank(originUrl)) {
-            GotoUrl(originUrl, request, response);
+            GotoUrl(originUrl, response);
             return;
         }
-        //无缓存
+        /*
+        1.分布式解决缓存重建
+        2.注意缓存穿透，查询数据库之前使用布隆过滤器判断，误判再查询数据库
+         */
         RLock rLock = redissonClient.getLock(LOCK_SHORT_LINK);
         rLock.lock();
-        //二次获取,获取成功
-        if (!StrUtil.isBlank(stringRedisTemplate.opsForValue()
-                .get(String.format(FULL_SHORT_LINK, fullShortUrl))))
-        {
-            originUrl = stringRedisTemplate.opsForValue()
-                    .get(String.format(FULL_SHORT_LINK, fullShortUrl));
-            GotoUrl(originUrl, request, response);
-            return;
-        }
-        //未获取到缓存（缓存未重建）
-        ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
-                Wrappers.lambdaQuery(ShortLinkGoDO.class)
-                        .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
-        if (gotoDO == null) {
-            throw new ClientException("短链接不存在");
-        }
+        try {
+            //二次获取重建缓存,获取成功
+            if (!StrUtil.isBlank(stringRedisTemplate.opsForValue()
+                    .get(String.format(FULL_SHORT_LINK, fullShortUrl))))
+            {
+                originUrl = stringRedisTemplate.opsForValue()
+                        .get(String.format(FULL_SHORT_LINK, fullShortUrl));
+                GotoUrl(originUrl, response);
+                return;
+            }
+            //未获取到缓存（缓存未重建）
+            if (!bloomFilter.contains(fullShortUrl)) {
+                return;
+            }
+            ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
+                    Wrappers.lambdaQuery(ShortLinkGoDO.class)
+                            .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
+            if (gotoDO == null) {
+                throw new ClientException("短链接不存在");
+            }
 
-        ShortLinkDO shortLinkDO = lambdaQuery()
-                .eq(ShortLinkDO::getGid, gotoDO.getGid())
-                .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
-                .eq(ShortLinkDO::getDelFlag, 0)
-                .one();
-        if (shortLinkDO == null) {
-            throw new ClientException("短链接不存在或已删除");
+            ShortLinkDO shortLinkDO = lambdaQuery()
+                    .eq(ShortLinkDO::getGid, gotoDO.getGid())
+                    .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    .one();
+            if (shortLinkDO == null) {
+                throw new ClientException("短链接不存在或已删除");
+            }
+            stringRedisTemplate.opsForValue()
+                    .set(String.format(FULL_SHORT_LINK, fullShortUrl),shortLinkDO.getOriginUrl());
+            GotoUrl(originUrl, response);
+        } finally {
+            rLock.unlock();
         }
-        stringRedisTemplate.opsForValue()
-                .set(String.format(FULL_SHORT_LINK, fullShortUrl),shortLinkDO.getOriginUrl());
-        GotoUrl(originUrl, request, response);
     }
 
     //跳转到原始链接
-    public void GotoUrl(String originUrl, ServletRequest request, ServletResponse response) {
+    public void GotoUrl(String originUrl, ServletResponse response) {
         try {
             ((HttpServletResponse) response).sendRedirect(originUrl);
         } catch (IOException e) {
             throw new ClientException("跳转失败");
         }
     }
-
-
 }

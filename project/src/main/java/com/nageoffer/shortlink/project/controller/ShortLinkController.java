@@ -40,7 +40,7 @@ public class ShortLinkController {
 
     @GetMapping("/{shortLinkUri}")
     public Result<Void> shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
-        shortLinkService.gotoUrl(shortLinkUri, request, response);
+        shortLinkService.gotoOriginUrl(shortLinkUri, request, response);
         return Results.success();
     }
 }
