@@ -1,6 +1,7 @@
 package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -22,10 +23,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+
+import static com.nageoffer.shortlink.project.common.constant.RedisConstant.FULL_SHORT_LINK;
+import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK_SHORT_LINK;
 
 @Service
 @Slf4j
@@ -34,6 +41,8 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
 
     private final RBloomFilter<String> bloomFilter;
     private final ShortLinkGoToMapper shortLinkGoToMapper;
+    private final RedissonClient redissonClient;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
@@ -115,8 +124,26 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
     public void gotoUrl(String shortLinkUri, ServletRequest request, ServletResponse response) {
         String domain = request.getServerName();
         String fullShortUrl = domain + "/" + shortLinkUri;
-
-
+        String originUrl = stringRedisTemplate.opsForValue()
+                .get(String.format(FULL_SHORT_LINK, fullShortUrl));
+        //有缓存
+        if (!StrUtil.isBlank(originUrl)) {
+            GotoUrl(originUrl, request, response);
+            return;
+        }
+        //无缓存
+        RLock rLock = redissonClient.getLock(LOCK_SHORT_LINK);
+        rLock.lock();
+        //二次获取,获取成功
+        if (!StrUtil.isBlank(stringRedisTemplate.opsForValue()
+                .get(String.format(FULL_SHORT_LINK, fullShortUrl))))
+        {
+            originUrl = stringRedisTemplate.opsForValue()
+                    .get(String.format(FULL_SHORT_LINK, fullShortUrl));
+            GotoUrl(originUrl, request, response);
+            return;
+        }
+        //未获取到缓存（缓存未重建）
         ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
                 Wrappers.lambdaQuery(ShortLinkGoDO.class)
                         .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
@@ -132,11 +159,19 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
         if (shortLinkDO == null) {
             throw new ClientException("短链接不存在或已删除");
         }
+        stringRedisTemplate.opsForValue()
+                .set(String.format(FULL_SHORT_LINK, fullShortUrl),shortLinkDO.getOriginUrl());
+        GotoUrl(originUrl, request, response);
+    }
 
+    //跳转到原始链接
+    public void GotoUrl(String originUrl, ServletRequest request, ServletResponse response) {
         try {
-            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+            ((HttpServletResponse) response).sendRedirect(originUrl);
         } catch (IOException e) {
             throw new ClientException("跳转失败");
         }
     }
+
+
 }
