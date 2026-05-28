@@ -17,6 +17,13 @@ public interface IGroupService extends IService<GroupDO> {
     void saveGroup(String groupName);
 
     /**
+     * 创建分组（指定用户，用于注册时初始化默认分组）
+     * @param groupName 组名
+     * @param username  用户名
+     */
+    void saveGroup(String groupName, String username);
+
+    /**
      * 查询分组
      * @return 分组列表
      */

@@ -23,24 +23,27 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void saveGroup(String groupName) {
-        String userName = UserContext.getUsername();
-        Long count = lambdaQuery().eq(GroupDO::getUsername, userName)
+        saveGroup(groupName, UserContext.getUsername());
+    }
+
+    @Override
+    public void saveGroup(String groupName, String username) {
+        Long count = lambdaQuery().eq(GroupDO::getUsername, username)
                 .count();
         if (count > 10) {
             throw new RuntimeException("链接分组最多为10");
         }
-        
-        String Gid;
+
+        String gid;
         do {
-            Gid = RandomUtil.randomString(6);
-        } while (hasGid(Gid));
+            gid = RandomUtil.randomString(6);
+        } while (hasGid(gid));
 
         GroupDO groupDO = new GroupDO()
                 .setName(groupName)
-                .setGid(Gid)
+                .setGid(gid)
                 .setSortOrder(0)
-                //TODO 设置用户名
-                .setUsername(userName);
+                .setUsername(username);
 
         baseMapper.insert(groupDO);
     }

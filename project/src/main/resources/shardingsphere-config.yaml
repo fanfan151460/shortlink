@@ -14,12 +14,23 @@ rules:
         tableStrategy:
           standard:
             shardingColumn: gid
-            shardingAlgorithmName: link_table_hash_mod
+            shardingAlgorithmName: t_link_hash_mod
+      t_link_goto:
+        actualDataNodes: ds_0.t_link_goto${0..15}
+        tableStrategy:
+          standard:
+            shardingColumn: full_short_url
+            shardingAlgorithmName: t_link_goto_hash_mod
     shardingAlgorithms:
-      link_table_hash_mod:
+      t_link_hash_mod:
         type: HASH_MOD
         props:
           sharding-count: 16
+      t_link_goto_hash_mod:
+        type: HASH_MOD
+        props:
+          sharding-count: 16
+
 # 展现逻辑 SQL & 真实 SQL
 props:
   sql-show: true

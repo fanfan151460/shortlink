@@ -6,6 +6,8 @@ import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import java.util.List;
 
@@ -31,4 +33,6 @@ public interface IShortLinkService extends IService<ShortLinkDO> {
      * @param reqDTO 请求参数
      */
     void updateShortLink(ShortLinkUpReqDTO reqDTO);
+
+    void gotoUrl(String shortLinkUri, ServletRequest request, ServletResponse response);
 }

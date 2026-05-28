@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.exception.ClientException;
 import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.nageoffer.shortlink.admin.dao.mapper.UsersMapper;
+import com.nageoffer.shortlink.admin.service.IGroupService;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserUpdateDTO;
@@ -44,6 +45,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
+    private final IGroupService groupService;
 
     @Override
     public UserDTO getByUerName(String userName) {
@@ -74,6 +76,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
                 if (insert < 1) {
                     throw new ClientException(USER_REGISTER_ERROR);
                 }
+                groupService.saveGroup("默认分组", userRegisterDTO.getUsername());
             } else {
                 throw new ClientException(USER_HAD);
             }
