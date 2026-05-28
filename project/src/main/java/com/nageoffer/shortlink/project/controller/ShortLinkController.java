@@ -15,31 +15,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/short-link/v1")
+@RequestMapping("")
 @RequiredArgsConstructor
 public class ShortLinkController {
 
     private final IShortLinkService shortLinkService;
 
-    @PostMapping("/create")
+    @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkRespDTO> createShortLink(@RequestBody ShortLinkReqDTO reqDTO) {
         ShortLinkRespDTO shortLinkRespDTO = shortLinkService.createShortLink(reqDTO);
         return Results.success(shortLinkRespDTO);
     }
 
-    @GetMapping("/page")
+    @GetMapping("/api/short-link/v1/page")
     public Result<List<ShortLinkRespDTO>> pageShortLink(PageReqDTO pageReqDTO) {
         return Results.success(shortLinkService.pageShortLink(pageReqDTO));
     }
 
-    @PutMapping()
+    @PutMapping("/api/short-link/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpReqDTO reqDTO) {
         shortLinkService.updateShortLink(reqDTO);
         return Results.success();
     }
 
-    @GetMapping()
-    public Result<Void> shortLinkGoTo(String shortLinkUri, ServletRequest request, ServletResponse response) {
+    @GetMapping("/{shortLinkUri}")
+    public Result<Void> shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
         shortLinkService.gotoUrl(shortLinkUri, request, response);
         return Results.success();
     }

@@ -116,6 +116,7 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
         String domain = request.getServerName();
         String fullShortUrl = domain + "/" + shortLinkUri;
 
+
         ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
                 Wrappers.lambdaQuery(ShortLinkGoDO.class)
                         .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));

@@ -20,4 +20,5 @@ public class ShortLinkGoDO {
 
     @TableField(value = "full_short_url")
     private String fullShortUrl;
+
 }
