@@ -2,6 +2,7 @@ package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -67,7 +68,8 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
         ShortLinkDO shortLinkDO = BeanUtil
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
-                .setShortUri(shortLink);
+                .setShortUri(shortLink)
+                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()));
         try {
             baseMapper.insert(shortLinkDO);
         } catch (Exception e) {
@@ -204,6 +206,27 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
         } catch (IOException e) {
             throw new ClientException("跳转notfound页面失败");
         }
+    }
+
+    private String getFaviconUrl(String originUrl) {
+        try {
+            String html = HttpUtil.get(originUrl);
+            java.util.regex.Matcher matcher = java.util.regex.Pattern
+                    .compile("<link[^>]+rel=[\"']?(?:shortcut )?icon[\"']?[^>]+href=[\"']([^\"']+)[\"']",
+                            java.util.regex.Pattern.CASE_INSENSITIVE)
+                    .matcher(html);
+            if (matcher.find()) {
+                String href = matcher.group(1);
+                if (href.startsWith("http") || href.startsWith("//")) {
+                    return href.startsWith("//") ? "https:" + href : href;
+                }
+                java.net.URI uri = java.net.URI.create(originUrl);
+                return uri.getScheme() + "://" + uri.getHost() + (href.startsWith("/") ? "" : "/") + href;
+            }
+        } catch (Exception ignored) {
+        }
+        java.net.URI uri = java.net.URI.create(originUrl);
+        return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
     }
 
 }
