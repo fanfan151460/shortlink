@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class ShortLinkUpReqDTO implements Serializable {
@@ -32,7 +32,7 @@ public class ShortLinkUpReqDTO implements Serializable {
     /**
      * 有效期
      */
-    private LocalDateTime validDate;
+    private Date validDate;
 
     /**
      * 描述

@@ -17,6 +17,7 @@ import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.HashUtil;
+import com.nageoffer.shortlink.project.util.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.FULL_SHORT_LINK;
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK_SHORT_LINK;
@@ -106,18 +108,22 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
     @Override
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
         lambdaUpdate()
-                .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
-                .set(ShortLinkDO::getGid, reqDTO.getGid())
+                .eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .eq(ShortLinkDO::getEnableStatus, 0)
-                .set(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
-                .set(ShortLinkDO::getGid, reqDTO.getGid())
                 .set(ShortLinkDO::getValidDateType, reqDTO.getValidDateType())
                 .set(ShortLinkDO::getDescription, reqDTO.getDescription())
                 .set(ShortLinkDO::getValidDate, reqDTO.getValidDateType() == 0
                         ? null
                         : reqDTO.getValidDate())
                 .update();
+        long linkExpireTime = LinkUtil.getLinkExpireTime(reqDTO.getValidDate());
+        String fullShortUrl  = lambdaQuery().eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 0).one().getFullShortUrl();
+        stringRedisTemplate.opsForValue()
+                .set(String.format(FULL_SHORT_LINK, fullShortUrl)
+                        ,reqDTO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -145,17 +151,20 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
                 GotoUrl(originUrl, response);
+                notFound(response);
                 return;
             }
             //未获取到缓存（缓存未重建）
             if (!bloomFilter.contains(fullShortUrl)) {
+                notFound(response);
                 return;
             }
             ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
                     Wrappers.lambdaQuery(ShortLinkGoDO.class)
                             .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
             if (gotoDO == null) {
-                throw new ClientException("短链接不存在");
+                notFound(response);
+                return;
             }
 
             ShortLinkDO shortLinkDO = lambdaQuery()
@@ -167,8 +176,13 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
             if (shortLinkDO == null) {
                 throw new ClientException("短链接不存在或已删除");
             }
+            long linkExpireTime = LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate());
+            if(linkExpireTime < 0){
+                throw new ClientException("短链接已经过期");
+            }
             stringRedisTemplate.opsForValue()
-                    .set(String.format(FULL_SHORT_LINK, fullShortUrl),shortLinkDO.getOriginUrl());
+                    .set(String.format(FULL_SHORT_LINK, fullShortUrl)
+                            ,shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
             GotoUrl(originUrl, response);
         } finally {
             rLock.unlock();
@@ -183,4 +197,13 @@ public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> 
             throw new ClientException("跳转失败");
         }
     }
+
+    public void notFound(ServletResponse response) {
+        try {
+            ((HttpServletResponse) response).sendRedirect("/page/notFound");
+        } catch (IOException e) {
+            throw new ClientException("跳转notfound页面失败");
+        }
+    }
+
 }
