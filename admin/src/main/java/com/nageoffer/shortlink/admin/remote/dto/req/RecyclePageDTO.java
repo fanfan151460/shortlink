@@ -5,18 +5,20 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class PageReqDTO {
+public class RecyclePageDTO {
+
+    /**
+     * gid
+     */
+    private String gid;
 
     /**
      * 页码
      */
     private int current;
+
     /**
      * 每页大小
      */
     private int size;
-    /**
-     * gid
-     */
-    private String gid;
 }

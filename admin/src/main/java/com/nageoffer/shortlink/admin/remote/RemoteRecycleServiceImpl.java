@@ -2,13 +2,17 @@ package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.remote.dto.IRemoteRecycleService;
+import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkRecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,5 +34,22 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
         if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程移入回收站失败");
         }
+    }
+
+    @Override
+    public List<ShortLinkRespDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
+        String url = BASE_URL + "/page?current=" + pageReqDTO.getCurrent()
+                + "&size=" + pageReqDTO.getSize()
+                + "&gid=" + pageReqDTO.getGid();
+        Result<List<ShortLinkRespDTO>> result = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Result<List<ShortLinkRespDTO>>>() {}
+        ).getBody();
+        if (result == null || !result.isSuccess()) {
+            throw new RuntimeException("远程回收站分页查询失败");
+        }
+        return result.getData();
     }
 }
