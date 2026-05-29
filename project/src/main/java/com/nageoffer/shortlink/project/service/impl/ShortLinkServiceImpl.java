@@ -40,7 +40,7 @@ import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ShortLinkService extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements IShortLinkService {
+public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements IShortLinkService {
 
     private final RBloomFilter<String> bloomFilter;
     private final ShortLinkGoToMapper shortLinkGoToMapper;
