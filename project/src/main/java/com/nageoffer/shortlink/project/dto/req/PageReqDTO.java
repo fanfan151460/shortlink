@@ -3,6 +3,9 @@ package com.nageoffer.shortlink.project.dto.req;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * 短链接分页查询
+ */
 @Data
 @Accessors(chain = true)
 public class PageReqDTO {

@@ -15,6 +15,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
         this.strictInsertFill(metaObject, "delFlag", Integer.class, 0);
         this.strictInsertFill(metaObject, "validDateType", Integer.class, 0);
+        this.strictInsertFill(metaObject, "enableStatus", Integer.class, 0);
 
     }
 

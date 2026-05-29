@@ -4,7 +4,7 @@ import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.dto.IRemoteRecycleService;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
-import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkRecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ public class RecycleBinController {
     private final IRemoteRecycleService remoteRecycleService;
 
     @PostMapping("/recycle-bin/save")
-    public Result<Void> saveRecycleBin(@RequestBody ShortLinkRecycleDTO recycleDTO) {
+    public Result<Void> saveRecycleBin(@RequestBody RecycleDTO recycleDTO) {
         remoteRecycleService.saveRecycleBin(recycleDTO);
         return Results.success();
     }
@@ -28,4 +28,12 @@ public class RecycleBinController {
     public Result<List<ShortLinkRespDTO>> pageRecycle(RecyclePageDTO pageReqDTO) {
         return Results.success(remoteRecycleService.pageRecycle(pageReqDTO));
     }
+
+    @PostMapping("/recycle-bin/recover")
+    public Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO) {
+        remoteRecycleService.rmRecycleBin(recycleDTO);
+        return Results.success();
+    }
+
+
 }

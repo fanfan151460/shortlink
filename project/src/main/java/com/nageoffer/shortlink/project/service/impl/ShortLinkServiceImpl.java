@@ -13,6 +13,7 @@ import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
@@ -140,7 +141,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             return;
         }
         /*
-        1.分布式解决缓存重建
+        1.分布式解决缓存击穿
         2.注意缓存穿透，查询数据库之前使用布隆过滤器判断，误判再查询数据库
          */
         RLock rLock = redissonClient.getLock(LOCK_SHORT_LINK);
@@ -153,10 +154,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
                 GotoUrl(originUrl, response);
-                notFound(response);
                 return;
             }
-            //未获取到缓存（缓存未重建）
+            //未获取到缓存（缓存未重建）, 判断是否为恶意请求
             if (!bloomFilter.contains(fullShortUrl)) {
                 notFound(response);
                 return;
@@ -176,12 +176,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getEnableStatus, 0)
                     .one();
             if (shortLinkDO == null) {
+                notFound(response);
                 throw new ClientException("短链接不存在或已删除");
             }
             long linkExpireTime = LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate());
             if(linkExpireTime < 0){
+                notFound(response);
                 throw new ClientException("短链接已经过期");
             }
+            //存入redis中，并设置有效期
             stringRedisTemplate.opsForValue()
                     .set(String.format(FULL_SHORT_LINK, fullShortUrl)
                             ,shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
@@ -192,6 +195,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     //跳转到原始链接
+    @Override
+    public void removeShortLink(RecycleDTO recycleDTO) {
+        boolean removed = lambdaUpdate()
+                .eq(ShortLinkDO::getGid, recycleDTO.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
+                .remove();
+        if (!removed) {
+            throw new ClientException("短链接删除失败");
+        }
+        stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, recycleDTO.getFullShortUrl()));
+    }
+
     public void GotoUrl(String originUrl, ServletResponse response) {
         try {
             ((HttpServletResponse) response).sendRedirect(originUrl);
@@ -228,5 +243,4 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         java.net.URI uri = java.net.URI.create(originUrl);
         return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
     }
-
 }

@@ -3,12 +3,9 @@ package com.nageoffer.shortlink.project.dto.req;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-/**
- * 回收站分页查询
- */
 @Data
 @Accessors(chain = true)
-public class RecyclePageDTO {
+public class RecycleDTO {
 
     /**
      * 完整短链接
@@ -19,14 +16,4 @@ public class RecyclePageDTO {
      * gid
      */
     private String gid;
-
-    /**
-     * 页码
-     */
-    private int current;
-
-    /**
-     * 每页大小
-     */
-    private int size;
 }

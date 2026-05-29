@@ -3,15 +3,21 @@ package com.nageoffer.shortlink.admin.remote.dto.req;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * 短链接分页查询
+ */
 @Data
 @Accessors(chain = true)
-public class ShortLinkRecycleDTO {
+public class PageReqDTO {
 
     /**
-     * 完整短链接
+     * 页码
      */
-    private String fullShortUrl;
-
+    private int current;
+    /**
+     * 每页大小
+     */
+    private int size;
     /**
      * gid
      */

@@ -55,6 +55,7 @@ public class ShortLinkDO implements Serializable {
     /**
      * 启用标识 0：未启用 1：已启用
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer enableStatus;
 
     /**
@@ -94,6 +95,7 @@ public class ShortLinkDO implements Serializable {
     /**
      * 删除标识 0：未删除 1：已删除
      */
+    @TableLogic(value = "0", delval = "1")
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
 

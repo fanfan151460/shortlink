@@ -3,6 +3,7 @@ package com.nageoffer.shortlink.project.controller;
 import com.nageoffer.shortlink.project.common.convention.result.Result;
 import com.nageoffer.shortlink.project.common.convention.result.Results;
 import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
@@ -41,6 +42,12 @@ public class ShortLinkController {
     @GetMapping("/{shortLinkUri}")
     public Result<Void> shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
         shortLinkService.gotoOriginUrl(shortLinkUri, request, response);
+        return Results.success();
+    }
+
+    @DeleteMapping("/api/short-link/v1/remove")
+    public Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO) {
+        shortLinkService.removeShortLink(recycleDTO);
         return Results.success();
     }
 }

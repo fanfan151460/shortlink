@@ -1,11 +1,11 @@
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: delFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
 spring:
-  profiles:
-    active: dev
----
-spring:
-  config:
-    activate:
-      on-profile: dev
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
@@ -17,19 +17,20 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
+
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 server:
-  port: 8001
+  port: 80
 ---
 spring:
   config:
     activate:
       on-profile: test
-  datasource:
-    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
-    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
 server:
   port: 8082
