@@ -12,7 +12,7 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 @TableName("t_link_access_stats")
-public class ShortLinkStatsDO implements Serializable {
+public class LinkStatsDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -1,10 +1,13 @@
+locale:
+  gaoDe:
+    apiKey: e9dc0d95166eccdd3290a2074d406fad
+
 mybatis-plus:
   global-config:
     db-config:
       logic-delete-field: delFlag
       logic-delete-value: 1
       logic-not-delete-value: 0
-
 spring:
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver

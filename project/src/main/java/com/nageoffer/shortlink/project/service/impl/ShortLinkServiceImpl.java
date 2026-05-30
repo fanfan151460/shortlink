@@ -5,14 +5,21 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
+import com.nageoffer.shortlink.project.dao.entity.LinkBrowserStatsDO;
+import com.nageoffer.shortlink.project.dao.entity.LinkLocalStatsDO;
+import com.nageoffer.shortlink.project.dao.entity.LinkOsStatsDO;
+import com.nageoffer.shortlink.project.dao.entity.LinkStatsDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
-import com.nageoffer.shortlink.project.dao.entity.ShortLinkStatsDO;
+import com.nageoffer.shortlink.project.dao.mapper.LinkBrowserStatsMapper;
+import com.nageoffer.shortlink.project.dao.mapper.LinkLocalStatsMapper;
+import com.nageoffer.shortlink.project.dao.mapper.LinkOsStatsMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkStatsMapper;
@@ -34,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +66,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
     private final ShortLinkStatsMapper linkStatsMapper;
+    private final LinkLocalStatsMapper linkLocalStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
+    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+
+    @Value("${locale.gaoDe.apiKey}")
+    private String apikey;
 
     @Override
     public ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
@@ -247,7 +261,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 }
                 gid = gotoDO.getGid();
             }
-            ShortLinkStatsDO statsDO = new ShortLinkStatsDO()
+            LinkStatsDO statsDO = new LinkStatsDO()
                     .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setUv(addedFlag.get() ? 1 : 0)
@@ -256,6 +270,35 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setHour(LocalTime.now().getHour())
                     .setWeekday(LocalDate.now().getDayOfWeek().getValue());
             linkStatsMapper.insertLinkStats(statsDO);
+
+            //地区统计
+            String localByIp = getLocalByIp(apikey, clientIp);
+            LinkLocalStatsDO linkLocalStatsDO = JSONUtil.toBean(localByIp, LinkLocalStatsDO.class);
+            if (StrUtil.equals(linkLocalStatsDO.getInfocode(), "10000")) {
+                linkLocalStatsDO
+                        .setGid(gid)
+                        .setFullShortUrl(fullShortUrl)
+                        .setDate(LocalDate.now())
+                        .setCnt(1);
+                linkLocalStatsMapper.insertLinkLocalStats(linkLocalStatsDO);
+            }
+            // 操作系统访问统计
+            String os = LinkUtil.getOs((HttpServletRequest) request);
+            LinkOsStatsDO linkOsStatsDO = new LinkOsStatsDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setDate(LocalDate.now())
+                    .setOs(os);
+            linkOsStatsMapper.insertLinkOsStats(linkOsStatsDO);
+            // 浏览器访问统计
+            String browser = LinkUtil.getBrowser((HttpServletRequest) request);
+            LinkBrowserStatsDO linkBrowserStatsDO = new LinkBrowserStatsDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setDate(LocalDate.now())
+                    .setBrowser(browser);
+            linkBrowserStatsMapper.insertLinkBrowserStats(linkBrowserStatsDO);
+
         } catch (Exception e) {
             log.error("短链接统计异常", e);
         }
@@ -274,9 +317,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     /**
+     *  获取指定ip位置
+     */
+    private String getLocalByIp(String key, String ip) {
+        String url = "https://restapi.amap.com/v3/ip?ip=" + ip + "&key=" + key;
+        return HttpUtil.get(url);
+    }
+    /**
      * 根据原链接跳转
      */
-    public void GotoUrl(String originUrl, ServletResponse response) {
+    private void GotoUrl(String originUrl, ServletResponse response) {
         try {
             ((HttpServletResponse) response).sendRedirect(originUrl);
         } catch (IOException e) {
@@ -284,7 +334,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
     }
 
-    public void notFound(ServletResponse response) {
+    private void notFound(ServletResponse response) {
         try {
             ((HttpServletResponse) response).sendRedirect("/page/notFound");
         } catch (IOException e) {

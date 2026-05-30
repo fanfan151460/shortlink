@@ -14,6 +14,33 @@ public class LinkUtil {
                 .orElse(2592000000L);
     }
 
+    public static String getOs(HttpServletRequest request) {
+        String ua = request.getHeader("User-Agent");
+        if (StrUtil.isBlank(ua)) {
+            return "其他";
+        }
+        if (ua.contains("Android")) return "Android";
+        if (ua.contains("iPhone") || ua.contains("iPad") || ua.contains("iOS")) return "iOS";
+        if (ua.contains("Windows")) return "Windows";
+        if (ua.contains("Mac OS X") || ua.contains("Macintosh")) return "macOS";
+        if (ua.contains("Linux")) return "Linux";
+        return "其他";
+    }
+
+    public static String getBrowser(HttpServletRequest request) {
+        String ua = request.getHeader("User-Agent");
+        if (StrUtil.isBlank(ua)) {
+            return "其他";
+        }
+        if (ua.contains("Edg/")) return "Edge";
+        if (ua.contains("OPR/")) return "Opera";
+        if (ua.contains("Chrome")) return "Chrome";
+        if (ua.contains("Safari")) return "Safari";
+        if (ua.contains("Firefox")) return "Firefox";
+        if (ua.contains("MSIE") || ua.contains("Trident")) return "IE";
+        return "其他";
+    }
+
     public static String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
