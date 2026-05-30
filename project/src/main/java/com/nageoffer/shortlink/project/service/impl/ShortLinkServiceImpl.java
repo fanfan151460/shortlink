@@ -11,18 +11,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
-import com.nageoffer.shortlink.project.dao.entity.LinkBrowserStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.LinkLocalStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.LinkOsStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.LinkStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
-import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
-import com.nageoffer.shortlink.project.dao.mapper.LinkBrowserStatsMapper;
-import com.nageoffer.shortlink.project.dao.mapper.LinkLocalStatsMapper;
-import com.nageoffer.shortlink.project.dao.mapper.LinkOsStatsMapper;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkStatsMapper;
+import com.nageoffer.shortlink.project.dao.entity.*;
+import com.nageoffer.shortlink.project.dao.mapper.*;
 import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
@@ -53,6 +43,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.*;
 
@@ -69,6 +60,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkLocalStatsMapper linkLocalStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
 
     @Value("${locale.gaoDe.apiKey}")
     private String apikey;
@@ -222,17 +214,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     public void addLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
+        AtomicReference<String> uv = new AtomicReference<>();
+        AtomicBoolean addedFlag = new AtomicBoolean();
+        AtomicBoolean addedUipFlag = new AtomicBoolean();
         try {
             Runnable addCookie = () -> {
-                String uv = UUID.fastUUID().toString();
-                Cookie uvCookie = new Cookie("uv", uv);
+                uv.set(UUID.fastUUID().toString());
+                Cookie uvCookie = new Cookie("uv", uv.get());
                 uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
             };
 
-            AtomicBoolean addedFlag = new AtomicBoolean();
-            AtomicBoolean addedUipFlag = new AtomicBoolean();
             //检查cookie
             Cookie[] cookies = ((HttpServletRequest) request).getCookies();
             if (ArrayUtil.isNotEmpty(cookies)) {
@@ -241,6 +234,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .findFirst()
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each -> {
+                            uv.set(each);
                             Long added = stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, each);
                             addedFlag.set(added != null && added > 0L);
                         }, addCookie);
@@ -298,6 +292,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setDate(LocalDate.now())
                     .setBrowser(browser);
             linkBrowserStatsMapper.insertLinkBrowserStats(linkBrowserStatsDO);
+            // 添加到日志表
+            LinkAccessLogsDO linkAccessLogsDO = new LinkAccessLogsDO()
+                    .setUser(uv.get())
+                    .setOs(os)
+                    .setBrowser(browser)
+                    .setIp(clientIp)
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl);
+            linkAccessLogsMapper.insert(linkAccessLogsDO);
 
         } catch (Exception e) {
             log.error("短链接统计异常", e);
