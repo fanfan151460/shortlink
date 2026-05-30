@@ -1,6 +1,7 @@
 package com.nageoffer.shortlink.project.util;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Date;
@@ -25,6 +26,21 @@ public class LinkUtil {
         if (ua.contains("Mac OS X") || ua.contains("Macintosh")) return "macOS";
         if (ua.contains("Linux")) return "Linux";
         return "其他";
+    }
+
+    /**
+     * 获取访问设备类型
+     */
+    public static String getDevice(HttpServletRequest request) {
+        String ua = request.getHeader("User-Agent");
+        if (StrUtil.isBlank(ua)) {
+            return "PC";
+        }
+        if (ua.contains("Android") || ua.contains("iPhone") || ua.contains("iPad")
+                || ua.contains("Mobile") || ua.contains("iPod")) {
+            return "Mobile";
+        }
+        return "PC";
     }
 
     public static String getBrowser(HttpServletRequest request) {
@@ -54,6 +70,29 @@ public class LinkUtil {
             ip = ip.split(",")[0].trim();
         }
         return ip;
+    }
+
+    /**
+     * 获取访问网络类型
+     */
+    public static String getNetwork(HttpServletRequest request) {
+        String ua = request.getHeader("User-Agent");
+        if (StrUtil.isBlank(ua)) {
+            return "未知";
+        }
+        if (ua.contains("Android") || ua.contains("iPhone") || ua.contains("iPad")
+                || ua.contains("Mobile") || ua.contains("iPod")) {
+            return "移动网络";
+        }
+        return "WIFI";
+    }
+
+    /**
+     *  获取指定ip位置
+     */
+    public static String getLocalByIp(String key, String ip) {
+        String url = "https://restapi.amap.com/v3/ip?ip=" + ip + "&key=" + key;
+        return HttpUtil.get(url);
     }
 
 }

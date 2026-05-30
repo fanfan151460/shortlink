@@ -60,6 +60,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkLocalStatsMapper linkLocalStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
 
     @Value("${locale.gaoDe.apiKey}")
@@ -266,7 +268,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             linkStatsMapper.insertLinkStats(statsDO);
 
             //地区统计
-            String localByIp = getLocalByIp(apikey, clientIp);
+            String localByIp = LinkUtil.getLocalByIp(apikey, clientIp);
             LinkLocalStatsDO linkLocalStatsDO = JSONUtil.toBean(localByIp, LinkLocalStatsDO.class);
             if (StrUtil.equals(linkLocalStatsDO.getInfocode(), "10000")) {
                 linkLocalStatsDO
@@ -292,6 +294,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setDate(LocalDate.now())
                     .setBrowser(browser);
             linkBrowserStatsMapper.insertLinkBrowserStats(linkBrowserStatsDO);
+            // 访问设备统计
+            String device = LinkUtil.getDevice((HttpServletRequest) request);
+            LinkDeviceStatsDO linkDeviceStatsDO = new LinkDeviceStatsDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setDate(LocalDate.now())
+                    .setDevice(device);
+            linkDeviceStatsMapper.insertLinkDeviceStats(linkDeviceStatsDO);
+            // 访问网络统计
+            String network = LinkUtil.getNetwork((HttpServletRequest) request);
+            LinkNetworkStatsDO linkNetworkStatsDO = new LinkNetworkStatsDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setDate(LocalDate.now())
+                    .setNetwork(network);
+            linkNetworkStatsMapper.insertLinkNetworkStats(linkNetworkStatsDO);
             // 添加到日志表
             LinkAccessLogsDO linkAccessLogsDO = new LinkAccessLogsDO()
                     .setUser(uv.get())
@@ -319,13 +337,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, recycleDTO.getFullShortUrl()));
     }
 
-    /**
-     *  获取指定ip位置
-     */
-    private String getLocalByIp(String key, String ip) {
-        String url = "https://restapi.amap.com/v3/ip?ip=" + ip + "&key=" + key;
-        return HttpUtil.get(url);
-    }
     /**
      * 根据原链接跳转
      */
