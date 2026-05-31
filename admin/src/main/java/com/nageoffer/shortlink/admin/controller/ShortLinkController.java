@@ -3,7 +3,7 @@ package com.nageoffer.shortlink.admin.controller;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.dto.IRemoteShortLinkService;
-import com.nageoffer.shortlink.admin.remote.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
@@ -27,8 +27,8 @@ public class ShortLinkController {
     }
 
     @GetMapping("/page")
-    public Result<List<ShortLinkRespDTO>> pageShortLink(PageReqDTO pageReqDTO) {
-        return Results.success(shortLinkService.pageShortLink(pageReqDTO));
+    public Result<List<ShortLinkRespDTO>> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
+        return Results.success(shortLinkService.pageShortLink(linkPageReqDTO));
     }
 
     @PutMapping("/update")

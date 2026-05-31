@@ -8,18 +8,25 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class PageReqDTO {
+public class LinkPageReqDTO {
 
     /**
      * 页码
      */
     private int current;
+
     /**
      * 每页大小
      */
     private int size;
+
     /**
      * gid
      */
     private String gid;
+
+    /**
+     * 排序字段
+     */
+    private String orderFlag;
 }

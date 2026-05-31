@@ -2,7 +2,7 @@ package com.nageoffer.shortlink.project.controller;
 
 import com.nageoffer.shortlink.project.common.convention.result.Result;
 import com.nageoffer.shortlink.project.common.convention.result.Results;
-import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
@@ -29,8 +29,8 @@ public class ShortLinkController {
     }
 
     @GetMapping("/api/short-link/v1/page")
-    public Result<List<ShortLinkRespDTO>> pageShortLink(PageReqDTO pageReqDTO) {
-        return Results.success(shortLinkService.pageShortLink(pageReqDTO));
+    public Result<List<ShortLinkRespDTO>> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
+        return Results.success(shortLinkService.pageShortLink(linkPageReqDTO));
     }
 
     @PutMapping("/api/short-link/v1/update")

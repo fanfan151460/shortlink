@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.dao.entity.*;
 import com.nageoffer.shortlink.project.dao.mapper.*;
-import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
@@ -114,12 +114,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     @Override
-    public List<ShortLinkRespDTO> pageShortLink(PageReqDTO pageReqDTO) {
-        Page<ShortLinkDO> linkPage = Page.of(pageReqDTO.getCurrent(), pageReqDTO.getSize());
+    public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
+        Page<ShortLinkDO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
         //TODO 排序
 
         Wrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                .eq(ShortLinkDO::getGid, pageReqDTO.getGid())
+                .eq(ShortLinkDO::getGid, linkPageReqDTO.getGid())
                 .eq(ShortLinkDO::getDelFlag, 0);
         Page<ShortLinkDO> shortLinkDOPage = page(linkPage, wrapper);
         return shortLinkDOPage.getRecords()
@@ -316,9 +316,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setOs(os)
                     .setBrowser(browser)
                     .setIp(clientIp)
+                    .setNetwork(network)
+                    .setDevice(device)
+                    .setLocale(linkLocalStatsDO.getProvince())
                     .setGid(gid)
                     .setFullShortUrl(fullShortUrl);
-            linkAccessLogsMapper.insert(linkAccessLogsDO);
+            linkAccessLogsMapper.insertAccessLog(linkAccessLogsDO);
 
         } catch (Exception e) {
             log.error("短链接统计异常", e);

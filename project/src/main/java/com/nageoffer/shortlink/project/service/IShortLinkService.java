@@ -2,7 +2,7 @@ package com.nageoffer.shortlink.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
-import com.nageoffer.shortlink.project.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
@@ -23,10 +23,10 @@ public interface IShortLinkService extends IService<ShortLinkDO> {
 
     /**
      * 分页查询短链接
-     * @param pageReqDTO 请求参数
+     * @param linkPageReqDTO 请求参数
      * @return 返回类型link
      */
-    List<ShortLinkRespDTO> pageShortLink(PageReqDTO pageReqDTO);
+    List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO);
 
     /**
      * 更新短链接

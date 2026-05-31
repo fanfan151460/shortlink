@@ -1,6 +1,6 @@
 package com.nageoffer.shortlink.admin.remote.dto;
 
-import com.nageoffer.shortlink.admin.remote.dto.req.PageReqDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
@@ -19,10 +19,10 @@ public interface IRemoteShortLinkService {
 
     /**
      * 远程分页查询
-     * @param pageReqDTO 请求参数
+     * @param linkPageReqDTO 请求参数
      * @return 返回
      */
-    List<ShortLinkRespDTO> pageShortLink(PageReqDTO pageReqDTO);
+    List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO);
 
     /**
      * 远程更新短链接

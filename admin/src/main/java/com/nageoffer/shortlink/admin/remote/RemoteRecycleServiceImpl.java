@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
 
-    private static final String BASE_URL = "http://localhost:8001/api/short-link/v1/recycle-bin";
+    private static final String BASE_URL = "http://localhost:80/api/short-link/v1/recycle-bin";
 
     private final RestTemplate restTemplate;
 

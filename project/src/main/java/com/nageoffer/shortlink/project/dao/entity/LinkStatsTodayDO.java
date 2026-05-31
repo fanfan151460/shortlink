@@ -4,24 +4,16 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.io.Serial;
-import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Accessors(chain = true)
-@TableName("t_link_access_logs")
-public class LinkAccessLogsDO implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+@TableName("t_link_stats_today")
+public class LinkStatsTodayDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
-
-    /**
-     * 完整短链接
-     */
-    private String fullShortUrl;
 
     /**
      * 分组标识
@@ -29,39 +21,29 @@ public class LinkAccessLogsDO implements Serializable {
     private String gid;
 
     /**
-     * 用户信息
+     * 完整短链接
      */
-    private String user;
+    private String fullShortUrl;
 
     /**
-     * IP
+     * 日期
      */
-    private String ip;
+    private LocalDate date;
 
     /**
-     * 浏览器
+     * 今日PV
      */
-    private String browser;
+    private Integer todayPv;
 
     /**
-     * 操作系统
+     * 今日UV
      */
-    private String os;
+    private Integer todayUv;
 
     /**
-     * 访问网络
+     * 今日IP数
      */
-    private String network;
-
-    /**
-     * 访问设备
-     */
-    private String device;
-
-    /**
-     * 访问地区
-     */
-    private String locale;
+    private Integer todayIpCount;
 
     /**
      * 创建时间
