@@ -6,7 +6,6 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -63,6 +62,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Value("${locale.gaoDe.apiKey}")
     private String apikey;
@@ -89,7 +89,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
-                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()));
+                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()))
+                .setTotalPv(0)
+                .setTotalUip(0)
+                .setTotalUv(0);
         try {
             baseMapper.insert(shortLinkDO);
         } catch (Exception e) {
@@ -115,16 +118,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
-        Page<ShortLinkDO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
-        //TODO 排序
-
-        Wrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                .eq(ShortLinkDO::getGid, linkPageReqDTO.getGid())
-                .eq(ShortLinkDO::getDelFlag, 0);
-        Page<ShortLinkDO> shortLinkDOPage = page(linkPage, wrapper);
-        return shortLinkDOPage.getRecords()
-                .stream().map(each -> BeanUtil.copyProperties(each, ShortLinkRespDTO.class))
-                .toList();
+        Page<ShortLinkRespDTO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
+        return baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag()).getRecords();
     }
 
     @Override
@@ -238,6 +233,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .ifPresentOrElse(each -> {
                             uv.set(each);
                             Long added = stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, each);
+                            stringRedisTemplate.expire(LINK_STATS_UV + fullShortUrl, 30, TimeUnit.DAYS);
                             addedFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
@@ -246,6 +242,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             //uip统计
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);
             Long addedUip = stringRedisTemplate.opsForSet().add(LINK_STATS_UIP + fullShortUrl, clientIp);
+            stringRedisTemplate.expire(LINK_STATS_UIP + fullShortUrl, 30, TimeUnit.DAYS);
             addedUipFlag.set(addedUip != null && addedUip > 0L);
 
             if (StrUtil.isBlank(gid)) {
@@ -323,6 +320,21 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setFullShortUrl(fullShortUrl);
             linkAccessLogsMapper.insertAccessLog(linkAccessLogsDO);
 
+            // 今日统计
+            LinkStatsTodayDO linkStatsTodayDO = new LinkStatsTodayDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setDate(LocalDate.now())
+                    .setTodayUv(addedFlag.get() ? 1 : 0)
+                    .setTodayIpCount(addedUipFlag.get() ? 1 : 0);
+            linkStatsTodayMapper.insertLinkStatsToday(linkStatsTodayDO);
+
+            lambdaUpdate().eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
+                    .eq(ShortLinkDO::getGid, gid)
+                    .setSql("total_pv = total_pv + 1")
+                    .setSql(addedFlag.get(),"total_up = total_up + 1")
+                    .setSql(addedUipFlag.get(),"total_uip = total_uip + 1")
+                    .update();
         } catch (Exception e) {
             log.error("短链接统计异常", e);
         }

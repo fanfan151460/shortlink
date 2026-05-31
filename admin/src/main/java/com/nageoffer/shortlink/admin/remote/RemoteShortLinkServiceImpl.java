@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
 
-    private static final String BASE_URL = "http://localhost:80/api/short-link/v1";
+    private static final String BASE_URL = "http://localhost:8082/api/short-link/v1";
 
     private final RestTemplate restTemplate;
 
@@ -43,7 +43,8 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
         String url = BASE_URL + "/page?current=" + linkPageReqDTO.getCurrent()
                 + "&size=" + linkPageReqDTO.getSize()
-                + "&gid=" + linkPageReqDTO.getGid();
+                + "&gid=" + linkPageReqDTO.getGid()
+                + "&orderFlag=" + linkPageReqDTO.getOrderFlag();
         Result<List<ShortLinkRespDTO>> result = restTemplate.exchange(
                 url,
                 HttpMethod.GET,

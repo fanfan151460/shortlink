@@ -64,6 +64,22 @@ public class ShortLinkDO implements Serializable {
     private Integer createdType;
 
     /**
+     * 历史pv
+     */
+    private Integer totalPv;
+
+    /**
+     * 历史uv
+     */
+    private Integer totalUv;
+
+    /**
+     * 历史uip
+     */
+    private Integer totalUip;
+
+
+    /**
      * 有效期类型 0：永久有效 1：用户自定义
      */
     @TableField(fill = FieldFill.INSERT)
@@ -103,4 +119,6 @@ public class ShortLinkDO implements Serializable {
      * 网站图标
      */
     private String favicon;
+
+
 }

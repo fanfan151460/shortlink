@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RemoteAccessLogsServiceImpl implements IRemoteAccessLogsService {
 
-    private static final String BASE_URL = "http://localhost:80/api/short-link/v1/access-logs";
+    private static final String BASE_URL = "http://localhost:8082/api/short-link/v1/access-logs";
 
     @Override
     public List<accessLogRespDTO> getAccessLogs(AccessLogReqDTO reqDTO) {

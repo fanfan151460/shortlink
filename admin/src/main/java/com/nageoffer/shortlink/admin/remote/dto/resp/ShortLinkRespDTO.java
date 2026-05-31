@@ -36,4 +36,19 @@ public class ShortLinkRespDTO {
      * 历史uip
      */
     private Integer totalUip;
+
+    /**
+     * 今日PV
+     */
+    private Integer todayPv;
+
+    /**
+     * 今日UV
+     */
+    private Integer todayUv;
+
+    /**
+     * 今日IP数
+     */
+    private Integer todayIpCount;
 }

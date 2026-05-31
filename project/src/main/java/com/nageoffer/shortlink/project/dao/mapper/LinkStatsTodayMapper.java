@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Update;
 public interface LinkStatsTodayMapper extends BaseMapper<LinkStatsTodayDO> {
 
     @Update("INSERT INTO t_link_stats_today (full_short_url, gid, date, today_pv, today_uv, today_ip_count, create_time, update_time, del_flag) "
-            + "VALUES (#{linkStatsToday.fullShortUrl}, #{linkStatsToday.gid}, #{linkStatsToday.date}, 1, #{linkStatsToday.todayUv}, #{linkStatsToday.todayIpCount}, NOW(), NOW(), 0) "
+            + "VALUES (#{linkStatsToday.fullShortUrl}, #{linkStatsToday.gid}, #{linkStatsToday.date}, 1, 1, 1, NOW(), NOW(), 0) "
             + "ON DUPLICATE KEY UPDATE "
             + "today_pv = today_pv + 1, "
             + "today_uv = today_uv + #{linkStatsToday.todayUv}, "
