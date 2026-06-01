@@ -6,6 +6,7 @@ import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
+import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import jakarta.servlet.ServletRequest;
@@ -23,8 +24,8 @@ public class ShortLinkController {
     private final IShortLinkService shortLinkService;
 
     @PostMapping("/api/short-link/v1/create")
-    public Result<ShortLinkRespDTO> createShortLink(@RequestBody ShortLinkReqDTO reqDTO) {
-        ShortLinkRespDTO shortLinkRespDTO = shortLinkService.createShortLink(reqDTO);
+    public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkReqDTO reqDTO) {
+        ShortLinkCreateRespDTO shortLinkRespDTO = shortLinkService.createShortLink(reqDTO);
         return Results.success(shortLinkRespDTO);
     }
 

@@ -6,6 +6,7 @@ import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
+import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -19,7 +20,7 @@ public interface IShortLinkService extends IService<ShortLinkDO> {
      * @param reqDTO 请求link参数
      * @return 返回类型link
      */
-    ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO);
+    ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO);
 
     /**
      * 分页查询短链接

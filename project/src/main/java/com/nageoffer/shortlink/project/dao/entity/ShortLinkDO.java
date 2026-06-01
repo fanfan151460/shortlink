@@ -61,21 +61,25 @@ public class ShortLinkDO implements Serializable {
     /**
      * 创建类型 0：控制台 1：接口
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer createdType;
 
     /**
      * 历史pv
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer totalPv;
 
     /**
      * 历史uv
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer totalUv;
 
     /**
      * 历史uip
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer totalUip;
 
 

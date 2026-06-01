@@ -16,6 +16,10 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "delFlag", Integer.class, 0);
         this.strictInsertFill(metaObject, "validDateType", Integer.class, 0);
         this.strictInsertFill(metaObject, "enableStatus", Integer.class, 0);
+        this.strictInsertFill(metaObject, "createdType", Integer.class, 0);
+        this.strictInsertFill(metaObject, "totalPv", Integer.class, 0);
+        this.strictInsertFill(metaObject, "totalUv", Integer.class, 0);
+        this.strictInsertFill(metaObject, "totalUip", Integer.class, 0);
 
     }
 

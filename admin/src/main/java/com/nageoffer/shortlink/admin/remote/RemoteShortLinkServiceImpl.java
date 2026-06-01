@@ -6,6 +6,7 @@ import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,13 +26,13 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
     private final RestTemplate restTemplate;
 
     @Override
-    public ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
+    public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
         String url = BASE_URL + "/create";
-        Result<ShortLinkRespDTO> result = restTemplate.exchange(
+        Result<ShortLinkCreateRespDTO> result = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 new HttpEntity<>(reqDTO),
-                new ParameterizedTypeReference<Result<ShortLinkRespDTO>>() {}
+                new ParameterizedTypeReference<Result<ShortLinkCreateRespDTO>>() {}
         ).getBody();
         if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程创建短链接失败");

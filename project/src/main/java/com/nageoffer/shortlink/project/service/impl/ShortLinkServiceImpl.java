@@ -16,6 +16,7 @@ import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
+import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.HashUtil;
@@ -70,7 +71,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
+    public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
 
         int count = 0;
         String OriginUrl = reqDTO.getOriginUrl();
@@ -112,7 +113,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setGid(reqDTO.getGid())
                 .setFullShortUrl(fullShortUrl));
         bloomFilter.add(fullShortUrl);
-        return new ShortLinkRespDTO()
+        return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
                 .setGid(shortLinkDO.getGid())
                 .setOriginUrl(shortLinkDO.getOriginUrl());
