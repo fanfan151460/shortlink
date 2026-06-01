@@ -21,6 +21,10 @@ public class UserLoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String username = request.getHeader("username");
         String token = request.getHeader("token");
+        // POST /user 为注册，无需认证
+        if ("POST".equals(request.getMethod()) && request.getRequestURI().endsWith("/user")) {
+            return true;
+        }
         if (username == null || token == null) {
             return false;
         }

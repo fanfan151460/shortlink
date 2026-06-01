@@ -47,6 +47,8 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
     private final StringRedisTemplate stringRedisTemplate;
     private final IGroupService groupService;
 
+    private static final int MAX_CONCURRENT_LOGIN = 3;
+
     @Override
     public UserDTO getByUerName(String userName) {
         LambdaQueryWrapper<UserDO> wrapper = Wrappers.lambdaQuery(UserDO.class)
@@ -104,12 +106,11 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
         }
 
         String key = LOGIN + userLoginDTO.getUsername();
-        //已经登陆
-        Boolean hadLongin = stringRedisTemplate.hasKey(key);
-        if (hadLongin) {
-            throw new ClientException("用户已登录");
+        // 限制并发登录数
+        Long loginCount = stringRedisTemplate.opsForHash().size(key);
+        if (loginCount != null && loginCount >= MAX_CONCURRENT_LOGIN) {
+            throw new ClientException("登录设备已达上限");
         }
-
         /*
          * hash
          * key: username
@@ -125,15 +126,18 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
 
     @Override
     public Boolean hasLogin(String username, String token) {
-        return stringRedisTemplate.opsForHash().hasKey(LOGIN + username, token);
+        if (username == null || token == null) {
+            return false;
+        }
+        return stringRedisTemplate.opsForHash().hasKey(LOGIN + token, username);
     }
 
     @Override
     public void logout(String username, String token) {
         if (hasLogin(username, token)) {
-            stringRedisTemplate.delete(LOGIN + username);
+            stringRedisTemplate.opsForHash().delete(LOGIN + username, token);
         } else {
-            throw new ClientException("用户未登录");
+            throw new ClientException("用户未登录或token已过期");
         }
     }
 }

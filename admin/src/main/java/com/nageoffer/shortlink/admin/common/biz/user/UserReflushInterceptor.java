@@ -24,6 +24,13 @@ public class UserReflushInterceptor implements HandlerInterceptor {
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
         String username = request.getHeader("username");
         String token = request.getHeader("token");
+        // POST /user 为注册，无需认证
+        if ("POST".equals(request.getMethod()) && request.getRequestURI().endsWith("/user")) {
+            return true;
+        }
+        if (username == null || token == null) {
+            return false;
+        }
         if (Objects.equals(token, "4b312f0b-aa6a-474a-8c20-70b2544c8f97")) {
             return true;
         }

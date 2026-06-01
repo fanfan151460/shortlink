@@ -15,6 +15,11 @@ spring:
       port: 6379
   profiles:
     active: dev
+
+short-link:
+  user-limit:
+    time: 1
+    max-click: 2
 ---
 spring:
   config:
@@ -27,12 +32,5 @@ spring:
   config:
     activate:
       on-profile: test
-  datasource:
-    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
-    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
 server:
   port: 8082

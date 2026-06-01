@@ -42,8 +42,8 @@ public class UsersController {
     }
 
     //判断用户名是否存在
-    @GetMapping("/user/has-username/{username}")
-    public Result<Boolean> HasYourName(@PathVariable("username") String username) {
+    @GetMapping("/user/has-username")
+    public Result<Boolean> HasYourName(String username) {
         return Results.success(usersService.hasUerName(username));
     }
 
@@ -75,7 +75,7 @@ public class UsersController {
 
     @GetMapping("/user/check-login")
     public Result<Boolean> hasLogin(String username, String token) {
-        Boolean isLogin =  usersService.hasLogin(username, token);
+        Boolean isLogin = usersService.hasLogin(username, token);
         return Results.success(isLogin);
     }
 

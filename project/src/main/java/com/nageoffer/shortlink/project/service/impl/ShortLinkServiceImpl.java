@@ -33,6 +33,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -68,6 +69,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private String apikey;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ShortLinkRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
 
         int count = 0;

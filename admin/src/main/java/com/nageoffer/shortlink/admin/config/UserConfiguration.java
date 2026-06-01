@@ -2,6 +2,7 @@ package com.nageoffer.shortlink.admin.config;
 
 import com.nageoffer.shortlink.admin.common.biz.user.UserLoginInterceptor;
 import com.nageoffer.shortlink.admin.common.biz.user.UserReflushInterceptor;
+import com.nageoffer.shortlink.admin.common.biz.user.UserStatsLimitInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -12,15 +13,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class UserConfiguration implements WebMvcConfigurer {
     private final UserReflushInterceptor userReflushInterceptor;
     private final UserLoginInterceptor userLoginInterceptor;
-
+    private final UserStatsLimitInterceptor userStatsLimitInterceptor;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(userReflushInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
-                        "/api/short-link/admin/v1/user",
-                        "/api/short-link/admin/v1/user/has-username/**",
+                        "/api/short-link/admin/v1/user/has-username",
                         "/api/short-link/admin/v1/test"
                 )
                 .order(0);
@@ -28,10 +28,15 @@ public class UserConfiguration implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
-                        "/api/short-link/admin/v1/user",
-                        "/api/short-link/admin/v1/user/has-username/**",
+                        "/api/short-link/admin/v1/user/has-username",
                         "/api/short-link/admin/v1/test"
                 )
-                .order(1);
+                .order(5);
+        registry.addInterceptor(userStatsLimitInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/api/short-link/admin/v1/user/login",
+                        "/api/short-link/admin/v1/user/has-username"
+                );
     }
 }
