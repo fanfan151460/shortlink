@@ -102,7 +102,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .one();
             if (hasShortLink != null) {
                 log.warn("短链接生成重复:{}", fullShortUrl);
-                throw new ClientException("该短连接已经存在");
+                throw new ClientException("服务端出错");
             }
             throw new RuntimeException(e);
         }
@@ -328,7 +328,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setTodayUv(addedFlag.get() ? 1 : 0)
                     .setTodayIpCount(addedUipFlag.get() ? 1 : 0);
             linkStatsTodayMapper.insertLinkStatsToday(linkStatsTodayDO);
-
+            // 历史统计
             lambdaUpdate().eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
                     .eq(ShortLinkDO::getGid, gid)
                     .setSql("total_pv = total_pv + 1")

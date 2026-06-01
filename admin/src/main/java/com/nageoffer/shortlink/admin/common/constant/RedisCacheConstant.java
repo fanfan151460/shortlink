@@ -5,5 +5,6 @@ public class RedisCacheConstant {
 
     public static final String LOGIN = "HAD-LOGIN:";
 
+    public static final String LOCK_GROUP = "LOCK:GROUP:%s";
 
 }

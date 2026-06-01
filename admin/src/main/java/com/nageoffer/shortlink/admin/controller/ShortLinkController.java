@@ -8,11 +8,9 @@ import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -41,10 +39,5 @@ public class ShortLinkController {
     public Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO) {
         shortLinkService.removeShortLink(recycleDTO);
         return Results.success();
-    }
-
-    @GetMapping("/{shortLinkUri}")
-    public void gotoShortLink(@PathVariable String shortLinkUri, HttpServletResponse response) throws IOException {
-        response.sendRedirect("http://localhost:8001/" + shortLinkUri);
     }
 }
