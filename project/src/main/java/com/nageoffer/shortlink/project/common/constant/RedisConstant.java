@@ -9,4 +9,8 @@ public class RedisConstant {
     public final static String LINK_STATS_UV = "Short-Link:UV:";
 
     public final static String LINK_STATS_UIP = "Short-Link:UIP:";
+
+    public final static String LOCK_LINK_STATS = "lock:link-stats:%s";
+
+    public static final String LOCK_GID_UPDATE_KEY = "LOCK:GROUP_UPDATE:%s";
 }
