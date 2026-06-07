@@ -75,7 +75,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
         //布隆过滤器
         while (bloomFilter.contains(fullShortUrl)) {
-            OriginUrl += System.currentTimeMillis();
+            OriginUrl += UUID.randomUUID().toString();
             shortLink = HashUtil.createBase62Link(OriginUrl);
             fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
             count++;
