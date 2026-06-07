@@ -3,9 +3,11 @@ package com.nageoffer.shortlink.project.mq.consumer;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.dao.entity.*;
 import com.nageoffer.shortlink.project.dao.mapper.*;
 import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
+import com.nageoffer.shortlink.project.mq.idempotent.MsgQueueIdempotentHandler;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.LinkUtil;
 import lombok.RequiredArgsConstructor;
@@ -41,24 +43,36 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
-    private final ShortLinkMapper shortLinkMapper;
     private final RedissonClient redissonClient;
     private final IShortLinkService shortLinkService;
+    private final MsgQueueIdempotentHandler idempotentHandler;
 
     @Value("${locale.gaoDe.apiKey}")
     private String apikey;
 
     @Override
     public void onMessage(Map<String, String> productMap) {
-        try {
-            ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSONUtil.toBean(productMap.get("productMap"), ShortLinkStatsRecordDTO.class);
-            consume(shortLinkStatsRecordDTO, null);
-        } catch (Exception e) {
-            log.error("短链接监控消费者异常", e);
+        String msgKey = productMap.get("keys");
+        if (idempotentHandler.hasConsume(msgKey)) {
+            if (idempotentHandler.isSuccessConsume(msgKey)) {
+                return;
+            }
+            throw new ServiceException("消息消费失败，消息队列重试");
         }
+        try {
+        ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSONUtil
+                .toBean(productMap.get("productMap"), ShortLinkStatsRecordDTO.class);
+            consume(shortLinkStatsRecordDTO);
+            idempotentHandler.delConsume(msgKey);
+        } catch (Throwable e) {
+            idempotentHandler.delConsume(msgKey);
+            log.error("短链接监控消费者异常", e);
+            throw e;
+        }
+        idempotentHandler.successConsume(msgKey);
     }
 
-    public void consume(ShortLinkStatsRecordDTO dto, String gid) {
+    public void consume(ShortLinkStatsRecordDTO dto) {
 
         // 数据解析
         String fullShortUrl = dto.getFullShortUrl();
@@ -73,29 +87,28 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
         LocalDate today = dto.getCurrentDate() != null ? dto.getCurrentDate() : LocalDate.now();
 
         // 补全gid
-        if (StrUtil.isBlank(gid)) {
-            ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
-                    Wrappers.lambdaQuery(ShortLinkGoDO.class)
-                            .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
-            if (gotoDO == null) {
-                return;
-            }
-            gid = gotoDO.getGid();
+        ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
+                Wrappers.lambdaQuery(ShortLinkGoDO.class)
+                        .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
+        if (gotoDO == null) {
+            return;
         }
+        String gid = gotoDO.getGid();
+
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
         rLock.lock();
-            try {
-                // pv uv uip
-                LinkStatsDO statsDO = new LinkStatsDO()
-                        .setGid(gid)
-                        .setFullShortUrl(fullShortUrl)
-                        .setUv(uvFirstFlag ? 1 : 0)
-                        .setUip(uipFirstFlag ? 1 : 0)
-                        .setDate(today)
-                        .setHour(LocalTime.now().getHour())
-                        .setWeekday(today.getDayOfWeek().getValue());
-                linkStatsMapper.insertLinkStats(statsDO);
+        try {
+            // pv uv uip
+            LinkStatsDO statsDO = new LinkStatsDO()
+                    .setGid(gid)
+                    .setFullShortUrl(fullShortUrl)
+                    .setUv(uvFirstFlag ? 1 : 0)
+                    .setUip(uipFirstFlag ? 1 : 0)
+                    .setDate(today)
+                    .setHour(LocalTime.now().getHour())
+                    .setWeekday(today.getDayOfWeek().getValue());
+            linkStatsMapper.insertLinkStats(statsDO);
 
             // 地区统计
             String localByIp = LinkUtil.getLocalByIp(apikey, clientIp);

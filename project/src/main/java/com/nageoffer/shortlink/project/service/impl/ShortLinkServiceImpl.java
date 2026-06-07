@@ -125,8 +125,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, reqDTO.getFullShortUrl()));
         RLock rLock = readWriteLock.writeLock();
         rLock.lock();
-
         try {
+            // TODO gid修改优化
             lambdaUpdate()
                     .eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
@@ -157,7 +157,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .get(String.format(FULL_SHORT_LINK, fullShortUrl));
         //有缓存
         if (!StrUtil.isBlank(originUrl)) {
-            addLinkStats(fullShortUrl, "", request, response);
+            addLinkStats(fullShortUrl, request, response);
             GotoUrl(originUrl, response, fullShortUrl);
             return;
         }
@@ -173,7 +173,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .get(String.format(FULL_SHORT_LINK, fullShortUrl)))) {
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
-                addLinkStats(fullShortUrl, "", request, response);
+                addLinkStats(fullShortUrl, request, response);
                 GotoUrl(originUrl, response, fullShortUrl);
                 return;
             }
@@ -209,14 +209,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             stringRedisTemplate.opsForValue()
                     .set(String.format(FULL_SHORT_LINK, fullShortUrl)
                             , shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
-            addLinkStats(fullShortUrl, "", request, response);
+            addLinkStats(fullShortUrl, request, response);
             GotoUrl(originUrl, response, fullShortUrl);
         } finally {
             rLock.unlock();
         }
     }
 
-    public void addLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
+    public void addLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
         AtomicReference<String> uv = new AtomicReference<>();
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         AtomicBoolean uipFirstFlag = new AtomicBoolean();
