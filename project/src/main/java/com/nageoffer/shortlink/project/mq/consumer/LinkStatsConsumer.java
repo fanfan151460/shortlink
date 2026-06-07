@@ -25,13 +25,14 @@ import java.time.LocalTime;
 import java.util.Map;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
-import static com.nageoffer.shortlink.project.config.RocketMQConfig.LINK_STATS_CONSUMER_GROUP;
-import static com.nageoffer.shortlink.project.config.RocketMQConfig.LINK_STATS_TOPIC;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@RocketMQMessageListener(topic = LINK_STATS_TOPIC, consumerGroup = LINK_STATS_CONSUMER_GROUP)
+@RocketMQMessageListener(
+        topic = "${rocketmq.producer.topic}",
+        consumerGroup = "${rocketmq.consumer.group}"
+)
 public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> {
 
     private final ShortLinkGoToMapper shortLinkGoToMapper;
@@ -61,7 +62,7 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
         }
         try {
         ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSONUtil
-                .toBean(productMap.get("productMap"), ShortLinkStatsRecordDTO.class);
+                .toBean(productMap.get("statsMap"), ShortLinkStatsRecordDTO.class);
             consume(shortLinkStatsRecordDTO);
             idempotentHandler.delConsume(msgKey);
         } catch (Throwable e) {
@@ -73,7 +74,6 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
     }
 
     public void consume(ShortLinkStatsRecordDTO dto) {
-
         // 数据解析
         String fullShortUrl = dto.getFullShortUrl();
         String clientIp = dto.getRemoteAddr();

@@ -94,15 +94,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             baseMapper.insert(shortLinkDO);
         } catch (Exception e) {
-            ShortLinkDO hasShortLink = lambdaQuery()
-                    .eq(ShortLinkDO::getGid, reqDTO.getGid())
-                    .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
-                    .one();
-            if (hasShortLink != null) {
-                log.warn("短链接生成重复:{}", fullShortUrl);
-                throw new ClientException("服务端出错");
-            }
-            throw new RuntimeException(e);
+            log.warn("短链接生成重复:{}", fullShortUrl);
+            throw new ClientException("服务端出错");
         }
         shortLinkGoToMapper.insert(new ShortLinkGoDO()
                 .setGid(reqDTO.getGid())
