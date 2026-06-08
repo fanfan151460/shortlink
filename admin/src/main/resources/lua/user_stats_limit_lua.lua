@@ -4,13 +4,14 @@ local timeWindow = ARGV[1] -- 时间窗口，单位：秒
 -- 构造 Redis 中存储用户访问次数的键名
 local accessKey = "short-link:user-flow-risk-control:" .. username
 
--- 检查键是否已经存在
-if redis.call("EXISTS", accessKey) == 1 then
-    -- 如果键存在，直接递增访问次数，不更新过期时间
-    return redis.call("INCR", accessKey)
-else
-    -- 如果键不存在，递增访问次数并设置过期时间
-    redis.call("INCR", accessKey)
+-- 原子递增次数
+local currentAccessCount = redis.call("INCR", accessKey)
+
+-- 设置过期时间
+if currentAccessCount == 1 then
     redis.call("EXPIRE", accessKey, timeWindow)
-    return 1  -- 第一次访问，返回访问次数 1
+end
+
+--返回数据
+    return currentAccessCount  -- 第一次访问，返回访问次数 1
 end
