@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -71,19 +72,20 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
             throw new ClientException(USER_REGISTER_ERROR);
         }
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterDTO.getUsername());
-
+        if (!lock.tryLock()) {
+            throw new ClientException(USER_HAD);
+        }
         try {
-            if (lock.tryLock()) {
-                int insert = baseMapper.insert(BeanUtil.copyProperties(userRegisterDTO, UserDO.class));
-                if (insert < 1) {
-                    throw new ClientException(USER_REGISTER_ERROR);
-                }
-                groupService.saveGroup("默认分组", userRegisterDTO.getUsername());
-            } else {
-                throw new ClientException(USER_HAD);
+            int insert = baseMapper.insert(BeanUtil.copyProperties(userRegisterDTO, UserDO.class));
+            if (insert < 1) {
+                throw new ClientException(USER_REGISTER_ERROR);
             }
-        }finally {
+            groupService.saveGroup("默认分组", userRegisterDTO.getUsername());
             userRegisterCachePenetrationBloomFilter.add(userRegisterDTO.getUsername());
+        }catch(DuplicateKeyException e) {
+            throw new ClientException("用户已存在");
+        }
+        finally{
             lock.unlock();
         }
     }
