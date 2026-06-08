@@ -175,6 +175,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 notFound(response);
                 return;
             }
+            //防止大量空缓存在布隆过滤器误判后查询数据库
+            if (StrUtil.isBlank(shortLinkUri)) {
+                notFound(response);
+                return;
+            }
             ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
                     Wrappers.lambdaQuery(ShortLinkGoDO.class)
                             .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
