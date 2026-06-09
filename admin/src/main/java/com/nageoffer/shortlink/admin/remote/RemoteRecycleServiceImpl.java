@@ -31,7 +31,7 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
                 new HttpEntity<>(recycleDTO),
                 new ParameterizedTypeReference<Result<Void>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程移入回收站失败");
         }
     }
@@ -47,7 +47,7 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
                 null,
                 new ParameterizedTypeReference<Result<List<ShortLinkRespDTO>>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程回收站分页查询失败");
         }
         return result.getData();
@@ -62,7 +62,7 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
                 new HttpEntity<>(recycleDTO),
                 new ParameterizedTypeReference<Result<Void>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程恢复短链接失败");
         }
     }

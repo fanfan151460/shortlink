@@ -13,6 +13,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.List;
 
+/**
+ * 使用lua脚本对特定接口进行限流
+ */
 @Component
 @RequiredArgsConstructor
 public class UserStatsLimitInterceptor implements HandlerInterceptor {

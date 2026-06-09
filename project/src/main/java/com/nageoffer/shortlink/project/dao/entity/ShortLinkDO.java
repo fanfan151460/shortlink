@@ -7,8 +7,8 @@ import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @TableName("t_link")
 @Data
@@ -93,7 +93,7 @@ public class ShortLinkDO implements Serializable {
      * 有效期
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date validDate;
+    private LocalDate validDate;
 
     /**
      * 描述

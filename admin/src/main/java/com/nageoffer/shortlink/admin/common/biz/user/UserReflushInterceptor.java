@@ -41,8 +41,7 @@ public class UserReflushInterceptor implements HandlerInterceptor {
         UserInfoDTO userInfoDTO = BeanUtil.copyProperties(userLoginDTO, UserInfoDTO.class, "password");
         UserContext.setUser(userInfoDTO);
         //刷新有效期
-        stringRedisTemplate.expire(LOGIN + username, 30, TimeUnit.HOURS);
+        stringRedisTemplate.expire(LOGIN + username, 30, TimeUnit.MINUTES);
         return true;
     }
-
 }

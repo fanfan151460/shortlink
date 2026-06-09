@@ -34,7 +34,10 @@ public final class UserContext {
      */
     public static String getUsername() {
         UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
-        return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getUsername).orElse(null);
+        return Optional
+                .ofNullable(userInfoDTO)
+                .map(UserInfoDTO::getUsername)
+                .orElse(null);
     }
 
     /**
@@ -44,7 +47,10 @@ public final class UserContext {
      */
     public static String getRealName() {
         UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
-        return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getRealName).orElse(null);
+        return Optional
+                .ofNullable(userInfoDTO)
+                .map(UserInfoDTO::getRealName)
+                .orElse(null);
     }
 
     /**

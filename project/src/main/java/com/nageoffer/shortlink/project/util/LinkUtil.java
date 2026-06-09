@@ -4,14 +4,16 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
 public class LinkUtil {
 
-    public static Long getLinkExpireTime(Date validDate) {
+    public static Long getLinkExpireTime(LocalDate validDate) {
         return Optional.ofNullable(validDate)
-                .map(each -> each.getTime() - new Date().getTime())
+                .map(each -> each.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        - System.currentTimeMillis())
                 .orElse(2592000000L);
     }
 

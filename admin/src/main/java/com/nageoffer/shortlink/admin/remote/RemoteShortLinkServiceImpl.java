@@ -34,7 +34,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 new HttpEntity<>(reqDTO),
                 new ParameterizedTypeReference<Result<ShortLinkCreateRespDTO>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程创建短链接失败");
         }
         return result.getData();
@@ -52,7 +52,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 null,
                 new ParameterizedTypeReference<Result<List<ShortLinkRespDTO>>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程分页查询短链接失败");
         }
         return result.getData();
@@ -67,7 +67,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 new HttpEntity<>(reqDTO),
                 new ParameterizedTypeReference<Result<Void>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程更新短链接失败");
         }
     }
@@ -81,7 +81,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 new HttpEntity<>(recycleDTO),
                 new ParameterizedTypeReference<Result<Void>>() {}
         ).getBody();
-        if (result == null || !result.isSuccess()) {
+        if (result == null || result.isSuccess()) {
             throw new RuntimeException("远程删除短链接失败");
         }
     }

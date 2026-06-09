@@ -73,6 +73,9 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
         if (!hasUerName(userRegisterDTO.getUsername())) {
             throw new ClientException(USER_REGISTER_ERROR);
         }
+        /*
+         * 防止两个请求使用相同的用户名同时进行注册
+         */
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterDTO.getUsername());
         if (!lock.tryLock()) {
             throw new ClientException(USER_HAD);
@@ -115,7 +118,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
         String key = LOGIN + userLoginDTO.getUsername();
         // 限制并发登录数
         Long loginCount = stringRedisTemplate.opsForHash().size(key);
-        if (loginCount != null && loginCount >= MAX_CONCURRENT_LOGIN) {
+        if (loginCount >= MAX_CONCURRENT_LOGIN) {
             throw new ClientException("登录设备已达上限");
         }
         /*
@@ -143,6 +146,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
     public void logout(String username, String token) {
         if (hasLogin(username, token)) {
             stringRedisTemplate.opsForHash().delete(LOGIN + username, token);
+            UserContext.removeUser();
         } else {
             throw new ClientException("用户未登录或token已过期");
         }
