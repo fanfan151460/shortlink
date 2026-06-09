@@ -100,6 +100,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         shortLinkGoToMapper.insert(new ShortLinkGoDO()
                 .setGid(reqDTO.getGid())
                 .setFullShortUrl(fullShortUrl));
+        //缓存预热
+        stringRedisTemplate.opsForValue()
+                .set(String.format(FULL_SHORT_LINK, fullShortUrl)
+                        , shortLinkDO.getOriginUrl(), LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
         bloomFilter.add(fullShortUrl);
         return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
