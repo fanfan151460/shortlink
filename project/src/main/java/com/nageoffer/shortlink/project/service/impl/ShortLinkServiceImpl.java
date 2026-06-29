@@ -25,7 +25,6 @@ import com.nageoffer.shortlink.project.mq.producer.LinkStatsProducer;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.HashUtil;
 import com.nageoffer.shortlink.project.util.LinkUtil;
-import jakarta.annotation.PreDestroy;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
@@ -47,9 +46,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,15 +63,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
     private final TransactionTemplate transactionTemplate;
-
-    private final ExecutorService executorService = new ThreadPoolExecutor(
-            2,
-            5,
-            60,
-            TimeUnit.SECONDS,
-            new SynchronousQueue<>(),
-            new ThreadPoolExecutor.DiscardPolicy()
-    );
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -101,23 +88,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
+                // TODO 优化图标获取
                 .setFavicon("")
                 .setTotalPv(0)
                 .setTotalUip(0)
                 .setTotalUv(0);
-        transactionTemplate.execute(status -> {
-            try {
-                baseMapper.insert(shortLinkDO);
-            } catch (Exception e) {
-                log.warn("短链接生成重复:{}，gid:{}", fullShortUrlFinally, reqDTO.getGid());
-                throw new ClientException("服务端出错，请再试一次！");
-            }
-            shortLinkGoToMapper.insert(new ShortLinkGoDO()
-                    .setGid(reqDTO.getGid())
-                    .setFullShortUrl(fullShortUrlFinally));
-            return null;
-        });
-
+        try {
+            baseMapper.insert(shortLinkDO);
+        } catch (Exception e) {
+            log.warn("短链接生成重复:{}，gid:{}", fullShortUrlFinally, reqDTO.getGid());
+            throw new ClientException("服务端出错，请再试一次！");
+        }
+        shortLinkGoToMapper.insert(new ShortLinkGoDO()
+                .setGid(reqDTO.getGid())
+                .setFullShortUrl(fullShortUrlFinally));
 
         //缓存预热
         stringRedisTemplate.opsForValue()
@@ -126,14 +110,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()),
                         TimeUnit.MILLISECONDS);
         bloomFilter.add(fullShortUrl);
-
-        executorService.execute(() -> {
-            String faviconUrl = getFaviconUrl(reqDTO.getOriginUrl());
-            lambdaUpdate().eq(ShortLinkDO::getFullShortUrl, fullShortUrlFinally)
-                    .eq(ShortLinkDO::getDelFlag, 0)
-                    .set(ShortLinkDO::getFavicon, faviconUrl)
-                    .update();
-        });
         return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
                 .setGid(shortLinkDO.getGid())
@@ -456,8 +432,4 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
     }
 
-    @PreDestroy
-    public void destroy() {
-        executorService.shutdown();
-    }
 }
