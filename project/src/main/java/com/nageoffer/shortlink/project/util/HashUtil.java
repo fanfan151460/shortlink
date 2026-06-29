@@ -22,17 +22,13 @@ public class HashUtil implements Serializable {
         return sb.reverse().toString();
     }
 
-    private static long convertBase62ToDec(String base62Str) {
+    private static long toHashCode(String base62Str) {
         int hash32 = MurmurHash.hash32(base62Str);
         return hash32 < 0 ? Integer.MAX_VALUE - (long) hash32 : hash32;
     }
 
     public static String createBase62Link(String decStr) {
-        return createBase62Link(decStr, 0);
+        return convertDecToBase62(toHashCode(decStr));
     }
 
-    public static String createBase62Link(String decStr, int salt) {
-        String input = salt == 0 ? decStr : decStr + "_" + salt;
-        return convertDecToBase62(convertBase62ToDec(input));
-    }
 }
