@@ -5,6 +5,7 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -24,6 +25,7 @@ import com.nageoffer.shortlink.project.mq.producer.LinkStatsProducer;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.HashUtil;
 import com.nageoffer.shortlink.project.util.LinkUtil;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
@@ -38,12 +40,16 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,16 +66,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
+    private final TransactionTemplate transactionTemplate;
 
+    private final ExecutorService executorService = new ThreadPoolExecutor(
+            2,
+            5,
+            60,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new ThreadPoolExecutor.DiscardPolicy()
+    );
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
+
         int count = 0;
         String OriginUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(OriginUrl);
         String fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
-
         //布隆过滤器
         while (bloomFilter.contains(fullShortUrl)) {
             OriginUrl += UUID.randomUUID().toString();
@@ -80,23 +95,30 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 throw new ClientException("重复创建");
             }
         }
+        final String fullShortUrlFinally = fullShortUrl;
+
         ShortLinkDO shortLinkDO = BeanUtil
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
-                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()))
+                .setFavicon("")
                 .setTotalPv(0)
                 .setTotalUip(0)
                 .setTotalUv(0);
-        try {
-            baseMapper.insert(shortLinkDO);
-        } catch (Exception e) {
-            log.warn("短链接生成重复:{}", fullShortUrl);
-            throw new ClientException("服务端出错");
-        }
-        shortLinkGoToMapper.insert(new ShortLinkGoDO()
-                .setGid(reqDTO.getGid())
-                .setFullShortUrl(fullShortUrl));
+        transactionTemplate.execute(status -> {
+            try {
+                baseMapper.insert(shortLinkDO);
+            } catch (Exception e) {
+                log.warn("短链接生成重复:{}，gid:{}", fullShortUrlFinally, reqDTO.getGid());
+                throw new ClientException("服务端出错，请再试一次！");
+            }
+            shortLinkGoToMapper.insert(new ShortLinkGoDO()
+                    .setGid(reqDTO.getGid())
+                    .setFullShortUrl(fullShortUrlFinally));
+            return null;
+        });
+
+
         //缓存预热
         stringRedisTemplate.opsForValue()
                 .set(String.format(FULL_SHORT_LINK, fullShortUrl),
@@ -104,6 +126,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()),
                         TimeUnit.MILLISECONDS);
         bloomFilter.add(fullShortUrl);
+
+        executorService.execute(() -> {
+            String faviconUrl = getFaviconUrl(reqDTO.getOriginUrl());
+            lambdaUpdate().eq(ShortLinkDO::getFullShortUrl, fullShortUrlFinally)
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .set(ShortLinkDO::getFavicon, faviconUrl)
+                    .update();
+        });
         return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
                 .setGid(shortLinkDO.getGid())
@@ -146,6 +176,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             shortLinkDO.getOriginUrl(),
                             LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()),
                             TimeUnit.MILLISECONDS);
+            bloomFilter.add(fullShortUrl);
             return new ShortLinkCreateRespDTO()
                     .setFullShortUrl(fullShortUrl)
                     .setGid(shortLinkDO.getGid())
@@ -164,13 +195,59 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     @Transactional
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
-        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, reqDTO.getFullShortUrl()));
-        AtomicBoolean ifUrlDif = new AtomicBoolean();
-        ifUrlDif.set(Objects.equals((lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one().getOriginUrl()), reqDTO.getOriginUrl()));
-        RLock rLock = readWriteLock.writeLock();
-        rLock.lock();
-        try {
+        boolean ifGidDiff = !Objects.equals((lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one().getGid()), reqDTO.getGid());
+        boolean ifOriUrlDiff = !Objects.equals((lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one().getOriginUrl()), reqDTO.getOriginUrl());
+        ShortLinkDO hasShortLinkDO = lambdaQuery()
+                .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                .one();
+        if (Objects.isNull(hasShortLinkDO)) {
+            throw new ClientException("改短连接不存在");
+        }
+        //当修改gid时
+        if (ifGidDiff) {
             // TODO gid修改优化
+            RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, reqDTO.getFullShortUrl()));
+            RLock rLock = readWriteLock.writeLock();
+            rLock.lock();
+            try {
+                lambdaUpdate()
+                        .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                        .eq(ShortLinkDO::getDelFlag, 0)
+                        .eq(ShortLinkDO::getEnableStatus, 0)
+                        .set(ShortLinkDO::getDelFlag, 1)
+                        .set(ShortLinkDO::getEnableStatus, 1)
+                        // TODO del_time的修改
+                        .update();
+                LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                        .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                        .eq(ShortLinkDO::getDelFlag, 1)
+                        .eq(ShortLinkDO::getEnableStatus, 1);
+                ShortLinkDO oldShortLinkDO = baseMapper.selectOne(queryWrapper);
+                ShortLinkDO newShortLinkDO = oldShortLinkDO
+                        .setGid(reqDTO.getGid())
+                        .setFullShortUrl(reqDTO.getFullShortUrl())
+                        .setDescription(reqDTO.getDescription())
+                        .setValidDateType(reqDTO.getValidDateType())
+                        .setValidDate(reqDTO.getValidDateType() == 0
+                                ? null
+                                : reqDTO.getValidDate())
+                        .setDelFlag(0)
+                        // TODO del_time的修改
+//                        .setDelTime(null)
+                        .setEnableStatus(0);
+                baseMapper.insert(newShortLinkDO);
+                // TODO goto表的修改
+//                shortLinkGoToMapper.update();
+                if (!ifOriUrlDiff) {
+                    stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
+                }
+            } finally {
+                rLock.unlock();
+            }
+        }
+        if (!ifGidDiff) {
             lambdaUpdate()
                     .eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
@@ -181,11 +258,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             ? null
                             : reqDTO.getValidDate())
                     .update();
-            if (ifUrlDif.get()) {
+            if (!ifOriUrlDiff) {
                 stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
             }
-        } finally {
-            rLock.unlock();
         }
     }
 
@@ -216,7 +291,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             notFound(response);
             return;
         }
-        RLock rLock = redissonClient.getLock(LOCK_SHORT_LINK);
+        RLock rLock = redissonClient.getLock(String.format(LOCK_SHORT_LINK, fullShortUrl));
         rLock.lock();
         try {
             //二次获取重建缓存,获取成功
@@ -250,6 +325,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
             long linkExpireTime = LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate());
             if (linkExpireTime < 0) {
+                stringRedisTemplate.opsForValue().set(String.format(SHORT_URL_NULL_KEY, fullShortUrl), "1", 1, TimeUnit.MINUTES);
                 notFound(response);
                 throw new ClientException("短链接已经过期");
             }
@@ -341,15 +417,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      * 根据原链接跳转
      */
     private void GotoUrl(String originUrl, ServletResponse response, String fullShortUrl) {
-        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
-        RLock rLock = readWriteLock.readLock();
-        rLock.lock();
         try {
             ((HttpServletResponse) response).sendRedirect(originUrl);
         } catch (IOException e) {
             throw new ClientException("跳转失败");
-        } finally {
-            rLock.unlock();
         }
     }
 
@@ -383,5 +454,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         java.net.URI uri = java.net.URI.create(originUrl);
         return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
+    }
+
+    @PreDestroy
+    public void destroy() {
+        executorService.shutdown();
     }
 }
