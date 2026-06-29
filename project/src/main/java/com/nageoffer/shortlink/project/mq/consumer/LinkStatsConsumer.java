@@ -7,6 +7,7 @@ import com.nageoffer.shortlink.project.common.convention.exception.ServiceExcept
 import com.nageoffer.shortlink.project.dao.entity.*;
 import com.nageoffer.shortlink.project.dao.mapper.*;
 import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
+import com.nageoffer.shortlink.project.mq.base.MessageWrapper;
 import com.nageoffer.shortlink.project.mq.idempotent.MsgQueueIdempotentHandler;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.LinkUtil;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Map;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
 
@@ -33,7 +33,7 @@ import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK
         topic = "${rocketmq.producer.topic}",
         consumerGroup = "${rocketmq.consumer.group}"
 )
-public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> {
+public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortLinkStatsRecordDTO>> {
 
     private final ShortLinkGoToMapper shortLinkGoToMapper;
     private final ShortLinkStatsMapper linkStatsMapper;
@@ -52,30 +52,33 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
     private String apikey;
 
     @Override
-    public void onMessage(Map<String, String> productMap) {
-        String msgKey = productMap.get("keys");
-        if (idempotentHandler.hasConsume(msgKey)) {
-            if (idempotentHandler.isSuccessConsume(msgKey)) {
-                return;
+    public void onMessage(MessageWrapper<ShortLinkStatsRecordDTO> message) {
+        String msgKey = message.getKeys();
+        if (!idempotentHandler.hasConsume(msgKey)) {
+            // 第一次：SETNX 刚创建 key，开始消费
+            try {
+                consume(message.getMessage());
+                idempotentHandler.successConsume(msgKey);  // "0" → "1"
+            } catch (Throwable e) {
+                idempotentHandler.delConsume(msgKey);
+                throw e;
             }
-            throw new ServiceException("消息消费失败，消息队列重试");
+            return;
         }
-        try {
-        ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSONUtil
-                .toBean(productMap.get("statsMap"), ShortLinkStatsRecordDTO.class);
-            consume(shortLinkStatsRecordDTO);
-            idempotentHandler.delConsume(msgKey);
-        } catch (Throwable e) {
-            idempotentHandler.delConsume(msgKey);
-            log.error("短链接监控消费者异常", e);
-            throw e;
+        if (idempotentHandler.isSuccessConsume(msgKey)) {
+            return;
         }
-        idempotentHandler.successConsume(msgKey);
+        throw new ServiceException("消息消费失败，消息队列重试");
     }
 
     public void consume(ShortLinkStatsRecordDTO dto) {
-        // 数据解析
         String fullShortUrl = dto.getFullShortUrl();
+
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
+        RLock rLock = readWriteLock.readLock();
+        rLock.lock();
+
+        // 数据解析
         String clientIp = dto.getRemoteAddr();
         String uv = dto.getUv();
         boolean uvFirstFlag = Boolean.TRUE.equals(dto.getUvFirstFlag());
@@ -85,7 +88,6 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
         String device = dto.getDevice();
         String network = dto.getNetwork();
         LocalDate today = dto.getCurrentDate() != null ? dto.getCurrentDate() : LocalDate.now();
-
         // 补全gid
         ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
                 Wrappers.lambdaQuery(ShortLinkGoDO.class)
@@ -95,9 +97,6 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
         }
         String gid = gotoDO.getGid();
 
-        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
-        RLock rLock = readWriteLock.readLock();
-        rLock.lock();
         try {
             // pv uv uip
             LinkStatsDO statsDO = new LinkStatsDO()
@@ -164,8 +163,9 @@ public class LinkStatsConsumer implements RocketMQListener<Map<String, String>> 
                     .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
                     .eq(ShortLinkDO::getGid, gid)
                     .setSql("total_pv = total_pv + 1")
-                    .setSql(uvFirstFlag, "total_up = total_up + 1")
-                    .setSql(uipFirstFlag, "total_uip = total_uip + 1");
+                    .setSql(uvFirstFlag, "total_uv = total_uv + 1")
+                    .setSql(uipFirstFlag, "total_uip = total_uip + 1")
+                    .update();
         } finally {
             rLock.unlock();
         }
