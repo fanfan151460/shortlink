@@ -39,7 +39,6 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -62,7 +61,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
-    private final TransactionTemplate transactionTemplate;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -82,26 +80,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 throw new ClientException("重复创建");
             }
         }
-        final String fullShortUrlFinally = fullShortUrl;
 
         ShortLinkDO shortLinkDO = BeanUtil
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
                 // TODO 优化图标获取
-                .setFavicon("")
+                .setFavicon(getFaviconUrl(fullShortUrl))
                 .setTotalPv(0)
                 .setTotalUip(0)
                 .setTotalUv(0);
         try {
             baseMapper.insert(shortLinkDO);
         } catch (Exception e) {
-            log.warn("短链接生成重复:{}，gid:{}", fullShortUrlFinally, reqDTO.getGid());
+            log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
             throw new ClientException("服务端出错，请再试一次！");
         }
         shortLinkGoToMapper.insert(new ShortLinkGoDO()
                 .setGid(reqDTO.getGid())
-                .setFullShortUrl(fullShortUrlFinally));
+                .setFullShortUrl(fullShortUrl));
 
         //缓存预热
         stringRedisTemplate.opsForValue()
