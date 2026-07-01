@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
+import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
@@ -66,21 +67,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
-        int count = 0;
         String OriginUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(OriginUrl);
         String fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
         //布隆过滤器
-        while (bloomFilter.contains(fullShortUrl)) {
-            OriginUrl += UUID.randomUUID().toString();
-            shortLink = HashUtil.createBase62Link(OriginUrl);
-            fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
-            count++;
-            if (count > 10) {
-                throw new ClientException("重复创建");
-            }
-        }
-
+        fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), reqDTO.getDomain());
+        shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
         ShortLinkDO shortLinkDO = BeanUtil
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
@@ -94,7 +86,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             baseMapper.insert(shortLinkDO);
         } catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
-            throw new ClientException("服务端出错，请再试一次！");
+            fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), reqDTO.getDomain());
+            shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
+            shortLinkDO.setFullShortUrl(fullShortUrl)
+                    .setShortUri(shortLink);
+            try {
+                baseMapper.insert(shortLinkDO);
+            } catch (DuplicateKeyException ex) {
+                log.error("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
+                throw new ServiceException("短链接生成出错");
+            }
         }
         shortLinkGoToMapper.insert(new ShortLinkGoDO()
                 .setGid(reqDTO.getGid())
@@ -246,13 +247,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         //有缓存
         if (!StrUtil.isBlank(originUrl)) {
             addLinkStats(fullShortUrl, request, response);
-            GotoUrl(originUrl, response, fullShortUrl);
+            GotoUrl(originUrl, response);
             return;
         }
-        /*
-        1.分布式解决缓存击穿
-        2.注意缓存穿透，查询数据库之前使用布隆过滤器判断，误判再查询数据库
-         */
         // 布隆过滤器前置，拦截穿透请求，避免恶意请求竞争锁
         if (!bloomFilter.contains(fullShortUrl)) {
             notFound(response);
@@ -273,7 +270,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
                 addLinkStats(fullShortUrl, request, response);
-                GotoUrl(originUrl, response, fullShortUrl);
+                GotoUrl(originUrl, response);
                 return;
             }
             // 双检：空值缓存，防止布隆误判下多线程重复穿透到MySQL
@@ -313,7 +310,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .set(String.format(FULL_SHORT_LINK, fullShortUrl)
                             , shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
             addLinkStats(fullShortUrl, request, response);
-            GotoUrl(shortLinkDO.getOriginUrl(), response, fullShortUrl);
+            GotoUrl(shortLinkDO.getOriginUrl(), response);
         } finally {
             rLock.unlock();
         }
@@ -393,7 +390,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     /**
      * 根据原链接跳转
      */
-    private void GotoUrl(String originUrl, ServletResponse response, String fullShortUrl) {
+    private void GotoUrl(String originUrl, ServletResponse response) {
         try {
             ((HttpServletResponse) response).sendRedirect(originUrl);
         } catch (IOException e) {
@@ -431,6 +428,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         java.net.URI uri = java.net.URI.create(originUrl);
         return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
+    }
+
+    public String judgeHadShortUrl(String fullShortUrl, String originUrl, String domain) {
+        int count = 0;
+        while (bloomFilter.contains(fullShortUrl)) {
+            originUrl += UUID.randomUUID().toString();
+            String shortLink = HashUtil.createBase62Link(originUrl);
+            fullShortUrl = domain + "/" + shortLink;
+            count++;
+            if (count > 10) {
+                throw new ClientException("重复创建");
+            }
+        }
+        return fullShortUrl;
     }
 
 }
