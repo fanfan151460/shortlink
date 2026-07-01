@@ -36,6 +36,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,7 +66,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
-
         int count = 0;
         String OriginUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(OriginUrl);
@@ -86,13 +86,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
                 // TODO 优化图标获取
-                .setFavicon(getFaviconUrl(fullShortUrl))
+                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()))
                 .setTotalPv(0)
                 .setTotalUip(0)
                 .setTotalUv(0);
         try {
             baseMapper.insert(shortLinkDO);
-        } catch (Exception e) {
+        } catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
             throw new ClientException("服务端出错，请再试一次！");
         }
@@ -176,7 +176,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .eq(ShortLinkDO::getGid, reqDTO.getGid())
                 .one();
         if (Objects.isNull(hasShortLinkDO)) {
-            throw new ClientException("改短连接不存在");
+            throw new ClientException("短连接不存在");
         }
         //当修改gid时
         if (ifGidDiff) {
@@ -267,13 +267,19 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         RLock rLock = redissonClient.getLock(String.format(LOCK_SHORT_LINK, fullShortUrl));
         rLock.lock();
         try {
-            //二次获取重建缓存,获取成功
+            // 双检：真实缓存
             if (!StrUtil.isBlank(stringRedisTemplate.opsForValue()
                     .get(String.format(FULL_SHORT_LINK, fullShortUrl)))) {
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
                 addLinkStats(fullShortUrl, request, response);
                 GotoUrl(originUrl, response, fullShortUrl);
+                return;
+            }
+            // 双检：空值缓存，防止布隆误判下多线程重复穿透到MySQL
+            if (!StrUtil.isBlank(stringRedisTemplate.opsForValue()
+                    .get(String.format(SHORT_URL_NULL_KEY, fullShortUrl)))) {
+                notFound(response);
                 return;
             }
             ShortLinkGoDO gotoDO = shortLinkGoToMapper.selectOne(
@@ -307,7 +313,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .set(String.format(FULL_SHORT_LINK, fullShortUrl)
                             , shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
             addLinkStats(fullShortUrl, request, response);
-            GotoUrl(originUrl, response, fullShortUrl);
+            GotoUrl(shortLinkDO.getOriginUrl(), response, fullShortUrl);
         } finally {
             rLock.unlock();
         }
@@ -335,7 +341,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .ifPresentOrElse(each -> {
                             uv.set(each);
                             Long added = stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, each);
-                            stringRedisTemplate.expire(LINK_STATS_UV + fullShortUrl, 30, TimeUnit.DAYS);
                             uvFirstFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
@@ -344,7 +349,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);
             Long addedUip = stringRedisTemplate.opsForSet().add(LINK_STATS_UIP + fullShortUrl, clientIp);
-            stringRedisTemplate.expire(LINK_STATS_UIP + fullShortUrl, 30, TimeUnit.DAYS);
             uipFirstFlag.set(addedUip != null && addedUip > 0L);
 
             String os = LinkUtil.getOs((HttpServletRequest) request);
