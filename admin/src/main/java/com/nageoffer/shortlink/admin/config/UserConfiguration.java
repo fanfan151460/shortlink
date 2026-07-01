@@ -14,6 +14,7 @@ public class UserConfiguration implements WebMvcConfigurer {
     private final UserReflushInterceptor userReflushInterceptor;
     private final UserLoginInterceptor userLoginInterceptor;
     private final UserStatsLimitInterceptor userStatsLimitInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(userReflushInterceptor)
@@ -21,7 +22,11 @@ public class UserConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
                         "/api/short-link/admin/v1/user/has-username",
-                        "/api/short-link/admin/v1/test"
+                        "/api/short-link/admin/v1/test",
+                        "/doc.html",
+                        "/swagger-ui/**",
+                        "/v3/**",
+                        "/webjars/**"
                 )
                 .order(0);
         registry.addInterceptor(userLoginInterceptor)
@@ -29,14 +34,24 @@ public class UserConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
                         "/api/short-link/admin/v1/user/has-username",
-                        "/api/short-link/admin/v1/test"
+                        "/api/short-link/admin/v1/test",
+                        "/doc.html",
+                        "/swagger-ui/**",
+                        "/v3/**",
+                        "/webjars/**"
                 )
                 .order(5);
         registry.addInterceptor(userStatsLimitInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
-                        "/api/short-link/admin/v1/user/has-username"
-                );
+                        "/api/short-link/admin/v1/user/has-username",
+                        "/api/short-link/admin/v1/create",
+                        "/doc.html",
+                        "/swagger-ui/**",
+                        "/v3/**",
+                        "/webjars/**"
+                )
+                .order(10);
     }
 }

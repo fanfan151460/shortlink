@@ -10,7 +10,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>admin</module>
-        <module>gateway</module>
         <module>project</module>
     </modules>
 
@@ -39,6 +38,7 @@
         <redisson.version>3.21.3</redisson.version>
         <guava.version>30.0-jre</guava.version>
         <rocketmq-spring-boot.version>2.3.0</rocketmq-spring-boot.version>
+        <knife4j.version>4.3.0</knife4j.version>
     </properties>
 
     <dependencyManagement>
@@ -119,6 +119,12 @@
                 <groupId>org.apache.rocketmq</groupId>
                 <artifactId>rocketmq-spring-boot-starter</artifactId>
                 <version>${rocketmq-spring-boot.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
