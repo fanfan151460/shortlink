@@ -41,7 +41,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             Long count = lambdaQuery().eq(GroupDO::getUsername, username)
                     .eq(GroupDO::getDelFlag, 0)
                     .count();
-            if (count > 20) {
+            if (count > 10) {
                 throw new ClientException("链接分组最多为10");
             }
 
@@ -77,6 +77,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public void updateGroup(GroupLinkUpdateDTO groupLinkUpdateDTO) {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .eq(GroupDO::getGid, groupLinkUpdateDTO.getGid())
                 .eq(GroupDO::getDelFlag, 0);
         GroupDO groupDO = baseMapper.selectOne(queryWrapper);
@@ -87,12 +88,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public void delGroup(String gid) {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .eq(GroupDO::getGid, gid)
                 .eq(GroupDO::getDelFlag, 0);
         GroupDO groupDO = baseMapper.selectOne(queryWrapper);
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO, queryWrapper);
-
     }
 
     @Override
@@ -109,6 +110,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     public Boolean hasGid(String Gid) {
         LambdaQueryWrapper<GroupDO> groupDOLambdaQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, Gid)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .eq(GroupDO::getDelFlag, 0);
         return baseMapper.selectOne(groupDOLambdaQueryWrapper) != null;
     }
