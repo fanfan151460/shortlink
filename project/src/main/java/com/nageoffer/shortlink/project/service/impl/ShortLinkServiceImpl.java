@@ -86,7 +86,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             baseMapper.insert(shortLinkDO);
         } catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
-            fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), reqDTO.getDomain());
+            fullShortUrl = forceRegenerate(reqDTO.getOriginUrl(), reqDTO.getDomain());
             shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
             shortLinkDO.setFullShortUrl(fullShortUrl)
                     .setShortUri(shortLink);
@@ -436,12 +436,27 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             originUrl += UUID.randomUUID().toString();
             String shortLink = HashUtil.createBase62Link(originUrl);
             fullShortUrl = domain + "/" + shortLink;
-            count++;
-            if (count > 10) {
+            if (++count > 10) {
                 throw new ClientException("重复创建");
             }
         }
         return fullShortUrl;
+    }
+
+    public String forceRegenerate(String originUrl, String domain) {
+        int count = 0;
+        String fullShortUrl;
+        while (true) {
+            originUrl += UUID.randomUUID().toString();
+            String shortLink = HashUtil.createBase62Link(originUrl);
+            fullShortUrl = domain + "/" + shortLink;
+            if (!bloomFilter.contains(fullShortUrl)) {
+                return fullShortUrl;
+            }
+            if (++count > 10) {
+                throw new ClientException("重复创建");
+            }
+        }
     }
 
 }
