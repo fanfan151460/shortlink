@@ -21,9 +21,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
-        System.out.println(">>> Feign calling: createShortLink, gid=" + reqDTO.getGid());
         Result<ShortLinkCreateRespDTO> result = projectFeignClient.createShortLink(reqDTO);
-        System.out.println(">>> Feign returned: " + (result == null ? "null" : result.getCode()));
         if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程创建短链接失败");
         }
@@ -58,11 +56,6 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
         if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程删除短链接失败");
         }
-    }
-
-    @Override
-    public String testProjectShortLink() {
-        return projectFeignClient.testProject();
     }
 
 

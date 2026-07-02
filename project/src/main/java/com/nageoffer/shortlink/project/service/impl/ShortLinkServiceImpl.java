@@ -84,7 +84,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setTotalUv(0);
         try {
             baseMapper.insert(shortLinkDO);
-        } catch (DuplicateKeyException e) {
+        }
+            catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
             fullShortUrl = forceRegenerate(reqDTO.getOriginUrl(), reqDTO.getDomain());
             shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
@@ -214,7 +215,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 baseMapper.insert(newShortLinkDO);
                 // TODO goto表的修改
 //                shortLinkGoToMapper.update();
-                if (!ifOriUrlDiff) {
+                if (ifOriUrlDiff) {
                     stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
                 }
             } finally {
@@ -232,7 +233,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             ? null
                             : reqDTO.getValidDate())
                     .update();
-            if (!ifOriUrlDiff) {
+            if (ifOriUrlDiff) {
                 stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
             }
         }

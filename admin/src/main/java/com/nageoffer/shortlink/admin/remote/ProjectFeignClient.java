@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@FeignClient(name = "shortlink-project", url = "http://192.168.1.11:082")
+@FeignClient(name = "shortlink-project")
 public interface ProjectFeignClient {
 
     // ========== ShortLink ==========
@@ -32,9 +32,6 @@ public interface ProjectFeignClient {
 
     @DeleteMapping("/api/short-link/v1/remove")
     Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO);
-
-    @GetMapping("/api/short-link/v1/test")
-    String testProject();
 
     // ========== Recycle ==========
 
