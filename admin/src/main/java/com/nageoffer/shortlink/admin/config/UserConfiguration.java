@@ -28,7 +28,7 @@ public class UserConfiguration implements WebMvcConfigurer {
                         "/v3/**",
                         "/webjars/**"
                 )
-                .order(0);
+                .order(5);
         registry.addInterceptor(userLoginInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
@@ -40,13 +40,15 @@ public class UserConfiguration implements WebMvcConfigurer {
                         "/v3/**",
                         "/webjars/**"
                 )
-                .order(5);
+                .order(0);
         registry.addInterceptor(userStatsLimitInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/api/short-link/admin/v1/user/login",
                         "/api/short-link/admin/v1/user/has-username",
                         "/api/short-link/admin/v1/create",
+                        "/api/short-link/admin/v1/test",
+                        "/api/short-link/admin/v1/page",
                         "/doc.html",
                         "/swagger-ui/**",
                         "/v3/**",

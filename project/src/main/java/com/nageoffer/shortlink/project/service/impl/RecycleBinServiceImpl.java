@@ -50,7 +50,6 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
     public List<ShortLinkRespDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
         Page<ShortLinkDO> linkPage = Page.of(pageReqDTO.getCurrent(), pageReqDTO.getSize());
         //TODO 排序
-
         Wrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                 .eq(ShortLinkDO::getGid, pageReqDTO.getGid())
                 .eq(ShortLinkDO::getEnableStatus, 1)

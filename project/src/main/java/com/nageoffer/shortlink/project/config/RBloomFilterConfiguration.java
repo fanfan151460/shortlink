@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RBloomFilterConfiguration {
     /**
-     * 防止用户注册查询数据库的布隆过滤器
+     * 短链接查重及缓存穿透
      */
     @Bean
     public RBloomFilter<String> userRegisterCachePenetrationBloomFilter(RedissonClient redissonClient) {

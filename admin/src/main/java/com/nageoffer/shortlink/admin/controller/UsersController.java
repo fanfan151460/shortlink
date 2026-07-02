@@ -34,6 +34,22 @@ public class UsersController {
         return Results.success("admin");
     }
 
+    @Operation(summary = "测试远程调用project")
+    @GetMapping("/test-call")
+    public Result<String> testCallProject() {
+        try {
+            java.net.URL url = new java.net.URL("http://127.0.0.1:8082/api/short-link/v1/test");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(3000);
+            conn.setRequestMethod("GET");
+            int code = conn.getResponseCode();
+            return Results.success("HTTP " + code + ": " + conn.getResponseMessage());
+        } catch (Exception e) {
+            return Results.success("Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+        }
+    }
+
     @Operation(summary = "检查用户名是否存在")
     @GetMapping("/user/has-username")
     public Result<Boolean> HasYourName(String username) {

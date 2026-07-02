@@ -13,12 +13,12 @@ public class LinkPageReqDTO {
     /**
      * 页码
      */
-    private int current;
+    private Long current;
 
     /**
      * 每页大小
      */
-    private int size;
+    private Long size;
 
     /**
      * gid

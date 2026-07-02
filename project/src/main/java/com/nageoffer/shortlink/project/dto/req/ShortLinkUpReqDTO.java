@@ -1,6 +1,7 @@
 package com.nageoffer.shortlink.project.dto.req;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -17,8 +18,8 @@ public class ShortLinkUpReqDTO implements Serializable {
     /**
      * 完成短链接
      */
-
     private String fullShortUrl;
+
     /**
      * 分组标识
      */
@@ -32,6 +33,7 @@ public class ShortLinkUpReqDTO implements Serializable {
     /**
      * 有效期
      */
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate validDate;
 
     /**

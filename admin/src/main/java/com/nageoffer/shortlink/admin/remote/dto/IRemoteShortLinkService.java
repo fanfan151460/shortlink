@@ -36,4 +36,6 @@ public interface IRemoteShortLinkService {
      * @param recycleDTO 请求参数
      */
     void removeShortLink(RecycleDTO recycleDTO);
+
+    String testProjectShortLink();
 }

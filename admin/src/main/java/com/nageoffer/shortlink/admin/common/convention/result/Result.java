@@ -42,6 +42,6 @@ public class Result<T> implements Serializable {
     private String requestId;
 
     public boolean isSuccess() {
-        return !SUCCESS_CODE.equals(code);
+        return SUCCESS_CODE.equals(code);
     }
 }

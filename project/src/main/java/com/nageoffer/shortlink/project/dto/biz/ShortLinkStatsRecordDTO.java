@@ -71,7 +71,6 @@ public class ShortLinkStatsRecordDTO {
      */
     private Boolean uipFirstFlag;
 
-
     /**
      * 当前时间
      */

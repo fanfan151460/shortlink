@@ -28,5 +28,9 @@ public interface IRecycleBinService extends IService<ShortLinkDO> {
      */
     void rmRecycleBin(RecycleDTO recycleDTO);
 
+    /**
+     * 删除短链接
+     * @param recycleDTO 请求参数
+     */
     void removeShortLink(RecycleDTO recycleDTO);
 }

@@ -6,6 +6,19 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 spring:
+  application:
+    name: shortlink-admin
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: full
+            connectTimeout: 5000
+            readTimeout: 5000
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
@@ -16,10 +29,14 @@ spring:
   profiles:
     active: dev
 
+logging:
+  level:
+    com.nageoffer.shortlink.admin.remote.ProjectFeignClient: DEBUG
+
 short-link:
   user-limit:
     time: 1
-    max-click: 2
+    max-click: 5
 ---
 spring:
   config:

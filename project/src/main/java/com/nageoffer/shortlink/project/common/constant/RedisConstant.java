@@ -14,6 +14,7 @@ public class RedisConstant {
 
     public static final String LOCK_GID_UPDATE_KEY = "LOCK:GROUP_UPDATE:%s";
 
-    public static final String LOCK_IDEMPOTENT_KEY = "LOCK-IDEMPOTENT:%s";
+    public static final String IDEMPOTENT_KEY = "IDEMPOTENT:%s";
 
+    public static final String SHORT_URL_NULL_KEY = "SHORT_URL_NULL:%s";
 }

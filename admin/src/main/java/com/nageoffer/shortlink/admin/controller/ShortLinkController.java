@@ -14,6 +14,7 @@ import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +22,8 @@ import java.util.List;
 @Tag(name = "短链接管理", description = "短链接创建、查询、更新、删除")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/short-link/admin/v1")
+@RequestMapping("/api/short-link/admin/v1")
+@Slf4j
 public class ShortLinkController {
     private final IRemoteShortLinkService shortLinkService;
 
@@ -37,6 +39,7 @@ public class ShortLinkController {
     @Operation(summary = "分页查询短链接", description = "按分组gid分页查询短链接列表")
     @GetMapping("/page")
     public Result<List<ShortLinkRespDTO>> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
+        log.info("调用分页短链接");
         return Results.success(shortLinkService.pageShortLink(linkPageReqDTO));
     }
 
@@ -52,5 +55,10 @@ public class ShortLinkController {
     public Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO) {
         shortLinkService.removeShortLink(recycleDTO);
         return Results.success();
+    }
+
+    @GetMapping("/project-test")
+    public String test() {
+        return shortLinkService.testProjectShortLink();
     }
 }

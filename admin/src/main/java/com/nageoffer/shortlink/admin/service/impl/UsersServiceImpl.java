@@ -97,7 +97,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
 
     @Override
     public void updateUser(UserUpdateDTO userUpdateDTO) {
-        if (Objects.equals(userUpdateDTO.getUsername(), UserContext.getUsername())) {
+        if (!Objects.equals(userUpdateDTO.getUsername(), UserContext.getUsername())) {
             throw new ClientException("当前登录用户修改请求异常");
         }
         LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)

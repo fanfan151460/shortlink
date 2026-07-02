@@ -14,4 +14,3 @@ end
 
 --返回数据
     return currentAccessCount  -- 第一次访问，返回访问次数 1
-end

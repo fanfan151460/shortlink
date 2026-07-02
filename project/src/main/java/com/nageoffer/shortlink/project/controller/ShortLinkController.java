@@ -67,4 +67,9 @@ public class ShortLinkController {
         shortLinkService.removeShortLink(recycleDTO);
         return Results.success();
     }
+
+    @GetMapping("/test")
+    public String test() {
+        return "test";
+    }
 }

@@ -9,11 +9,7 @@ import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -21,20 +17,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
 
-    private static final String BASE_URL = "http://localhost:8082/api/short-link/v1";
-
-    private final RestTemplate restTemplate;
+    private final ProjectFeignClient projectFeignClient;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
-        String url = BASE_URL + "/create";
-        Result<ShortLinkCreateRespDTO> result = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(reqDTO),
-                new ParameterizedTypeReference<Result<ShortLinkCreateRespDTO>>() {}
-        ).getBody();
-        if (result == null || result.isSuccess()) {
+        System.out.println(">>> Feign calling: createShortLink, gid=" + reqDTO.getGid());
+        Result<ShortLinkCreateRespDTO> result = projectFeignClient.createShortLink(reqDTO);
+        System.out.println(">>> Feign returned: " + (result == null ? "null" : result.getCode()));
+        if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程创建短链接失败");
         }
         return result.getData();
@@ -42,17 +32,13 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
 
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
-        String url = BASE_URL + "/page?current=" + linkPageReqDTO.getCurrent()
-                + "&size=" + linkPageReqDTO.getSize()
-                + "&gid=" + linkPageReqDTO.getGid()
-                + "&orderFlag=" + linkPageReqDTO.getOrderFlag();
-        Result<List<ShortLinkRespDTO>> result = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Result<List<ShortLinkRespDTO>>>() {}
-        ).getBody();
-        if (result == null || result.isSuccess()) {
+        Result<List<ShortLinkRespDTO>> result = projectFeignClient.pageShortLink(
+                linkPageReqDTO.getGid(),
+                linkPageReqDTO.getCurrent(),
+                linkPageReqDTO.getSize(),
+                linkPageReqDTO.getOrderFlag()
+        );
+        if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程分页查询短链接失败");
         }
         return result.getData();
@@ -60,29 +46,24 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
 
     @Override
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
-        String url = BASE_URL + "/update";
-        Result<Void> result = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                new HttpEntity<>(reqDTO),
-                new ParameterizedTypeReference<Result<Void>>() {}
-        ).getBody();
-        if (result == null || result.isSuccess()) {
+        Result<Void> result = projectFeignClient.updateShortLink(reqDTO);
+        if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程更新短链接失败");
         }
     }
 
     @Override
     public void removeShortLink(RecycleDTO recycleDTO) {
-        String url = BASE_URL + "/remove";
-        Result<Void> result = restTemplate.exchange(
-                url,
-                HttpMethod.DELETE,
-                new HttpEntity<>(recycleDTO),
-                new ParameterizedTypeReference<Result<Void>>() {}
-        ).getBody();
-        if (result == null || result.isSuccess()) {
+        Result<Void> result = projectFeignClient.removeShortLink(recycleDTO);
+        if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程删除短链接失败");
         }
     }
+
+    @Override
+    public String testProjectShortLink() {
+        return projectFeignClient.testProject();
+    }
+
+
 }
