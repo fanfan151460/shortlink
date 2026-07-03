@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -24,6 +23,7 @@ import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkRespDTO;
 import com.nageoffer.shortlink.project.mq.producer.LinkStatsProducer;
+import com.nageoffer.shortlink.project.service.FaviconService;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import com.nageoffer.shortlink.project.util.HashUtil;
 import com.nageoffer.shortlink.project.util.LinkUtil;
@@ -65,6 +65,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
+    private final FaviconService faviconService;
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -92,8 +93,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
                 .setUserName(UserContext.getUserName())
-                // TODO 优化图标获取
-                .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()))
+                .setFavicon(getDefaultFavicon(reqDTO.getOriginUrl()))
                 .setTotalPv(0)
                 .setTotalUip(0)
                 .setTotalUv(0);
@@ -124,6 +124,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()),
                         TimeUnit.MILLISECONDS);
         bloomFilter.add(fullShortUrl);
+        faviconService.updateFavicon(fullShortUrl, reqDTO.getGid(), originUrl);
         return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
                 .setGid(shortLinkDO.getGid())
@@ -158,6 +159,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setFullShortUrl(fullShortUrl)
                     .setUserName(UserContext.getUserName())
                     .setShortUri(shortLink)
+                    .setFavicon(getDefaultFavicon(reqDTO.getOriginUrl()))
                     .setTotalPv(0).setTotalUip(0).setTotalUv(0);
             baseMapper.insert(shortLinkDO);
             shortLinkGoToMapper.insert(new ShortLinkGoDO()
@@ -168,6 +170,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             LinkUtil.getLinkExpireTime(shortLinkDO.getValidDate()),
                             TimeUnit.MILLISECONDS);
             bloomFilter.add(fullShortUrl);
+            faviconService.updateFavicon(fullShortUrl, reqDTO.getGid(), originUrl);
             return new ShortLinkCreateRespDTO()
                     .setFullShortUrl(fullShortUrl)
                     .setGid(shortLinkDO.getGid())
@@ -420,26 +423,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     /**
      * 获取图标
      */
-    private String getFaviconUrl(String originUrl) {
-        try {
-            String html = HttpUtil.get(originUrl);
-            java.util.regex.Matcher matcher = java.util.regex.Pattern
-                    .compile("<link[^>]+rel=[\"']?(?:shortcut )?icon[\"']?[^>]+href=[\"']([^\"']+)[\"']",
-                            java.util.regex.Pattern.CASE_INSENSITIVE)
-                    .matcher(html);
-            if (matcher.find()) {
-                String href = matcher.group(1);
-                if (href.startsWith("http") || href.startsWith("//")) {
-                    return href.startsWith("//") ? "https:" + href : href;
-                }
-                java.net.URI uri = java.net.URI.create(originUrl);
-                return uri.getScheme() + "://" + uri.getHost() + (href.startsWith("/") ? "" : "/") + href;
-            }
-        } catch (Exception ignored) {
-        }
+    private String getDefaultFavicon(String originUrl) {
         java.net.URI uri = java.net.URI.create(originUrl);
         return uri.getScheme() + "://" + uri.getHost() + "/favicon.ico";
     }
+
 
     public String judgeHadShortUrl(String fullShortUrl, String originUrl, String domain) {
         int count = 0;
