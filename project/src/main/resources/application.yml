@@ -37,6 +37,9 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
+  short-link:
+    domain: fan.ink
+    block-domain-list: xiaohongshu.com,taobao.com
   profiles:
     active: dev
 ---
