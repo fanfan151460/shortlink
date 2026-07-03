@@ -75,12 +75,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
+        String originUrl = reqDTO.getOriginUrl();
 
-        if (Arrays.asList(blockDomainList.split(",")).contains(domain)) {
-            throw new ClientException("不能在该域名下创建短链接");
+        boolean blocked = Arrays.stream(blockDomainList.split(","))
+                .anyMatch(keyword -> originUrl.contains(keyword.trim()));
+        if (blocked) {
+            throw new ClientException("该域名不允许创建短链接");
         }
-        String OriginUrl = reqDTO.getOriginUrl();
-        String shortLink = HashUtil.createBase62Link(OriginUrl);
+        String shortLink = HashUtil.createBase62Link(originUrl);
         String fullShortUrl = domain + "/" + shortLink;
         //布隆过滤器
         fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), domain);
@@ -197,7 +199,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         //当修改gid时
         if (ifGidDiff) {
-            // TODO gid修改优化
             RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, reqDTO.getFullShortUrl()));
             RLock rLock = readWriteLock.writeLock();
             rLock.lock();
@@ -220,7 +221,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .setDelTime(null)
                         .setEnableStatus(0);
                 baseMapper.insert(newShortLinkDO);
-                // TODO goto表的修改
                 LambdaUpdateWrapper<ShortLinkGoDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkGoDO.class)
                         .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl())
                         .set(ShortLinkGoDO::getGid, reqDTO.getGid());
@@ -250,7 +250,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public void gotoOriginUrl(String shortLinkUri, ServletRequest request, ServletResponse response) {
-        String domain = request.getServerName();
         String fullShortUrl = domain + "/" + shortLinkUri;
         String originUrl = stringRedisTemplate.opsForValue()
                 .get(String.format(FULL_SHORT_LINK, fullShortUrl));
