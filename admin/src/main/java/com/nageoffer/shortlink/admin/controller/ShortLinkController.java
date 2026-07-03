@@ -4,7 +4,7 @@ import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.nageoffer.shortlink.admin.common.biz.user.SentinelBlockUtil;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
-import com.nageoffer.shortlink.admin.remote.dto.IRemoteShortLinkService;
+import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;

@@ -2,7 +2,7 @@ package com.nageoffer.shortlink.admin.controller;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
-import com.nageoffer.shortlink.admin.remote.dto.IRemoteRecycleService;
+import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;

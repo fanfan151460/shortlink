@@ -2,7 +2,7 @@ package com.nageoffer.shortlink.admin.controller;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
-import com.nageoffer.shortlink.admin.remote.dto.IRemoteAccessLogsService;
+import com.nageoffer.shortlink.admin.remote.IRemoteAccessLogsService;
 import com.nageoffer.shortlink.admin.remote.dto.req.AccessLogReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.accessLogRespDTO;
 import io.swagger.v3.oas.annotations.Operation;
