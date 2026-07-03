@@ -21,7 +21,6 @@ import java.util.List;
 
 @Tag(name = "短链接核心服务", description = "创建、重定向、分页查询、更新、删除")
 @RestController
-@RequestMapping("")
 @RequiredArgsConstructor
 public class ShortLinkController {
 
