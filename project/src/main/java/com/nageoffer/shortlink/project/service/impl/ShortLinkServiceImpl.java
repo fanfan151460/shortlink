@@ -37,6 +37,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -64,14 +65,28 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
 
+    @Value("${spring.short-link.block-domain-list}")
+    private String blockDomainList;
+
+    @Value("${spring.short-link.domain}")
+    private String domain;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkReqDTO reqDTO) {
+
+        if (Arrays.asList(blockDomainList.split(",")).contains(domain)) {
+            throw new ClientException("不能在该域名下创建短链接");
+        }
+
+        if (StrUtil.isBlank(reqDTO.getUserName())) {
+            throw new ClientException("用户名不能为空");
+        }
         String OriginUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(OriginUrl);
-        String fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
+        String fullShortUrl = domain + "/" + shortLink;
         //布隆过滤器
-        fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), reqDTO.getDomain());
+        fullShortUrl = judgeHadShortUrl(fullShortUrl, reqDTO.getOriginUrl(), domain);
         shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
         ShortLinkDO shortLinkDO = BeanUtil
                 .copyProperties(reqDTO, ShortLinkDO.class)
@@ -87,7 +102,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
             catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
-            fullShortUrl = forceRegenerate(reqDTO.getOriginUrl(), reqDTO.getDomain());
+            fullShortUrl = forceRegenerate(reqDTO.getOriginUrl(), domain);
             shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
             shortLinkDO.setFullShortUrl(fullShortUrl)
                     .setShortUri(shortLink);
@@ -119,7 +134,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkReqDTO reqDTO) {
         String originUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(originUrl);
-        String fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
+        String fullShortUrl = domain + "/" + shortLink;
         int rebuildCount = 0;
         RLock lock = redissonClient.getLock("lock:create:");
         lock.lock();
@@ -131,7 +146,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             while (exist != null) {
                 rebuildCount++;
                 shortLink = HashUtil.createBase62Link(originUrl + UUID.randomUUID());
-                fullShortUrl = reqDTO.getDomain() + "/" + shortLink;
+                fullShortUrl = domain + "/" + shortLink;
                 exist = shortLinkGoToMapper.selectOne(Wrappers.lambdaQuery(ShortLinkGoDO.class)
                         .eq(ShortLinkGoDO::getFullShortUrl, fullShortUrl));
                 if (rebuildCount >= 10) {
