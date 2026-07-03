@@ -18,6 +18,10 @@ spring:
           uri: lb://shortlink-project
           predicates:
             - Path=/api/short-link/**
+        - id: shortlink-redirect
+          uri: lb://shortlink-project
+          predicates:
+            - Path=/**
   data:
     redis:
       host: localhost
