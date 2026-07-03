@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
@@ -31,13 +32,14 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveRecycleBin(RecycleDTO recycleDTO) {
-        boolean update = lambdaUpdate().eq(ShortLinkDO::getGid, recycleDTO.getGid())
+        boolean update = lambdaUpdate()
                 .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
-                .eq(ShortLinkDO::getEnableStatus, 0)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getGid, recycleDTO.getGid())
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .and(v -> v.isNull(ShortLinkDO::getValidDate)
                         .or().gt(ShortLinkDO::getValidDate, new Date()))
-                .set(ShortLinkDO::getEnableStatus, 1)
+                .set(ShortLinkDO::getDelFlag, 1)
                 .update();
         if (!update) {
             throw new ClientException("短链接已经不在了");
@@ -52,8 +54,8 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         //TODO 排序
         Wrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                 .eq(ShortLinkDO::getGid, pageReqDTO.getGid())
-                .eq(ShortLinkDO::getEnableStatus, 1)
-                .eq(ShortLinkDO::getDelFlag, 0);
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getDelFlag, 1);
         Page<ShortLinkDO> shortLinkDOPage = page(linkPage, wrapper);
         return shortLinkDOPage.getRecords()
                 .stream().map(each -> BeanUtil.copyProperties(each, ShortLinkRespDTO.class))
@@ -64,11 +66,10 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
     public void rmRecycleBin(RecycleDTO recycleDTO) {
         boolean update = lambdaUpdate().eq(ShortLinkDO::getGid, recycleDTO.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
-                .eq(ShortLinkDO::getEnableStatus, 1)
-                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getDelFlag, 1)
                 .and(v -> v.isNull(ShortLinkDO::getValidDate)
                         .or().gt(ShortLinkDO::getValidDate, new Date()))
-                .set(ShortLinkDO::getEnableStatus, 0)
+                .set(ShortLinkDO::getDelFlag, 0)
                 .update();
         if (!update) {
             throw new ClientException("短链接恢复失败");
@@ -79,10 +80,9 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
     public void removeShortLink(RecycleDTO recycleDTO) {
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                 .eq(ShortLinkDO::getGid, recycleDTO.getGid())
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
                 .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
-                .eq(ShortLinkDO::getDelFlag, 0);
+                .eq(ShortLinkDO::getDelFlag, 1);
         remove(queryWrapper);
-        //删除缓存
-        stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, recycleDTO.getFullShortUrl()));
     }
 }

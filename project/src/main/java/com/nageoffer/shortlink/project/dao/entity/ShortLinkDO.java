@@ -53,7 +53,7 @@ public class ShortLinkDO implements Serializable {
     private String gid;
 
     /**
-     * 启用标识 0：未启用 1：已启用
+     * 启用标识 0：已启用 1：未启用
      */
     @TableField(fill = FieldFill.INSERT)
     private Integer enableStatus;

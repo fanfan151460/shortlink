@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ShortLinkMapper extends BaseMapper<ShortLinkDO> {
 
-    IPage<ShortLinkRespDTO> pageShortLinkWithStats(Page<ShortLinkRespDTO> page, @Param("gid") String gid, @Param("orderFlag") String orderFlag);
+    IPage<ShortLinkRespDTO> pageShortLinkWithStats(Page<ShortLinkRespDTO> page, @Param("gid") String gid, @Param("orderFlag") String orderFlag, @Param("userName") String userName);
 }

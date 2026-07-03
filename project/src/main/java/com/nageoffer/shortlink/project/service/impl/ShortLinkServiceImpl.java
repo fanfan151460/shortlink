@@ -5,10 +5,11 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
@@ -78,10 +79,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         if (Arrays.asList(blockDomainList.split(",")).contains(domain)) {
             throw new ClientException("不能在该域名下创建短链接");
         }
-
-        if (StrUtil.isBlank(reqDTO.getUserName())) {
-            throw new ClientException("用户名不能为空");
-        }
         String OriginUrl = reqDTO.getOriginUrl();
         String shortLink = HashUtil.createBase62Link(OriginUrl);
         String fullShortUrl = domain + "/" + shortLink;
@@ -92,6 +89,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .copyProperties(reqDTO, ShortLinkDO.class)
                 .setFullShortUrl(fullShortUrl)
                 .setShortUri(shortLink)
+                .setUserName(UserContext.getUserName())
                 // TODO 优化图标获取
                 .setFavicon(getFaviconUrl(reqDTO.getOriginUrl()))
                 .setTotalPv(0)
@@ -156,6 +154,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkDO shortLinkDO = BeanUtil
                     .copyProperties(reqDTO, ShortLinkDO.class)
                     .setFullShortUrl(fullShortUrl)
+                    .setUserName(UserContext.getUserName())
                     .setShortUri(shortLink)
                     .setTotalPv(0).setTotalUip(0).setTotalUv(0);
             baseMapper.insert(shortLinkDO);
@@ -179,7 +178,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
         Page<ShortLinkRespDTO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
-        return baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag()).getRecords();
+        return baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName()).getRecords();
     }
 
     @Override
@@ -190,6 +189,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         ShortLinkDO hasShortLinkDO = lambdaQuery()
                 .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                 .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
                 .eq(ShortLinkDO::getGid, reqDTO.getGid())
                 .one();
         if (Objects.isNull(hasShortLinkDO)) {
@@ -205,31 +205,26 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 lambdaUpdate()
                         .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                         .eq(ShortLinkDO::getDelFlag, 0)
-                        .eq(ShortLinkDO::getEnableStatus, 0)
                         .set(ShortLinkDO::getDelFlag, 1)
                         .set(ShortLinkDO::getEnableStatus, 1)
-                        // TODO del_time的修改
+                        .set(ShortLinkDO::getDelTime, System.currentTimeMillis())
                         .update();
-                LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                        .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
-                        .eq(ShortLinkDO::getDelFlag, 1)
-                        .eq(ShortLinkDO::getEnableStatus, 1);
-                ShortLinkDO oldShortLinkDO = baseMapper.selectOne(queryWrapper);
-                ShortLinkDO newShortLinkDO = oldShortLinkDO
+                ShortLinkDO newShortLinkDO = hasShortLinkDO
                         .setGid(reqDTO.getGid())
-                        .setFullShortUrl(reqDTO.getFullShortUrl())
                         .setDescription(reqDTO.getDescription())
                         .setValidDateType(reqDTO.getValidDateType())
                         .setValidDate(reqDTO.getValidDateType() == 0
                                 ? null
                                 : reqDTO.getValidDate())
                         .setDelFlag(0)
-                        // TODO del_time的修改
-//                        .setDelTime(null)
+                        .setDelTime(null)
                         .setEnableStatus(0);
                 baseMapper.insert(newShortLinkDO);
                 // TODO goto表的修改
-//                shortLinkGoToMapper.update();
+                LambdaUpdateWrapper<ShortLinkGoDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkGoDO.class)
+                        .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                        .set(ShortLinkGoDO::getGid, reqDTO.getGid());
+                shortLinkGoToMapper.update(null,updateWrapper);
                 if (ifOriUrlDiff) {
                     stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
                 }
@@ -241,7 +236,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             lambdaUpdate()
                     .eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
-                    .eq(ShortLinkDO::getEnableStatus, 0)
                     .set(ShortLinkDO::getValidDateType, reqDTO.getValidDateType())
                     .set(ShortLinkDO::getDescription, reqDTO.getDescription())
                     .set(ShortLinkDO::getValidDate, reqDTO.getValidDateType() == 0
@@ -393,7 +387,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public void removeShortLink(RecycleDTO recycleDTO) {
+
         boolean removed = lambdaUpdate()
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
                 .eq(ShortLinkDO::getGid, recycleDTO.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
                 .remove();

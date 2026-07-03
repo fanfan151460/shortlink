@@ -34,9 +34,4 @@ public class ShortLinkReqDTO implements Serializable {
      */
     @TableField("`describe`")
     private String description;
-
-    /**
-     * 创建用户
-     */
-    private String userName;
 }

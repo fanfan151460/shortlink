@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.dao.entity.LinkAccessLogsDO;
+import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.mapper.LinkAccessLogsMapper;
 import com.nageoffer.shortlink.project.dto.req.AccessLogReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.accessLogRespDTO;
 import com.nageoffer.shortlink.project.service.ILinkAccessLogsService;
+import com.nageoffer.shortlink.project.service.IShortLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +28,17 @@ public class LinkAccessLogsServiceImpl extends ServiceImpl<LinkAccessLogsMapper,
 
     private final LinkAccessLogsMapper linkAccessLogsMapper;
 
+    private final IShortLinkService shortLinkService;
     @Override
     public List<accessLogRespDTO> getAccessLogs(AccessLogReqDTO accessLogReqDTO) {
+        ShortLinkDO one = shortLinkService.lambdaQuery()
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getGid, accessLogReqDTO.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, accessLogReqDTO.getFullShortUrl())
+                .one();
+        if (BeanUtil.isEmpty(one)) {
+            throw new RuntimeException("该链接不存在于你的列表");
+        }
         // 分页查询访问日志
         Page<LinkAccessLogsDO> page = Page.of(accessLogReqDTO.getCurrent(), accessLogReqDTO.getSize());
         LambdaQueryWrapper<LinkAccessLogsDO> wrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
