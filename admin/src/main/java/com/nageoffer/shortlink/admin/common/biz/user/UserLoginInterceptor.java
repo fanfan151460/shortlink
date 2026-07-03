@@ -21,22 +21,11 @@ public class UserLoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String username = request.getHeader("username");
         String token = request.getHeader("token");
-        // POST /user 为注册，无需认证
-        if ("POST".equals(request.getMethod()) && request.getRequestURI().endsWith("/user")) {
-            return true;
-        }
-        if (username == null || token == null) {
-            return false;
-        }
         Object loginDTO = stringRedisTemplate.opsForHash().get(LOGIN + username, token);
-        if (loginDTO == null) {
-            return false;
-        }
-        //反序列化
         UserLoginDTO userLoginDTO = JSONUtil.toBean((String) loginDTO, UserLoginDTO.class);
         UserInfoDTO userInfoDTO = BeanUtil.copyProperties(userLoginDTO, UserInfoDTO.class, "password");
+        // 保存用户上下文
         UserContext.setUser(userInfoDTO);
-
         return true;
     }
 }
