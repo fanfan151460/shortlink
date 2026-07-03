@@ -10,11 +10,6 @@ import java.time.LocalDate;
 public class ShortLinkReqDTO implements Serializable {
 
     /**
-     * 域名
-     */
-    private String domain;
-
-    /**
      * 原始链接
      */
     private String originUrl;
@@ -40,4 +35,8 @@ public class ShortLinkReqDTO implements Serializable {
     @TableField("`describe`")
     private String description;
 
+    /**
+     * 创建用户
+     */
+    private String userName;
 }
