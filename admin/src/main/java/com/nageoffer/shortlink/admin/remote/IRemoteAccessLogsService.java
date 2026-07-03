@@ -1,4 +1,4 @@
-package com.nageoffer.shortlink.admin.remote.dto;
+package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.remote.dto.req.AccessLogReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.accessLogRespDTO;

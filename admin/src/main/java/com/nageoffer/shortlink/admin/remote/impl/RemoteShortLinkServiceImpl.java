@@ -1,7 +1,8 @@
-package com.nageoffer.shortlink.admin.remote;
+package com.nageoffer.shortlink.admin.remote.impl;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.remote.dto.IRemoteShortLinkService;
+import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
+import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;

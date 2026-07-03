@@ -1,4 +1,4 @@
-package com.nageoffer.shortlink.admin.remote.dto;
+package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
