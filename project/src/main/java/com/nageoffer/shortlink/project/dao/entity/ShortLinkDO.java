@@ -124,5 +124,13 @@ public class ShortLinkDO implements Serializable {
      */
     private String favicon;
 
+    /**
+     * 创建用户
+     */
+    private String userName;
 
+    /**
+     * 短链接删除时间戳（修改短链接用）
+     */
+    private String delTime;
 }
