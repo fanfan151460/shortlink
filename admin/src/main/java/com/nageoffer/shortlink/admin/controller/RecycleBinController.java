@@ -3,6 +3,7 @@ package com.nageoffer.shortlink.admin.controller;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
+import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
@@ -20,6 +21,7 @@ import java.util.List;
 public class RecycleBinController {
 
     private final IRemoteRecycleService remoteRecycleService;
+    private final ProjectFeignClient projectFeignClient;
 
     @Operation(summary = "移入回收站")
     @PostMapping("/recycle-bin/save")
@@ -38,6 +40,13 @@ public class RecycleBinController {
     @PostMapping("/recycle-bin/recover")
     public Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO) {
         remoteRecycleService.rmRecycleBin(recycleDTO);
+        return Results.success();
+    }
+
+    @Operation(summary = "永久删除短链接")
+    @DeleteMapping("/recycle-bin/delete")
+    public Result<Void> deleteRecycleBin(@RequestBody RecycleDTO recycleDTO) {
+        projectFeignClient.deleteRecycleBin(recycleDTO);
         return Results.success();
     }
 

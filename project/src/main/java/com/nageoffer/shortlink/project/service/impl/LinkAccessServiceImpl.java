@@ -6,12 +6,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
+import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.dao.entity.LinkAccessLogsDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.mapper.LinkAccessLogsMapper;
 import com.nageoffer.shortlink.project.dto.req.AccessLogReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.accessLogRespDTO;
-import com.nageoffer.shortlink.project.service.ILinkAccessLogsService;
+import com.nageoffer.shortlink.project.service.ILinkAccessService;
 import com.nageoffer.shortlink.project.service.IShortLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class LinkAccessLogsServiceImpl extends ServiceImpl<LinkAccessLogsMapper, LinkAccessLogsDO> implements ILinkAccessLogsService {
+public class LinkAccessServiceImpl extends ServiceImpl<LinkAccessLogsMapper, LinkAccessLogsDO> implements ILinkAccessService {
 
     private final LinkAccessLogsMapper linkAccessLogsMapper;
 
@@ -37,28 +38,36 @@ public class LinkAccessLogsServiceImpl extends ServiceImpl<LinkAccessLogsMapper,
                 .eq(ShortLinkDO::getFullShortUrl, accessLogReqDTO.getFullShortUrl())
                 .one();
         if (BeanUtil.isEmpty(one)) {
-            throw new RuntimeException("该链接不存在于你的列表");
+            throw new ClientException("该链接不存在于你的列表");
         }
         // 分页查询访问日志
         Page<LinkAccessLogsDO> page = Page.of(accessLogReqDTO.getCurrent(), accessLogReqDTO.getSize());
         LambdaQueryWrapper<LinkAccessLogsDO> wrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
                 .eq(LinkAccessLogsDO::getFullShortUrl, accessLogReqDTO.getFullShortUrl())
-                .eq(LinkAccessLogsDO::getGid, accessLogReqDTO.getGid())
-                .between(LinkAccessLogsDO::getCreateTime,
-                        LocalDateTime.of(accessLogReqDTO.getStartDate(), LocalTime.MIN),
-                        LocalDateTime.of(accessLogReqDTO.getEndDate(), LocalTime.MAX));
+                .eq(LinkAccessLogsDO::getGid, accessLogReqDTO.getGid());
+        if (accessLogReqDTO.getStartDate() != null && accessLogReqDTO.getEndDate() != null) {
+            wrapper.between(LinkAccessLogsDO::getCreateTime,
+                    LocalDateTime.of(accessLogReqDTO.getStartDate(), LocalTime.MIN),
+                    LocalDateTime.of(accessLogReqDTO.getEndDate(), LocalTime.MAX));
+        }
         page(page, wrapper);
-
+        if (page.getRecords() == null || page.getRecords().isEmpty()) {
+            return List.of();
+        }
         // 收集所有用户，查询新老访客类型
         List<String> userList = page.getRecords().stream()
                 .map(LinkAccessLogsDO::getUser)
                 .distinct()
                 .toList();
+        String startStr = accessLogReqDTO.getStartDate() != null
+                ? accessLogReqDTO.getStartDate().toString() : "2000-01-01";
+        String endStr = accessLogReqDTO.getEndDate() != null
+                ? accessLogReqDTO.getEndDate().toString() : "2099-12-31";
         Map<String, String> userTypeMap = linkAccessLogsMapper.selectUvTypeGroupByUser(
                         accessLogReqDTO.getFullShortUrl(),
                         accessLogReqDTO.getGid(),
-                        accessLogReqDTO.getStartDate().toString(),
-                        accessLogReqDTO.getEndDate().toString(),
+                        startStr,
+                        endStr,
                         userList)
                 .stream()
                 .collect(Collectors.toMap(m -> m.get("user"), m -> m.get("uvType")));

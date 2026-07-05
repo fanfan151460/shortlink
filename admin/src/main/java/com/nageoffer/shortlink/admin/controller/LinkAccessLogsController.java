@@ -20,14 +20,8 @@ public class LinkAccessLogsController {
     private final IRemoteAccessLogsService remoteAccessLogsService;
 
     @Operation(summary = "查询访问记录", description = "按短链接查询访问日志，支持分页")
-    @GetMapping("/stats/access-record")
-    public Result<List<accessLogRespDTO>> getAccessLogs(AccessLogReqDTO accessLogReqDTO) {
-        if (accessLogReqDTO.getCurrent() == null) {
-            accessLogReqDTO.setCurrent(1L);
-        }
-        if (accessLogReqDTO.getSize() == null) {
-            accessLogReqDTO.setSize(10L);
-        }
+    @PostMapping("/stats/access-record")
+    public Result<List<accessLogRespDTO>> getAccessLogs(@RequestBody AccessLogReqDTO accessLogReqDTO) {
         return Results.success(remoteAccessLogsService.getAccessLogs(accessLogReqDTO));
     }
 }

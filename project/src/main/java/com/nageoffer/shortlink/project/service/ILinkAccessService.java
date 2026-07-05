@@ -7,7 +7,7 @@ import com.nageoffer.shortlink.project.dto.resp.accessLogRespDTO;
 
 import java.util.List;
 
-public interface ILinkAccessLogsService extends IService<LinkAccessLogsDO> {
+public interface ILinkAccessService extends IService<LinkAccessLogsDO> {
     /**
      * 分页查询日志
      * @return 结果

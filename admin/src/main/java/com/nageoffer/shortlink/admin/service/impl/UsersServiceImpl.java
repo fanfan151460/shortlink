@@ -107,7 +107,8 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
 
     @Override
     public UserLoginRespDTO Login(UserLoginDTO userLoginDTO) {
-        LambdaQueryWrapper<UserDO> wrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, userLoginDTO.getUsername())
+        LambdaQueryWrapper<UserDO> wrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, userLoginDTO.getUsername())
                 .eq(UserDO::getPassword, userLoginDTO.getPassword())
                 .eq(UserDO::getDelFlag, 0);
         UserDO userDo = baseMapper.selectOne(wrapper);

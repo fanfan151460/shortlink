@@ -1,6 +1,7 @@
 package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
+import com.nageoffer.shortlink.admin.remote.dto.req.AccessLogReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
@@ -10,7 +11,6 @@ import com.nageoffer.shortlink.admin.remote.dto.resp.accessLogRespDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @FeignClient(name = "shortlink-project")
@@ -46,13 +46,18 @@ public interface ProjectFeignClient {
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO);
 
+    // ========== Recycle (永久删除) ==========
+
+    @DeleteMapping("/api/short-link/v1/recycle-bin/dellete")
+    Result<Void> deleteRecycleBin(@RequestBody RecycleDTO recycleDTO);
+
+    // ========== Title ==========
+
+    @GetMapping("/api/short-link/v1/title")
+    Result<String> getTitleByUrl(@RequestParam String url);
+
     // ========== AccessLogs ==========
 
-    @GetMapping("/api/short-link/v1/access-logs")
-    Result<List<accessLogRespDTO>> getAccessLogs(@RequestParam String fullShortUrl,
-                                                  @RequestParam String gid,
-                                                  @RequestParam Long current,
-                                                  @RequestParam Long size,
-                                                  @RequestParam LocalDate startDate,
-                                                  @RequestParam LocalDate endDate);
+    @PostMapping("/api/short-link/v1/access-logs")
+    Result<List<accessLogRespDTO>> getAccessLogs(@RequestBody AccessLogReqDTO reqDTO);
 }

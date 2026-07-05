@@ -48,7 +48,7 @@ public class UserDO implements Serializable {
     private LocalDateTime updateTime;
 
     @TableField(value = "del_flag", fill = FieldFill.INSERT)
-    private Boolean delFlag;
+    private Integer delFlag;
 
 
 }

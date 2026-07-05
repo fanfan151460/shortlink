@@ -39,7 +39,7 @@ public class UserStatsLimitInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String username = UserContext.getUsername();
         if (username == null) {
-            return false;
+            return true;
         }
         Long count = stringRedisTemplate.execute(
                 SCRIPT,

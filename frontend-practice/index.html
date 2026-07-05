@@ -205,7 +205,7 @@ td.stats .today { font-size:11px; color:var(--text2); }
   <div class="modal">
     <h3 id="modalTitle">创建短链接</h3>
     <form id="linkForm">
-      <div class="form-group"><label>原始链接</label><input name="originUrl" required placeholder="https://..."></div>
+      <div class="form-group"><label>原始链接</label><div style="display:flex;gap:6px;"><input name="originUrl" required placeholder="https://..." style="flex:1"><button type="button" class="btn-cancel" onclick="fetchTitle()" style="white-space:nowrap;font-size:12px;padding:8px 12px;">获取标题</button></div></div>
       <div class="form-group"><label>有效期类型</label><select name="validDateType"><option value="0">永久有效</option><option value="1">自定义日期</option></select></div>
       <div class="form-group" id="validDateGroup" style="display:none"><label>有效期</label><input name="validDate" type="datetime-local"></div>
       <div class="form-group"><label>描述</label><input name="description" placeholder="可选描述"></div>
@@ -224,6 +224,13 @@ td.stats .today { font-size:11px; color:var(--text2); }
     <h3>访问记录</h3>
     <button class="drawer-close" onclick="closeDrawer()">&times;</button>
   </div>
+  <div style="padding:12px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--bg);">
+    <input type="date" id="logStart" style="width:140px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" placeholder="开始日期">
+    <span style="color:var(--text2);">—</span>
+    <input type="date" id="logEnd" style="width:140px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" placeholder="结束日期">
+    <button onclick="logFilter()" style="padding:6px 16px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">筛选</button>
+    <button onclick="logReset()" style="padding:6px 12px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:13px;cursor:pointer;">重置</button>
+  </div>
   <div class="drawer-body" id="drawerBody"></div>
   <div class="pagination" id="drawerPager"></div>
 </div>
@@ -235,7 +242,7 @@ td.stats .today { font-size:11px; color:var(--text2); }
 const BASE = 'http://127.0.0.1:8000/api/short-link/admin/v1';
 let token = '', username = '', groups = [], currentGid = '', currentView = 'links';
 let page = 1, hasMore = false, recyclePage = 1, recycleHasMore = false;
-let logShortUrl = '', logGid = '', logPage = 1, logHasMore = false;
+let logShortUrl = '', logGid = '', logPage = 1, logHasMore = false, logStart = '', logEnd = '';
 
 // ================ utils ================
 function hdrs() { return {'Content-Type':'application/json', username, token}; }
@@ -419,6 +426,16 @@ function openEdit(fullShortUrl,originUrl,description) {
   document.getElementById('linkModal').classList.add('show');
 }
 function closeModal(){document.getElementById('linkModal').classList.remove('show');}
+async function fetchTitle() {
+  var url = document.forms.linkForm.originUrl.value.trim();
+  if (!url) return toast('请先输入链接','error');
+  try {
+    var r = await fetch(BASE+'/title?url='+encodeURIComponent(url),{headers:hdrs()});
+    var j = await r.json();
+    if (j.code==='0' && j.data) { document.forms.linkForm.description.value = j.data; toast('标题已获取','success'); }
+    else toast('未获取到标题','info');
+  } catch(e) { toast('网络错误','error'); }
+}
 
 document.getElementById('linkForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -459,7 +476,7 @@ function renderRecycle(items) {
   h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>分组</th><th style="width:120px">操作</th></tr></thead><tbody>';
   items.forEach(function(l){
     h+='<tr><td class="url">'+esc(l.fullShortUrl)+'</td><td class="origin" title="'+esc(l.originUrl)+'">'+esc(l.originUrl||'-')+'</td><td>'+esc(l.gid||'-')+'</td>'
-      +'<td class="actions-cell"><button onclick="recoverLink(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">恢复</button></td></tr>';
+      +'<td class="actions-cell"><button onclick="recoverLink(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">恢复</button><button class="danger" onclick="permDelete(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">彻底删除</button></td></tr>';
   });
   h+='</tbody></table></div>';
   h+='<div class="pagination"><button onclick="recycleGo('+(recyclePage-1)+')" '+(recyclePage<=1?'disabled':'')+'>上一页</button><span class="page-num">第 '+recyclePage+' 页</span><button onclick="recycleGo('+(recyclePage+1)+')" '+(!recycleHasMore?'disabled':'')+'>下一页</button></div>';
@@ -475,6 +492,15 @@ async function recoverLink(fullShortUrl,gid) {
     else toast(j.message||'恢复失败','error');
   }catch(e){toast('网络错误','error');}
 }
+async function permDelete(fullShortUrl,gid) {
+  if(!confirm('确定永久删除？此操作不可恢复！')) return;
+  try {
+    var r=await fetch(BASE+'/recycle-bin/delete',{method:'DELETE',headers:hdrs(),body:JSON.stringify({fullShortUrl,gid})});
+    var j=await r.json();
+    if(j.code==='0'){toast('已永久删除','success');loadRecycle();}
+    else toast(j.message||'删除失败','error');
+  }catch(e){toast('网络错误','error');}
+}
 
 // ================ access log drawer ================
 function openLogs(fullShortUrl,gid){logShortUrl=fullShortUrl;logGid=gid;logPage=1;document.getElementById('drawerOverlay').classList.add('show');document.getElementById('drawer').classList.add('show');loadLogs();}
@@ -482,10 +508,13 @@ function closeDrawer(){document.getElementById('drawerOverlay').classList.remove
 async function loadLogs() {
   document.getElementById('drawerBody').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">加载中...</div>';
   try {
-    var r=await fetch(BASE+'/stats/access-record?fullShortUrl='+encodeURIComponent(logShortUrl)+'&gid='+logGid+'&current='+logPage+'&size=10',{headers:hdrs()});
+    var body = {fullShortUrl:logShortUrl,gid:logGid,current:logPage,size:10};
+    if(logStart) body.startDate = logStart;
+    if(logEnd) body.endDate = logEnd;
+    var r=await fetch(BASE+'/stats/access-record',{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
     var j=await r.json();
     if(j.code==='0'){logHasMore=j.data.length>=10;renderLogs(j.data);}
-    else document.getElementById('drawerBody').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">加载失败</div>';
+    else document.getElementById('drawerBody').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">'+(j.message||'加载失败')+'</div>';
   }catch(e){document.getElementById('drawerBody').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">网络错误</div>';}
 }
 function renderLogs(logs) {
@@ -500,6 +529,8 @@ function renderLogs(logs) {
   document.getElementById('drawerPager').innerHTML='<button onclick="logGo('+(logPage-1)+')" '+(logPage<=1?'disabled':'')+'>上一页</button><span style="margin:0 8px;font-size:13px;">第 '+logPage+' 页</span><button onclick="logGo('+(logPage+1)+')" '+(!logHasMore?'disabled':'')+'>下一页</button>';
 }
 function logGo(p){if(p<1||p===logPage&&!logHasMore)return;logPage=p;loadLogs();}
+function logFilter(){logStart=document.getElementById('logStart').value;logEnd=document.getElementById('logEnd').value;logPage=1;loadLogs();}
+function logReset(){document.getElementById('logStart').value='';document.getElementById('logEnd').value='';logStart='';logEnd='';logPage=1;loadLogs();}
 document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
 
 // ================ modal overlay click ================

@@ -18,16 +18,9 @@ public class RemoteAccessLogsServiceImpl implements IRemoteAccessLogsService {
 
     @Override
     public List<accessLogRespDTO> getAccessLogs(AccessLogReqDTO reqDTO) {
-        Result<List<accessLogRespDTO>> result = projectFeignClient.getAccessLogs(
-                reqDTO.getFullShortUrl(),
-                reqDTO.getGid(),
-                reqDTO.getCurrent(),
-                reqDTO.getSize(),
-                reqDTO.getStartDate(),
-                reqDTO.getEndDate()
-        );
-        if (result == null || !result.isSuccess()) {
-            throw new RuntimeException("远程查询访问日志失败");
+        Result<List<accessLogRespDTO>> result = projectFeignClient.getAccessLogs(reqDTO);
+        if (!result.isSuccess()) {
+            throw new RuntimeException(result.getMessage());
         }
         return result.getData();
     }

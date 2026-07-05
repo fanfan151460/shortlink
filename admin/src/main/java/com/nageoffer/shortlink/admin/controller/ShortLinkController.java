@@ -5,6 +5,7 @@ import com.nageoffer.shortlink.admin.common.biz.user.SentinelBlockUtil;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
+import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
@@ -26,6 +27,13 @@ import java.util.List;
 @Slf4j
 public class ShortLinkController {
     private final IRemoteShortLinkService shortLinkService;
+    private final ProjectFeignClient projectFeignClient;
+
+    @Operation(summary = "获取网页标题", description = "根据URL抓取目标页面title标签")
+    @GetMapping("/title")
+    public Result<String> getTitleByUrl(@RequestParam String url) {
+        return projectFeignClient.getTitleByUrl(url);
+    }
 
     @Operation(summary = "创建短链接", description = "传入原始URL，返回生成的短链接（MurmurHash+Base62）")
     @PostMapping("/create")
