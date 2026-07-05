@@ -9,8 +9,8 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface LinkBrowserStatsMapper extends BaseMapper<LinkBrowserStatsDO> {
 
-    @Update("INSERT INTO t_link_browser_stats (full_short_url, gid, date, cnt, browser, create_time, update_time, del_flag) "
-            + "VALUES (#{linkBrowserStats.fullShortUrl}, #{linkBrowserStats.gid}, #{linkBrowserStats.date}, 1, #{linkBrowserStats.browser}, NOW(), NOW(), 0) "
+    @Update("INSERT INTO t_link_browser_stats (full_short_url, date, cnt, browser, create_time, update_time, del_flag) "
+            + "VALUES (#{linkBrowserStats.fullShortUrl}, #{linkBrowserStats.date}, 1, #{linkBrowserStats.browser}, NOW(), NOW(), 0) "
             + "ON DUPLICATE KEY UPDATE "
             + "cnt = cnt + 1, "
             + "update_time = NOW()")

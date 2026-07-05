@@ -100,7 +100,6 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
         try {
             // pv uv uip
             LinkStatsDO statsDO = new LinkStatsDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setUv(uvFirstFlag ? 1 : 0)
                     .setUip(uipFirstFlag ? 1 : 0)
@@ -114,30 +113,26 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             LinkLocalStatsDO linkLocalStatsDO = JSONUtil.toBean(localByIp, LinkLocalStatsDO.class);
             String province = linkLocalStatsDO.getProvince();
             if (StrUtil.equals(linkLocalStatsDO.getInfocode(), "10000")) {
-                linkLocalStatsDO.setGid(gid).setFullShortUrl(fullShortUrl).setDate(today).setCnt(1);
+                linkLocalStatsDO.setFullShortUrl(fullShortUrl).setDate(today).setCnt(1);
                 linkLocalStatsMapper.insertLinkLocalStats(linkLocalStatsDO);
             }
             // 操作系统
             linkOsStatsMapper.insertLinkOsStats(new LinkOsStatsDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setDate(today)
                     .setOs(os));
             // 浏览器
             linkBrowserStatsMapper.insertLinkBrowserStats(new LinkBrowserStatsDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setDate(today)
                     .setBrowser(browser));
             // 设备
             linkDeviceStatsMapper.insertLinkDeviceStats(new LinkDeviceStatsDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setDate(today)
                     .setDevice(device));
             // 网络
             linkNetworkStatsMapper.insertLinkNetworkStats(new LinkNetworkStatsDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setDate(today)
                     .setNetwork(network));
@@ -153,7 +148,6 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
                     .setGid(gid).setFullShortUrl(fullShortUrl));
             // 今日统计
             linkStatsTodayMapper.insertLinkStatsToday(new LinkStatsTodayDO()
-                    .setGid(gid)
                     .setFullShortUrl(fullShortUrl)
                     .setDate(today)
                     .setTodayUv(uvFirstFlag ? 1 : 0)

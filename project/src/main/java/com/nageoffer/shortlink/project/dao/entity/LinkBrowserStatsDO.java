@@ -25,11 +25,6 @@ public class LinkBrowserStatsDO implements Serializable {
     private String fullShortUrl;
 
     /**
-     * 分组标识
-     */
-    private String gid;
-
-    /**
      * 日期
      */
     private LocalDate date;

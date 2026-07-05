@@ -9,8 +9,8 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface ShortLinkStatsMapper extends BaseMapper<LinkStatsDO> {
 
-    @Update("INSERT INTO t_link_access_stats (gid, full_short_url, date, pv, uv, uip, hour, weekday, create_time, update_time, del_flag) "
-            + "VALUES (#{linkStats.gid}, #{linkStats.fullShortUrl}, #{linkStats.date}, 1, 1, 1, #{linkStats.hour}, #{linkStats.weekday}, NOW(), NOW(), 0) "
+    @Update("INSERT INTO t_link_access_stats (full_short_url, date, pv, uv, uip, hour, weekday, create_time, update_time, del_flag) "
+            + "VALUES (#{linkStats.fullShortUrl}, #{linkStats.date}, 1, 1, 1, #{linkStats.hour}, #{linkStats.weekday}, NOW(), NOW(), 0) "
             + "ON DUPLICATE KEY UPDATE "
             + "pv = pv + 1, "
             + "uv = uv + #{linkStats.uv}, "

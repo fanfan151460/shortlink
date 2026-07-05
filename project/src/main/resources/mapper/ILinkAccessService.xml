@@ -30,7 +30,6 @@
         FROM t_link l
         LEFT JOIN t_link_stats_today t
             ON l.full_short_url = t.full_short_url
-            AND l.gid = t.gid
             AND t.date = CURDATE()
             AND t.del_flag = 0
         WHERE l.gid = #{gid}

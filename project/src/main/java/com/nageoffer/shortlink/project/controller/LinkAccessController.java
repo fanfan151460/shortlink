@@ -16,13 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/short-link/v1")
 @RequiredArgsConstructor
-public class LinkAccessLogsController {
-    private final ILinkAccessService linkAccessLogsService;
+public class LinkAccessController {
+    private final ILinkAccessService linkAccessService;
 
     @Operation(summary = "查询访问日志", description = "按短链接查询访问记录，RocketMQ异步写入的8表统计数据")
     @PostMapping("/access-logs")
     public Result<List<accessLogRespDTO>> getAccessLogs(@RequestBody AccessLogReqDTO accessLogReqDTO) {
-        List<accessLogRespDTO> listLog = linkAccessLogsService.getAccessLogs(accessLogReqDTO);
+        List<accessLogRespDTO> listLog = linkAccessService.getAccessLogs(accessLogReqDTO);
         return Results.success(listLog);
     }
 }

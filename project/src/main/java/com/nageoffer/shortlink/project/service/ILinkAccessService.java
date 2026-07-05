@@ -13,4 +13,6 @@ public interface ILinkAccessService extends IService<LinkAccessLogsDO> {
      * @return 结果
      */
     List<accessLogRespDTO> getAccessLogs(AccessLogReqDTO accessLogReqDTO);
+
+
 }

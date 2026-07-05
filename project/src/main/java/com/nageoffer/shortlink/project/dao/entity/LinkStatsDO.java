@@ -20,11 +20,6 @@ public class LinkStatsDO implements Serializable {
     private Long id;
 
     /**
-     * 分组标识
-     */
-    private String gid;
-
-    /**
      * 完整短链接
      */
     private String fullShortUrl;

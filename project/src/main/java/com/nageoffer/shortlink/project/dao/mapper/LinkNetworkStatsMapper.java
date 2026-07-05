@@ -9,8 +9,8 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
 
-    @Update("INSERT INTO t_link_network_stats (full_short_url, gid, date, cnt, network, create_time, update_time, del_flag) "
-            + "VALUES (#{linkNetworkStats.fullShortUrl}, #{linkNetworkStats.gid}, #{linkNetworkStats.date}, 1, #{linkNetworkStats.network}, NOW(), NOW(), 0) "
+    @Update("INSERT INTO t_link_network_stats (full_short_url, date, cnt, network, create_time, update_time, del_flag) "
+            + "VALUES (#{linkNetworkStats.fullShortUrl}, #{linkNetworkStats.date}, 1, #{linkNetworkStats.network}, NOW(), NOW(), 0) "
             + "ON DUPLICATE KEY UPDATE "
             + "cnt = cnt + 1, "
             + "update_time = NOW()")
