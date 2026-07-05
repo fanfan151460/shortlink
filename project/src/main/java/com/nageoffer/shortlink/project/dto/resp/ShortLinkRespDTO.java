@@ -23,6 +23,11 @@ public class ShortLinkRespDTO {
     private String gid;
 
     /**
+     * 短链接描述
+     */
+    private String description;
+
+    /**
      * 历史pv
      */
     private Integer totalPv;

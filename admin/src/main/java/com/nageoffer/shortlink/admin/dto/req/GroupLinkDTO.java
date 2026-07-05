@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class GroupLinkDTO {
-    /*
-     * 组名
-     */
+
+    private String gid;
+
     private String name;
 
 }

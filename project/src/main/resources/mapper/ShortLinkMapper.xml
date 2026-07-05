@@ -6,6 +6,7 @@
         <result property="fullShortUrl" column="full_short_url"/>
         <result property="originUrl" column="origin_url"/>
         <result property="gid" column="gid"/>
+        <result property="description" column="description"/>
         <result property="totalPv" column="total_pv"/>
         <result property="totalUv" column="total_uv"/>
         <result property="totalUip" column="total_uip"/>
@@ -19,6 +20,7 @@
             l.full_short_url,
             l.origin_url,
             l.gid,
+            l.description,
             l.total_pv,
             l.total_uv,
             l.total_uip,

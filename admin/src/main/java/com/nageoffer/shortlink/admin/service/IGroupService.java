@@ -47,4 +47,11 @@ public interface IGroupService extends IService<GroupDO> {
      * @return 新顺序
      */
     List<GroupLinkDTO> order(List<GroupLinkOrderDTO> linkOrderDTOList);
+
+    /**
+     * 判断gid是否属于当前用户
+     * @param gid 分组标识
+     * @return 是否属于当前用户
+     */
+    boolean hasGid(String gid);
 }

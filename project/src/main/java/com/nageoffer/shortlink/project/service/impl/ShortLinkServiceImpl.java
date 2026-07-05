@@ -128,7 +128,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         return new ShortLinkCreateRespDTO()
                 .setFullShortUrl(fullShortUrl)
                 .setGid(shortLinkDO.getGid())
-                .setOriginUrl(shortLinkDO.getOriginUrl());
+                .setOriginUrl(shortLinkDO.getOriginUrl())
+                .setFavicon(getDefaultFavicon(originUrl))
+                .setDescription(reqDTO.getDescription());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -237,7 +239,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         if (!ifGidDiff) {
             lambdaUpdate()
-                    .eq(ShortLinkDO::getOriginUrl, reqDTO.getOriginUrl())
+                    .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .set(ShortLinkDO::getValidDateType, reqDTO.getValidDateType())
                     .set(ShortLinkDO::getDescription, reqDTO.getDescription())
@@ -339,6 +341,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
+                stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, uv.get());
+                uvFirstFlag.set(true);
             };
 
             Cookie[] cookies = ((HttpServletRequest) request).getCookies();
@@ -353,7 +357,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             uvFirstFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
-                new Thread(addCookie).start();
+               addCookie.run();
             }
 
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);

@@ -39,7 +39,7 @@ import static com.nageoffer.shortlink.admin.common.enums.UserErrorCode.USER_HAD;
  *  服务实现类
  * </p>
  *
- * @author author
+ * @author fanfanfan
  * @since 2026-05-20
  */
 @Service
@@ -116,10 +116,9 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
         }
 
         String key = LOGIN + userLoginDTO.getUsername();
-        // 限制并发登录数
         Long loginCount = stringRedisTemplate.opsForHash().size(key);
         if (loginCount >= MAX_CONCURRENT_LOGIN) {
-            throw new ClientException("登录设备已达上限");
+            stringRedisTemplate.delete(key);
         }
         /*
          * hash
@@ -139,7 +138,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
         if (username == null || token == null) {
             return false;
         }
-        return stringRedisTemplate.opsForHash().hasKey(LOGIN + token, username);
+        return stringRedisTemplate.opsForHash().hasKey(LOGIN + username, token);
     }
 
     @Override

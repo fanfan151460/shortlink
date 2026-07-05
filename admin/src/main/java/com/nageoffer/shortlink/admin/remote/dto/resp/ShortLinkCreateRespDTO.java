@@ -22,4 +22,9 @@ public class ShortLinkCreateRespDTO {
      */
     private String gid;
 
+    /**
+     * 描述
+     */
+    private String description;
+
 }

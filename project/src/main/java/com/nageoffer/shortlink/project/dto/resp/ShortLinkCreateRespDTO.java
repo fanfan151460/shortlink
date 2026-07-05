@@ -22,4 +22,14 @@ public class ShortLinkCreateRespDTO {
      */
     private String gid;
 
+    /**
+     * 网站图标
+     */
+    private String favicon;
+
+    /**
+     * 描述
+     */
+    private String description;
+
 }

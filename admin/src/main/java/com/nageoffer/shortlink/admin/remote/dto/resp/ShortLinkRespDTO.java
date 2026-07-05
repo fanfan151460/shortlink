@@ -51,4 +51,9 @@ public class ShortLinkRespDTO {
      * 今日IP数
      */
     private Integer todayIpCount;
+
+    /**
+     * 描述
+     */
+    private String description;
 }

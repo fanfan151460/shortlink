@@ -22,6 +22,14 @@ import java.util.List;
 
 import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.LOCK_GROUP;
 
+/**
+ * <p>
+ *  服务实现类
+ * </p>
+ *
+ * @author fanfanfan
+ * @since 2026-05-20
+ */
 @Service
 @RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements IGroupService {
@@ -64,7 +72,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public List<GroupLinkDTO> listGroup() {
-        //TODO 当前用户
         String username = UserContext.getUsername();
         LambdaQueryWrapper<GroupDO> groupDOLambdaQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getUsername, username)
@@ -107,9 +114,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         return listGroup();
     }
 
-    public Boolean hasGid(String Gid) {
+    @Override
+    public boolean hasGid(String gid) {
         LambdaQueryWrapper<GroupDO> groupDOLambdaQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getGid, Gid)
+                .eq(GroupDO::getGid, gid)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .eq(GroupDO::getDelFlag, 0);
         return baseMapper.selectOne(groupDOLambdaQueryWrapper) != null;

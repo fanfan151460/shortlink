@@ -9,11 +9,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class UserInterceptor implements HandlerInterceptor {
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
         String username = request.getHeader("username");
-        String token = request.getHeader("token");
 
         UserContext.setUser(new UserInfoDTO()
-                .setUserName(username)
-                .setToken(token));
+                .setUserName(username));
         return true;
     }
 
