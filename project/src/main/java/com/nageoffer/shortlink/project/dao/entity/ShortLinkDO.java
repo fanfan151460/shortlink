@@ -131,5 +131,6 @@ public class ShortLinkDO implements Serializable {
     /**
      * 短链接删除时间戳（修改短链接用）
      */
+    @TableField(fill = FieldFill.INSERT)
     private String delTime;
 }
