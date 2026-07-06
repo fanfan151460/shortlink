@@ -94,6 +94,7 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .and(v -> v.isNull(ShortLinkDO::getValidDate)
                         .or().gt(ShortLinkDO::getValidDate, new Date()))
                 .set(ShortLinkDO::getDelFlag, 0)
+                .set(ShortLinkDO::getDelTime, "0")
                 .update();
         if (!update) {
             throw new ClientException("短链接恢复失败");

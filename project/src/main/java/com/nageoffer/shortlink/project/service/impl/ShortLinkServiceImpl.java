@@ -247,7 +247,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                                 ? null
                                 : reqDTO.getValidDate())
                         .setDelFlag(0)
-                        .setDelTime(null)
+                        .setDelTime("0")
                         .setEnableStatus(0);
                 baseMapper.insert(newShortLinkDO);
                 LambdaUpdateWrapper<ShortLinkGoDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkGoDO.class)
