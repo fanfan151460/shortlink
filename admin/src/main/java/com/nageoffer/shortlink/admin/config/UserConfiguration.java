@@ -49,6 +49,7 @@ public class UserConfiguration implements WebMvcConfigurer {
                         "/api/short-link/admin/v1/create",
                         "/api/short-link/admin/v1/test",
                         "/api/short-link/admin/v1/page",
+                        "/api/short-link/admin/v1/stats/**",
                         "/doc.html",
                         "/swagger-ui/**",
                         "/v3/**",

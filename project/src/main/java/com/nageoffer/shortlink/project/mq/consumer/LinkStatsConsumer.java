@@ -36,7 +36,7 @@ import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK
 public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortLinkStatsRecordDTO>> {
 
     private final ShortLinkGoToMapper shortLinkGoToMapper;
-    private final ShortLinkStatsMapper linkStatsMapper;
+    private final LinkStatsMapper linkStatsMapper;
     private final LinkLocalStatsMapper linkLocalStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
@@ -114,6 +114,9 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             String province = linkLocalStatsDO.getProvince();
             if (StrUtil.equals(linkLocalStatsDO.getInfocode(), "10000")) {
                 linkLocalStatsDO.setFullShortUrl(fullShortUrl).setDate(today).setCnt(1);
+                if (StrUtil.isBlank(linkLocalStatsDO.getProvince())) {
+                    linkLocalStatsDO.setProvince("未知");
+                }
                 linkLocalStatsMapper.insertLinkLocalStats(linkLocalStatsDO);
             }
             // 操作系统

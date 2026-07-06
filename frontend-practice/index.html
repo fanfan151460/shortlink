@@ -12,7 +12,6 @@
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-
 /* ===== Auth ===== */
 .auth-wrap { display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
 .auth-card { background:var(--card); border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.08); width:400px; overflow:hidden; }
@@ -32,7 +31,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .auth-body .btn:hover { background:var(--primary-hover); }
 .auth-body .btn:disabled { opacity:.5; cursor:not-allowed; }
 .auth-body .error { color:var(--danger); font-size:13px; text-align:center; margin-top:8px; }
-
 /* ===== Layout ===== */
 .app { display:flex; height:100vh; }
 .sidebar { width:250px; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
@@ -52,7 +50,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .sidebar-footer input:focus { border-color:var(--primary); }
 .sidebar-footer button { padding:7px 14px; background:var(--primary); color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; white-space:nowrap; }
 .sidebar-footer button:hover { background:var(--primary-hover); }
-
 /* ===== Main ===== */
 .main { flex:1; display:flex; flex-direction:column; min-width:0; }
 .topbar { padding:0 24px; height:56px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
@@ -68,13 +65,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .content { flex:1; padding:24px; overflow-y:auto; }
 .empty-state { text-align:center; padding:80px 0; color:var(--text2); }
 .empty-state .icon { font-size:40px; margin-bottom:12px; }
-
 /* ===== Toolbar ===== */
 .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
 .toolbar .btn-primary { padding:8px 20px; background:var(--primary); color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; font-weight:500; }
 .toolbar .btn-primary:hover { background:var(--primary-hover); }
 .toolbar .stats-summary { display:flex; gap:16px; font-size:13px; color:var(--text2); }
-
 /* ===== Table ===== */
 .card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
 table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -98,7 +93,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
 .pagination button:hover { background:#f1f5f9; }
 .pagination button:disabled { opacity:.4; cursor:default; }
 .pagination .page-num { color:var(--text2); }
-
 /* ===== Drawer ===== */
 .drawer-overlay { position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:200; display:none; }
 .drawer-overlay.show { display:block; }
@@ -113,7 +107,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
 .drawer-body th { font-size:11px; }
 .drawer-body td { font-size:12px; }
 .log-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:#eef2ff; color:var(--primary); }
-
 /* ===== Modal ===== */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:100; justify-content:center; align-items:center; }
 .modal-overlay.show { display:flex; }
@@ -127,17 +120,42 @@ td.stats .today { font-size:11px; color:var(--text2); }
 .modal-actions .btn-cancel { background:#fff; border:1px solid var(--border); }
 .modal-actions .btn-confirm { background:var(--primary); color:#fff; border:none; }
 .modal-actions .btn-confirm:hover { background:var(--primary-hover); }
-
 /* ===== Toast ===== */
 .toast { position:fixed; top:20px; right:20px; padding:10px 20px; border-radius:6px; font-size:14px; color:#fff; z-index:300; opacity:0; transition:opacity .3s; pointer-events:none; }
 .toast.show { opacity:1; }
 .toast.success { background:var(--success); }
 .toast.error { background:var(--danger); }
 .toast.info { background:var(--primary); }
+/* ===== Stats ===== */
+.stats-overlay { position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:200; display:none; }
+.stats-overlay.show { display:flex; justify-content:center; align-items:flex-start; }
+.stats-panel { background:var(--card); border-radius:12px; width:94vw; max-width:1200px; height:90vh; margin-top:3vh; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,.12); overflow:hidden; }
+.stats-panel-header { padding:14px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.stats-panel-header h3 { font-size:16px; }
+.stats-panel-header .link-info { font-size:12px; color:var(--primary); margin-left:12px; font-family:monospace; }
+.stats-panel-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--text2); }
+.stats-panel-close:hover { color:var(--text); }
+.stats-toolbar { padding:10px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.stats-toolbar .preset-btn { padding:5px 14px; border:1px solid var(--border); border-radius:14px; font-size:12px; cursor:pointer; background:#fff; color:var(--text2); transition:.15s; }
+.stats-toolbar .preset-btn:hover { border-color:var(--primary); color:var(--primary); }
+.stats-toolbar .preset-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.stats-toolbar input[type="date"] { padding:5px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; outline:none; }
+.stats-toolbar input[type="date"]:focus { border-color:var(--primary); }
+.stats-toolbar .spacer { flex:1; }
+.stats-body { flex:1; overflow-y:auto; padding:16px 24px 24px; }
+.stats-loading { text-align:center; padding:60px; color:var(--text2); }
+.stats-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+.stats-grid .chart-card { background:var(--bg); border-radius:var(--radius); padding:14px; min-height:260px; display:flex; flex-direction:column; }
+.stats-grid .chart-card h4 { font-size:13px; color:var(--text2); margin-bottom:8px; }
+.stats-grid .chart-card canvas { flex:1; max-height:220px; }
+.stats-row-full { margin-top:16px; }
+.stats-row-full .chart-card { background:var(--bg); border-radius:var(--radius); padding:14px; min-height:280px; }
+.stats-row-full .chart-card h4 { font-size:13px; color:var(--text2); margin-bottom:8px; }
+.stats-row-full .chart-card canvas { max-height:240px; }
+.stats-empty { text-align:center; padding:40px; color:var(--text2); font-size:13px; }
 </style>
 </head>
 <body>
-
 <!-- ======================== AUTH ======================== -->
 <div id="authPage" class="auth-wrap">
   <div class="auth-card">
@@ -147,7 +165,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
     </div>
     <div class="auth-body">
       <h1>SaaS短链系统</h1>
-
       <!-- 登录表单 -->
       <form id="loginForm">
         <div class="form-group"><label>用户名</label><input name="username" required placeholder="输入用户名"></div>
@@ -155,7 +172,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
         <button type="submit" class="btn">登录</button>
         <div class="error" id="loginError"></div>
       </form>
-
       <!-- 注册表单 -->
       <form id="registerForm" style="display:none">
         <div class="form-group"><label>用户名</label><input name="rusername" required placeholder="输入用户名" autocomplete="off"><div class="hint" id="nameHint"></div></div>
@@ -169,7 +185,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
     </div>
   </div>
 </div>
-
 <!-- ======================== APP ======================== -->
 <div id="appPage" class="app" style="display:none">
   <!-- Sidebar -->
@@ -184,7 +199,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
       <button onclick="createGroup()">新建</button>
     </div>
   </div>
-
   <!-- Main -->
   <div class="main">
     <div class="topbar">
@@ -199,7 +213,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
     <div class="content" id="content"></div>
   </div>
 </div>
-
 <!-- ======================== MODAL ======================== -->
 <div class="modal-overlay" id="linkModal">
   <div class="modal">
@@ -216,7 +229,6 @@ td.stats .today { font-size:11px; color:var(--text2); }
     </form>
   </div>
 </div>
-
 <!-- ======================== DRAWER (访问日志) ======================== -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="drawer" id="drawer">
@@ -234,16 +246,35 @@ td.stats .today { font-size:11px; color:var(--text2); }
   <div class="drawer-body" id="drawerBody"></div>
   <div class="pagination" id="drawerPager"></div>
 </div>
-
+<!-- ======================== STATS PANEL ======================== -->
+<div class="stats-overlay" id="statsOverlay">
+  <div class="stats-panel">
+    <div class="stats-panel-header">
+      <div><h3 style="display:inline">数据统计</h3><span class="link-info" id="statsLinkUrl"></span></div>
+      <button class="stats-panel-close" onclick="closeStats()">&times;</button>
+    </div>
+    <div class="stats-toolbar" id="statsToolbar">
+      <button class="preset-btn active" onclick="statsPreset(7, this)">近7天</button>
+      <button class="preset-btn" onclick="statsPreset(30, this)">近30天</button>
+      <button class="preset-btn" onclick="statsPreset(90, this)">近90天</button>
+      <span class="spacer"></span>
+      <input type="date" id="statsStart"> <span style="font-size:12px;color:var(--text2);">—</span>
+      <input type="date" id="statsEnd">
+      <button class="preset-btn" onclick="statsCustom()">自定义查询</button>
+    </div>
+    <div class="stats-body" id="statsBody">
+      <div class="stats-loading">请选择一条短链接查看统计数据</div>
+    </div>
+  </div>
+</div>
 <!-- ======================== TOAST ======================== -->
 <div class="toast" id="toast"></div>
-
 <script>
 const BASE = 'http://127.0.0.1:8000/api/short-link/admin/v1';
 let token = '', username = '', groups = [], currentGid = '', currentView = 'links';
 let page = 1, hasMore = false, recyclePage = 1, recycleHasMore = false;
 let logShortUrl = '', logGid = '', logPage = 1, logHasMore = false, logStart = '', logEnd = '';
-
+let statsShortUrl = '', statsGid = '', statsCharts = [];
 // ================ utils ================
 function hdrs() { return {'Content-Type':'application/json', username, token}; }
 function toast(msg, type) { var e=document.getElementById('toast'); e.textContent=msg; e.className='toast '+type+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2000); }
@@ -251,7 +282,6 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function escQ(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function fmtDate(d) { if(!d) return '-'; return d.split('T')[0] || d.split(' ')[0] || d; }
 function faviconUrl(url) { try { var u=new URL(url); return u.origin+'/favicon.ico'; } catch(e) { return ''; } }
-
 // ================ auth tabs ================
 function switchAuthTab(tab) {
   var isLogin = tab === 'login';
@@ -260,7 +290,6 @@ function switchAuthTab(tab) {
   document.getElementById('loginForm').style.display = isLogin ? '' : 'none';
   document.getElementById('registerForm').style.display = isLogin ? 'none' : '';
 }
-
 // ================ login ================
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -273,7 +302,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     else document.getElementById('loginError').textContent = j.message||'登录失败';
   } catch(e) { document.getElementById('loginError').textContent = '网络错误: '+e.message; }
 });
-
 // ================ register (with username check) ================
 var nameCheckTimer;
 document.forms.registerForm.rusername.addEventListener('input', function() {
@@ -289,7 +317,6 @@ document.forms.registerForm.rusername.addEventListener('input', function() {
     } catch(e) { hint.textContent='检测失败'; hint.className='hint err'; }
   }, 400);
 });
-
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   var body = { username:this.rusername.value, password:this.rpassword.value, realName:this.realName.value, phone:this.phone.value, mail:this.mail.value };
@@ -302,11 +329,9 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     else document.getElementById('regError').textContent = j.message||'注册失败';
   } catch(e) { document.getElementById('regError').textContent = '网络错误: '+e.message; }
 });
-
 // ================ session ================
 function saveSession() { localStorage.setItem('sl_token',token); localStorage.setItem('sl_username',username); }
 function clearSession() { localStorage.removeItem('sl_token'); localStorage.removeItem('sl_username'); token=''; username=''; }
-
 async function restoreSession() {
   var t = localStorage.getItem('sl_token'), u = localStorage.getItem('sl_username');
   if (!t||!u) return;
@@ -317,16 +342,13 @@ async function restoreSession() {
     else clearSession();
   } catch(e) {}
 }
-
 function enterApp() {
   document.getElementById('authPage').style.display='none';
   document.getElementById('appPage').style.display='flex';
   document.getElementById('topUser').textContent = username;
   loadGroups();
 }
-
 function logout() { clearSession(); document.getElementById('appPage').style.display='none'; document.getElementById('authPage').style.display='flex'; currentGid=''; }
-
 // ================ groups ================
 async function loadGroups() {
   try {
@@ -360,7 +382,6 @@ async function delGroup(gid) {
     else toast(j.message||'删除失败','error');
   }catch(e){toast('网络错误','error');}
 }
-
 // ================ view switcher ================
 function switchView(view) {
   currentView = view;
@@ -375,7 +396,6 @@ function switchView(view) {
     recyclePage=1; loadRecycle();
   }
 }
-
 // ================ shortlink list ================
 async function loadLinks() {
   if(!currentGid||currentView!=='links') return;
@@ -390,7 +410,7 @@ function renderLinks(links) {
   document.getElementById('viewTitle').textContent = (groups.find(function(g){return g.gid===currentGid})||{}).name||'短链接管理';
   var h='<div class="toolbar"><button class="btn-primary" onclick="openCreate()">+ 创建短链接</button></div>';
   if(!links||!links.length){ h+='<div class="empty-state"><p>此分组暂无短链接</p></div>'; document.getElementById('content').innerHTML=h; return; }
-  h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>描述</th><th>今日PV/UV/IP</th><th>历史PV/UV/IP</th><th style="width:160px">操作</th></tr></thead><tbody>';
+  h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>描述</th><th>今日PV/UV/IP</th><th>历史PV/UV/IP</th><th style="width:210px">操作</th></tr></thead><tbody>';
   links.forEach(function(l){
     var fv=faviconUrl(l.originUrl);
     h+='<tr>'
@@ -401,6 +421,7 @@ function renderLinks(links) {
       +'<td class="stats">'+(l.totalPv||0)+' / '+(l.totalUv||0)+' / '+(l.totalUip||0)+'</td>'
       +'<td class="actions-cell">'
       +'<button onclick="openEdit(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.originUrl)+'\',\''+escQ(l.description||'')+'\')">编辑</button>'
+      +'<button onclick="openStats(\''+escQ(l.fullShortUrl)+'\',\''+escQ(currentGid)+'\')">统计</button>'
       +'<button onclick="openLogs(\''+escQ(l.fullShortUrl)+'\',\''+escQ(currentGid)+'\')">访问记录</button>'
       +'<button class="danger" onclick="removeLink(\''+escQ(l.fullShortUrl)+'\')">删除</button>'
       +'</td></tr>';
@@ -410,7 +431,6 @@ function renderLinks(links) {
   document.getElementById('content').innerHTML=h;
 }
 function goPage(p){if(p<1)return;page=p;loadLinks();}
-
 // ================ create / edit modal ================
 var editingUrl='';
 function openCreate() {
@@ -436,7 +456,6 @@ async function fetchTitle() {
     else toast('未获取到标题','info');
   } catch(e) { toast('网络错误','error'); }
 }
-
 document.getElementById('linkForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   var body={originUrl:this.originUrl.value, gid:currentGid, validDateType:parseInt(this.validDateType.value), description:this.description.value};
@@ -450,7 +469,6 @@ document.getElementById('linkForm').addEventListener('submit', async function(e)
   }catch(e){toast('网络错误','error');}
 });
 document.forms.linkForm.validDateType.addEventListener('change', function() { document.getElementById('validDateGroup').style.display=this.value==='1'?'block':'none'; });
-
 async function removeLink(fullShortUrl) {
   if(!confirm('确定删除该短链接？（移入回收站）')) return;
   try {
@@ -460,7 +478,6 @@ async function removeLink(fullShortUrl) {
     else toast(j.message||'删除失败','error');
   }catch(e){toast('网络错误','error');}
 }
-
 // ================ recycle bin ================
 async function loadRecycle() {
   document.getElementById('content').innerHTML='<div style="text-align:center;padding:60px;color:var(--text2);">加载中...</div>';
@@ -501,7 +518,6 @@ async function permDelete(fullShortUrl,gid) {
     else toast(j.message||'删除失败','error');
   }catch(e){toast('网络错误','error');}
 }
-
 // ================ access log drawer ================
 function openLogs(fullShortUrl,gid){logShortUrl=fullShortUrl;logGid=gid;logPage=1;document.getElementById('drawerOverlay').classList.add('show');document.getElementById('drawer').classList.add('show');loadLogs();}
 function closeDrawer(){document.getElementById('drawerOverlay').classList.remove('show');document.getElementById('drawer').classList.remove('show');}
@@ -532,10 +548,126 @@ function logGo(p){if(p<1||p===logPage&&!logHasMore)return;logPage=p;loadLogs();}
 function logFilter(){logStart=document.getElementById('logStart').value;logEnd=document.getElementById('logEnd').value;logPage=1;loadLogs();}
 function logReset(){document.getElementById('logStart').value='';document.getElementById('logEnd').value='';logStart='';logEnd='';logPage=1;loadLogs();}
 document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
-
 // ================ modal overlay click ================
 document.getElementById('linkModal').addEventListener('click',function(e){if(e.target===this) closeModal();});
-
+// ================ stats ================
+var chartJsLoaded = false;
+function openStats(fullShortUrl, gid) {
+  statsShortUrl = fullShortUrl; statsGid = gid;
+  document.getElementById('statsOverlay').classList.add('show');
+  document.getElementById('statsLinkUrl').textContent = fullShortUrl;
+  if (chartJsLoaded) { statsPreset(7, document.querySelector('#statsToolbar .preset-btn')); return; }
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  script.onload = function() { chartJsLoaded = true; statsPreset(7, document.querySelector('#statsToolbar .preset-btn')); };
+  script.onerror = function() { document.getElementById('statsBody').innerHTML = '<div class="stats-loading">图表库加载失败，请检查网络连接</div>'; };
+  document.head.appendChild(script);
+}
+function closeStats() {
+  document.getElementById('statsOverlay').classList.remove('show');
+  statsCharts.forEach(function(c) { c.destroy(); });
+  statsCharts = [];
+}
+function statsPreset(days, btn) {
+  document.querySelectorAll('#statsToolbar .preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var end = new Date(); var start = new Date();
+  start.setDate(start.getDate() - days + 1);
+  document.getElementById('statsStart').value = start.toISOString().split('T')[0];
+  document.getElementById('statsEnd').value = end.toISOString().split('T')[0];
+  loadStats();
+}
+function statsCustom() {
+  document.querySelectorAll('#statsToolbar .preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  var s = document.getElementById('statsStart').value, e = document.getElementById('statsEnd').value;
+  if (!s || !e) { toast('请选择起止日期','error'); return; }
+  loadStats();
+}
+async function loadStats() {
+  var body = { gid: statsGid, fullShortUrl: statsShortUrl,
+    startDate: document.getElementById('statsStart').value,
+    endDate: document.getElementById('statsEnd').value };
+  statsCharts.forEach(function(c) { c.destroy(); });
+  statsCharts = [];
+  document.getElementById('statsBody').innerHTML = '<div class="stats-loading">加载中...</div>';
+  try {
+    var dims = [
+      { key: 'locale', title: '地区分布' },
+      { key: 'os', title: '操作系统' },
+      { key: 'browser', title: '浏览器' },
+      { key: 'device', title: '设备类型' },
+      { key: 'network', title: '网络类型' }
+    ];
+    var r = await fetch(BASE+'/stats/dashboard', {method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    var j = await r.json();
+    var results = (j.code==='0' && j.data) ? j.data : {};
+    renderStats(dims, results);
+  } catch(e) { document.getElementById('statsBody').innerHTML = '<div class="stats-loading">加载失败: '+esc(e.message)+'</div>'; }
+}
+var CHART_COLORS = ['#4f46e5','#f59e0b','#22c55e','#ef4444','#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1'];
+function makeDonut(ctx, labels, values) {
+  if (typeof Chart === 'undefined') return null;
+  return new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: CHART_COLORS, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { boxWidth: 10, padding: 8, font: { size: 11 } } } } } });
+}
+function renderStats(dims, results) {
+  var h = '<div class="stats-grid">';
+  var hasData = false;
+  dims.forEach(function(d, i) {
+    var data = results[d.key] || [];
+    if (data.length > 0) hasData = true;
+    h += '<div class="chart-card"><h4>'+d.title+'</h4>';
+    if (data.length > 0) {
+      h += '<canvas id="chart'+i+'"></canvas>';
+    } else {
+      h += '<div class="stats-empty">暂无数据</div>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  // access line chart
+  var accData = results.access || [];
+  h += '<div class="stats-row-full"><div class="chart-card"><h4>访问趋势 (PV / UV / UIP)</h4>';
+  if (accData.length > 0) {
+    hasData = true;
+    h += '<canvas id="chartAccess"></canvas>';
+  } else {
+    h += '<div class="stats-empty">暂无数据</div>';
+  }
+  h += '</div></div>';
+  document.getElementById('statsBody').innerHTML = h;
+  if (!hasData) { document.getElementById('statsBody').innerHTML = '<div class="stats-empty" style="padding:80px;">该时间段暂无统计数据</div>'; return; }
+  // render donut charts
+  dims.forEach(function(d, i) {
+    var data = results[d.key] || [];
+    if (data.length > 0) {
+      var labels = data.map(function(item) { return item.name || '未知'; });
+      var values = data.map(function(item) { return item.value || 0; });
+      var ctx = document.getElementById('chart'+i);
+      if (ctx) statsCharts.push(makeDonut(ctx, labels, values));
+    }
+  });
+  // render access line chart
+  if (accData.length > 0) {
+    var dates = accData.map(function(item) { return item.date || ''; });
+    var pvs = accData.map(function(item) { return item.pv || 0; });
+    var uvs = accData.map(function(item) { return item.uv || 0; });
+    var uips = accData.map(function(item) { return item.uip || 0; });
+    var ctx2 = document.getElementById('chartAccess');
+    if (ctx2) {
+      if (typeof Chart !== 'undefined') statsCharts.push(new Chart(ctx2, { type: 'line', data: { labels: dates, datasets: [
+        { label: 'PV', data: pvs, borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.08)', fill: true, tension: .3, pointRadius: 3 },
+        { label: 'UV', data: uvs, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.08)', fill: true, tension: .3, pointRadius: 3 },
+        { label: 'UIP', data: uips, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.08)', fill: true, tension: .3, pointRadius: 3 }
+      ]}, options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 10 } } } }
+      } }));
+    }
+  }
+}
+document.getElementById('statsOverlay').addEventListener('click', function(e) { if (e.target === this) closeStats(); });
 // ================ init ================
 restoreSession();
 </script>

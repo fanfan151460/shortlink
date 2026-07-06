@@ -11,8 +11,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
+import com.nageoffer.shortlink.project.dao.entity.LinkStatsTodayDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
+import com.nageoffer.shortlink.project.dao.mapper.LinkStatsTodayMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
@@ -48,10 +50,13 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.*;
 
@@ -66,6 +71,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final LinkStatsProducer linkStatsProducer;
     private final FaviconService faviconService;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -185,7 +191,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
         Page<ShortLinkRespDTO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
-        return baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName()).getRecords();
+        List<ShortLinkRespDTO> records = baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName()).getRecords();
+        if (records.isEmpty()) {
+            return records;
+        }
+        Set<String> urls = records.stream().map(ShortLinkRespDTO::getFullShortUrl).collect(Collectors.toSet());
+        List<LinkStatsTodayDO> todayStats = linkStatsTodayMapper.selectList(
+                Wrappers.<LinkStatsTodayDO>lambdaQuery()
+                        .in(LinkStatsTodayDO::getFullShortUrl, urls)
+                        .eq(LinkStatsTodayDO::getDate, LocalDate.now())
+                        .eq(LinkStatsTodayDO::getDelFlag, 0));
+        Map<String, LinkStatsTodayDO> statsMap = todayStats.stream()
+                .collect(Collectors.toMap(LinkStatsTodayDO::getFullShortUrl, s -> s, (a, b) -> a));
+        for (ShortLinkRespDTO r : records) {
+            LinkStatsTodayDO s = statsMap.get(r.getFullShortUrl());
+            if (s != null) {
+                r.setTodayPv(s.getTodayPv()).setTodayUv(s.getTodayUv()).setTodayIpCount(s.getTodayIpCount());
+            }
+        }
+        return records;
     }
 
     @Override

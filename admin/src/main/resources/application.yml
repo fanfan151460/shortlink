@@ -36,7 +36,7 @@ logging:
 short-link:
   user-limit:
     time: 1
-    max-click: 5
+    max-click: 10
 ---
 spring:
   config:
