@@ -1,17 +1,8 @@
 package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.remote.dto.req.AccessLogReqDTO;
-import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
-import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
-import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
-import com.nageoffer.shortlink.admin.remote.dto.req.StatsRemoteReqDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.AccessStatsVO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.StatsDashboardVO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.StatsItemVO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.accessLogRespDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.*;
+import com.nageoffer.shortlink.admin.remote.dto.resp.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,9 +34,12 @@ public interface ProjectFeignClient {
     Result<Void> saveRecycleBin(@RequestBody RecycleDTO recycleDTO);
 
     @GetMapping("/api/short-link/v1/recycle-bin/page")
-    Result<List<ShortLinkRespDTO>> pageRecycle(@RequestParam String gid,
-                                                @RequestParam Long current,
-                                                @RequestParam Long size);
+    Result<List<RecycleBinShortLinkDTO>> pageRecycle(@RequestParam String gid,
+                                                     @RequestParam Long current,
+                                                     @RequestParam Long size);
+
+    @GetMapping("/api/short-link/v1/recycle-bin/save-all/{gid}")
+    Result<Void> saveRecycleBinAll(@PathVariable String gid);
 
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO);

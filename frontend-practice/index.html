@@ -375,8 +375,9 @@ async function createGroup() {
   }catch(e){toast('网络错误','error');}
 }
 async function delGroup(gid) {
-  if(!confirm('确定删除该分组？')) return;
+  if(!confirm('确定删除该分组？分组内短链接将移入回收站')) return;
   try {
+    await fetch(BASE+'/recycle-bin/save-all/'+encodeURIComponent(gid),{headers:hdrs()});
     var r=await fetch(BASE+'/group?gid='+gid,{method:'DELETE',headers:hdrs()}); var j=await r.json();
     if(j.code==='0'){if(currentGid===gid){currentGid='';document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';}toast('已删除','success');loadGroups();}
     else toast(j.message||'删除失败','error');
@@ -393,7 +394,8 @@ function switchView(view) {
     if (currentGid) loadLinks(); else document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';
   } else {
     document.getElementById('viewTitle').textContent = '回收站';
-    recyclePage=1; loadRecycle();
+    if (currentGid) { recyclePage=1; loadRecycle(); }
+    else document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';
   }
 }
 // ================ shortlink list ================
@@ -472,7 +474,7 @@ document.forms.linkForm.validDateType.addEventListener('change', function() { do
 async function removeLink(fullShortUrl) {
   if(!confirm('确定删除该短链接？（移入回收站）')) return;
   try {
-    var r=await fetch(BASE+'/remove',{method:'DELETE',headers:hdrs(),body:JSON.stringify({gid:currentGid,fullShortUrl})});
+    var r=await fetch(BASE+'/recycle-bin/save',{method:'POST',headers:hdrs(),body:JSON.stringify({gid:currentGid,fullShortUrl})});
     var j=await r.json();
     if(j.code==='0'){toast('已移入回收站','success');loadLinks();}
     else toast(j.message||'删除失败','error');
@@ -482,7 +484,7 @@ async function removeLink(fullShortUrl) {
 async function loadRecycle() {
   document.getElementById('content').innerHTML='<div style="text-align:center;padding:60px;color:var(--text2);">加载中...</div>';
   try {
-    var r=await fetch(BASE+'/recycle-bin/page?current='+recyclePage+'&size=10',{headers:hdrs()}); var j=await r.json();
+    var r=await fetch(BASE+'/recycle-bin/page?gid='+currentGid+'&current='+recyclePage+'&size=10',{headers:hdrs()}); var j=await r.json();
     if(j.code==='0'){recycleHasMore=j.data.length>=10;renderRecycle(j.data);}
     else document.getElementById('content').innerHTML='<div class="empty-state"><p>加载失败</p></div>';
   }catch(e){document.getElementById('content').innerHTML='<div class="empty-state"><p>网络错误</p></div>';}
@@ -490,9 +492,11 @@ async function loadRecycle() {
 function renderRecycle(items) {
   var h='<div class="toolbar"><h3>回收站</h3></div>';
   if(!items||!items.length){h+='<div class="empty-state"><p>回收站为空</p></div>';document.getElementById('content').innerHTML=h;return;}
-  h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>分组</th><th style="width:120px">操作</th></tr></thead><tbody>';
+  h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>描述</th><th>删除时间</th><th style="width:120px">操作</th></tr></thead><tbody>';
   items.forEach(function(l){
-    h+='<tr><td class="url">'+esc(l.fullShortUrl)+'</td><td class="origin" title="'+esc(l.originUrl)+'">'+esc(l.originUrl||'-')+'</td><td>'+esc(l.gid||'-')+'</td>'
+    var fv=l.favicon||defaultFavicon(l.originUrl);
+    var dt=l.updateTime?l.updateTime.substring(0,16).replace('T',' '):'-';
+    h+='<tr><td class="url"><img class="favicon-img" src="'+fv+'" onerror="this.style.display=\'none\'">'+esc(l.fullShortUrl)+'</td><td class="origin" title="'+esc(l.originUrl)+'">'+esc(l.originUrl||'-')+'</td><td>'+esc(l.description||'-')+'</td><td>'+dt+'</td>'
       +'<td class="actions-cell"><button onclick="recoverLink(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">恢复</button><button class="danger" onclick="permDelete(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">彻底删除</button></td></tr>';
   });
   h+='</tbody></table></div>';

@@ -1,11 +1,11 @@
 package com.nageoffer.shortlink.admin.remote.impl;
 
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
-import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
+import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.RecycleBinShortLinkDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +26,8 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
     }
 
     @Override
-    public List<ShortLinkRespDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
-        Result<List<ShortLinkRespDTO>> result = projectFeignClient.pageRecycle(
+    public List<RecycleBinShortLinkDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
+        Result<List<RecycleBinShortLinkDTO>> result = projectFeignClient.pageRecycle(
                 pageReqDTO.getGid(),
                 pageReqDTO.getCurrent(),
                 pageReqDTO.getSize()
@@ -43,6 +43,14 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
         Result<Void> result = projectFeignClient.rmRecycleBin(recycleDTO);
         if (result == null || !result.isSuccess()) {
             throw new RuntimeException("远程恢复短链接失败");
+        }
+    }
+
+    @Override
+    public void saveRecycleBinAll(String gid) {
+        Result<Void> result = projectFeignClient.saveRecycleBinAll(gid);
+        if (result == null || !result.isSuccess()) {
+            throw new RuntimeException("远程将分组短链接放入回收站失败");
         }
     }
 }

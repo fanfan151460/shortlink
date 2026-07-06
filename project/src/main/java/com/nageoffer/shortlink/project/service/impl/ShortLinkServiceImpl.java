@@ -417,12 +417,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public void removeShortLink(RecycleDTO recycleDTO) {
-
         boolean removed = lambdaUpdate()
                 .eq(ShortLinkDO::getUserName, UserContext.getUserName())
                 .eq(ShortLinkDO::getGid, recycleDTO.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, recycleDTO.getFullShortUrl())
-                .remove();
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .set(ShortLinkDO::getDelFlag, 1)
+                .set(ShortLinkDO::getDelTime, System.currentTimeMillis())
+                .update();
         if (!removed) {
             throw new ClientException("短链接删除失败");
         }

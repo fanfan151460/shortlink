@@ -4,9 +4,9 @@ import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
-import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.RecycleBinShortLinkDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +30,16 @@ public class RecycleBinController {
         return Results.success();
     }
 
+    @GetMapping("/recycle-bin/save-all/{gid}")
+    public Result<Void> multiSaveRecycleBin(@PathVariable String gid) {
+        remoteRecycleService.saveRecycleBinAll(gid);
+        return Results.success();
+    }
+
+
     @Operation(summary = "分页查询回收站")
     @GetMapping("/recycle-bin/page")
-    public Result<List<ShortLinkRespDTO>> pageRecycle(RecyclePageDTO pageReqDTO) {
+    public Result<List<RecycleBinShortLinkDTO>> pageRecycle(RecyclePageDTO pageReqDTO) {
         return Results.success(remoteRecycleService.pageRecycle(pageReqDTO));
     }
 

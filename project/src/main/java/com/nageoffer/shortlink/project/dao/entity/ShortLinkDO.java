@@ -115,7 +115,6 @@ public class ShortLinkDO implements Serializable {
     /**
      * 删除标识 0：未删除 1：已删除
      */
-    @TableLogic(value = "0", delval = "1")
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
 
