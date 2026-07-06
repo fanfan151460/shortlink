@@ -25,7 +25,8 @@ public interface IRemoteRecycleService {
 
     /**
      * 将分组下所有短链接放入回收站
-     * @param gid
+     * @param gid 分组标识
+     * @return true=分组下有短链接，false=空分组
      */
-    void saveRecycleBinAll(String gid);
+    boolean saveRecycleBinAll(String gid);
 }

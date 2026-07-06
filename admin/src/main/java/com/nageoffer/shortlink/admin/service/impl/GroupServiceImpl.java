@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
 import com.nageoffer.shortlink.admin.common.exception.ClientException;
-import com.nageoffer.shortlink.admin.common.exception.ServiceException;
 import com.nageoffer.shortlink.admin.dao.entity.GroupDO;
 import com.nageoffer.shortlink.admin.dao.mapper.GroupMapper;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkDTO;
@@ -107,15 +106,17 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     }
 
     @Override
-    public void delGroup(String gid) {
-        boolean update = lambdaUpdate()
+    public void delGroup(String gid, boolean hasLinks) {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getUserName, UserContext.getUsername())
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getDelFlag, 0)
-                .set(GroupDO::getDelFlag, 1)
-                .update();
-        if (!update) {
-            throw new ServiceException("系统删除短链接出错");
+                .eq(GroupDO::getDelFlag, 0);
+        GroupDO groupDO = baseMapper.selectOne(queryWrapper);
+        if (hasLinks) {
+            groupDO.setDelFlag(1);
+            baseMapper.update(groupDO, queryWrapper);
+        } else {
+            baseMapper.delete(queryWrapper);
         }
     }
 

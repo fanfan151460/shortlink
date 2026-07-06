@@ -56,10 +56,11 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
     }
 
     @Override
-    public void saveRecycleBinAll(String gid) {
-        Result<Void> result = projectFeignClient.saveRecycleBinAll(gid);
+    public boolean saveRecycleBinAll(String gid) {
+        Result<Boolean> result = projectFeignClient.saveRecycleBinAll(gid);
         if (!result.isSuccess()) {
             throw new ClientException(result.getMessage());
         }
+        return result.getData();
     }
 }

@@ -401,9 +401,8 @@ async function createGroup() {
   }catch(e){toast('网络错误','error');}
 }
 async function delGroup(gid) {
-  if(!confirm('确定删除该分组？分组内短链接将移入回收站')) return;
+  if(!confirm('确定删除该分组？空分组将被彻底删除，非空分组内的短链接将移入回收站')) return;
   try {
-    await fetch(BASE+'/recycle-bin/save-all/'+encodeURIComponent(gid),{headers:hdrs()});
     var r=await fetch(BASE+'/group?gid='+gid,{method:'DELETE',headers:hdrs()}); var j=await r.json();
     if(j.code==='0'){if(currentGid===gid){currentGid='';document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';}toast('已删除','success');loadGroups();}
     else toast(j.message||'删除失败','error');

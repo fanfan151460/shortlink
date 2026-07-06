@@ -52,16 +52,21 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
     }
 
     @Override
-    public void saveRecycleBinAll(String gid) {
-        boolean update = lambdaUpdate().eq(ShortLinkDO::getGid, gid)
+    public boolean saveRecycleBinAll(String gid) {
+        Long cnt = lambdaQuery()
+                .eq(ShortLinkDO::getGid, gid)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .count();
+        if (cnt == 0) {
+            return false;
+        }
+        lambdaUpdate().eq(ShortLinkDO::getGid, gid)
                 .eq(ShortLinkDO::getUserName, UserContext.getUserName())
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .set(ShortLinkDO::getDelTime, System.currentTimeMillis())
                 .set(ShortLinkDO::getDelFlag, 1)
                 .update();
-        if (!update) {
-            throw new ClientException("批量删除失败了！请稍后再试");
-        }
+        return true;
     }
 
     @Override

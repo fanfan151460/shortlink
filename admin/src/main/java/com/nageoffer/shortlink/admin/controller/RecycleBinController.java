@@ -31,9 +31,8 @@ public class RecycleBinController {
     }
 
     @GetMapping("/recycle-bin/save-all/{gid}")
-    public Result<Void> multiSaveRecycleBin(@PathVariable String gid) {
-        remoteRecycleService.saveRecycleBinAll(gid);
-        return Results.success();
+    public Result<Boolean> multiSaveRecycleBin(@PathVariable String gid) {
+        return Results.success(remoteRecycleService.saveRecycleBinAll(gid));
     }
 
 

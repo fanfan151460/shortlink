@@ -37,6 +37,7 @@ public interface IRecycleBinService extends IService<ShortLinkDO> {
     /**
      * 将分组下所有短链接移入回收站
      * @param gid 分组标识
+     * @return true=分组下有短链接（已移入回收站），false=空分组可直接物理删除
      */
-    void saveRecycleBinAll(String gid);
+    boolean saveRecycleBinAll(String gid);
 }

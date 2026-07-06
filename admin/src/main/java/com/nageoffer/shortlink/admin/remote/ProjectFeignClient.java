@@ -39,7 +39,7 @@ public interface ProjectFeignClient {
                                                      @RequestParam Long size);
 
     @GetMapping("/api/short-link/v1/recycle-bin/save-all/{gid}")
-    Result<Void> saveRecycleBinAll(@PathVariable String gid);
+    Result<Boolean> saveRecycleBinAll(@PathVariable String gid);
 
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO);

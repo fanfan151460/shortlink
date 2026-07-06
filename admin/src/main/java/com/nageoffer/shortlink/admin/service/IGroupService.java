@@ -43,9 +43,10 @@ public interface IGroupService extends IService<GroupDO> {
 
     /**
      * 删除分组
-     * @param gid
+     * @param gid 分组标识
+     * @param hasLinks 分组下是否有短链接，false=空分组直接物理删除
      */
-    void delGroup(String gid);
+    void delGroup(String gid, boolean hasLinks);
 
     /**
      * 排序分组

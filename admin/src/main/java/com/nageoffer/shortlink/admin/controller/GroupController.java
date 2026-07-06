@@ -5,6 +5,7 @@ import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkDTO;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkOrderDTO;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkUpdateDTO;
+import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
 import com.nageoffer.shortlink.admin.service.IGroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GroupController {
     private final IGroupService groupService;
+    private final IRemoteRecycleService remoteRecycleService;
 
     @Operation(summary = "创建分组")
     @PostMapping("/group")
@@ -52,7 +54,8 @@ public class GroupController {
     @Operation(summary = "删除分组")
     @DeleteMapping("/group")
     public Result<Void> deleteGroup(@RequestParam String gid) {
-        groupService.delGroup(gid);
+        boolean hasLinks = remoteRecycleService.saveRecycleBinAll(gid);
+        groupService.delGroup(gid, hasLinks);
         return Results.success();
     }
 

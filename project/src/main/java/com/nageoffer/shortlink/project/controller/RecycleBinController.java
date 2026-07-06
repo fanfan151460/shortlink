@@ -28,9 +28,8 @@ public class RecycleBinController {
     }
 
     @GetMapping("/save-all/{gid}")
-    public Result<Void> multiSaveRecycleBin(@PathVariable String gid) {
-        recycleBinService.saveRecycleBinAll(gid);
-        return Results.success();
+    public Result<Boolean> multiSaveRecycleBin(@PathVariable String gid) {
+        return Results.success(recycleBinService.saveRecycleBinAll(gid));
     }
 
     @Operation(summary = "分页查询回收站")
