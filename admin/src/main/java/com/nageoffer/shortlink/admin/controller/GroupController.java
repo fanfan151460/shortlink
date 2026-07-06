@@ -35,6 +35,13 @@ public class GroupController {
         return Results.success(groupLinkDTOS);
     }
 
+    @Operation(summary = "查询已删除分组列表")
+    @GetMapping("/group/deleted")
+    public Result<List<GroupLinkDTO>> getAllGroups() {
+        List<GroupLinkDTO> groupLinkDTOS = groupService.listAllGroup();
+        return Results.success(groupLinkDTOS);
+    }
+
     @Operation(summary = "更新分组名称")
     @PutMapping("/group")
     public Result<Void> updateGroup(@RequestBody GroupLinkUpdateDTO groupLinkUpdateDTO) {

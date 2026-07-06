@@ -9,4 +9,9 @@ public class GroupLinkDTO {
 
     private String name;
 
+    /**
+     * 删除标识 0：未删除 1：已删除
+     */
+    private Integer delFlag;
+
 }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
 import com.nageoffer.shortlink.admin.common.exception.ClientException;
+import com.nageoffer.shortlink.admin.common.exception.ServiceException;
 import com.nageoffer.shortlink.admin.dao.entity.GroupDO;
 import com.nageoffer.shortlink.admin.dao.mapper.GroupMapper;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkDTO;
@@ -46,7 +47,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         RLock rLock = redissonClient.getLock(String.format(LOCK_GROUP, username));
         rLock.lock();
         try {
-            Long count = lambdaQuery().eq(GroupDO::getUsername, username)
+            Long count = lambdaQuery().eq(GroupDO::getUserName, username)
                     .eq(GroupDO::getDelFlag, 0)
                     .count();
             if (count > 10) {
@@ -62,7 +63,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                     .setName(groupName)
                     .setGid(gid)
                     .setSortOrder(0)
-                    .setUsername(username);
+                    .setUserName(username);
 
             baseMapper.insert(groupDO);
         } finally {
@@ -74,17 +75,30 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     public List<GroupLinkDTO> listGroup() {
         String username = UserContext.getUsername();
         LambdaQueryWrapper<GroupDO> groupDOLambdaQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getUsername, username)
-                .orderByAsc(GroupDO::getSortOrder, GroupDO::getUpdateTime)
-                .eq(GroupDO::getDelFlag, 0);
+                .eq(GroupDO::getUserName, username)
+                .eq(GroupDO::getDelFlag, 0)
+                .orderByAsc(GroupDO::getSortOrder)
+                .orderByDesc(GroupDO::getUpdateTime);
         List<GroupDO> groupDOS = baseMapper.selectList(groupDOLambdaQueryWrapper);
         return BeanUtil.copyToList(groupDOS, GroupLinkDTO.class);
     }
 
+    public List<GroupLinkDTO> listAllGroup() {
+        String username = UserContext.getUsername();
+        List<GroupDO> groupDOS = lambdaQuery()
+                .eq(GroupDO::getUserName, username)
+                .eq(GroupDO::getDelFlag, 1)
+                .orderByAsc(GroupDO::getSortOrder)
+                .orderByDesc(GroupDO::getUpdateTime)
+                .list();
+        return BeanUtil.copyToList(groupDOS, GroupLinkDTO.class);
+    }
+
+
     @Override
     public void updateGroup(GroupLinkUpdateDTO groupLinkUpdateDTO) {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getUserName, UserContext.getUsername())
                 .eq(GroupDO::getGid, groupLinkUpdateDTO.getGid())
                 .eq(GroupDO::getDelFlag, 0);
         GroupDO groupDO = baseMapper.selectOne(queryWrapper);
@@ -94,20 +108,22 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void delGroup(String gid) {
-        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+        boolean update = lambdaUpdate()
+                .eq(GroupDO::getUserName, UserContext.getUsername())
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getDelFlag, 0);
-        GroupDO groupDO = baseMapper.selectOne(queryWrapper);
-        groupDO.setDelFlag(1);
-        baseMapper.update(groupDO, queryWrapper);
+                .eq(GroupDO::getDelFlag, 0)
+                .set(GroupDO::getDelFlag, 1)
+                .update();
+        if (!update) {
+            throw new ServiceException("系统删除短链接出错");
+        }
     }
 
     @Override
     public List<GroupLinkDTO> order(List<GroupLinkOrderDTO> linkOrderDTOList) {
         linkOrderDTOList.forEach(each -> lambdaUpdate()
                 .eq(GroupDO::getGid, each.getGroupId())
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getUserName, UserContext.getUsername())
                 .eq(GroupDO::getDelFlag, 0)
                 .set(GroupDO::getSortOrder, each.getSortOrder())
                 .update());
@@ -118,7 +134,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     public boolean hasGid(String gid) {
         LambdaQueryWrapper<GroupDO> groupDOLambdaQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getUserName, UserContext.getUsername())
                 .eq(GroupDO::getDelFlag, 0);
         return baseMapper.selectOne(groupDOLambdaQueryWrapper) != null;
     }

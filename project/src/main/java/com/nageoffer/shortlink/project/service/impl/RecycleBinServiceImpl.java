@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
+import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.RecyclePageDTO;
@@ -28,6 +29,7 @@ import static com.nageoffer.shortlink.project.common.constant.RedisConstant.FULL
 @RequiredArgsConstructor
 public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements IRecycleBinService {
     private final StringRedisTemplate stringRedisTemplate;
+    private final ShortLinkGoToMapper shortLinkGOToMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,9 +66,6 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
 
     @Override
     public List<RecycleBinShortLinkDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
-        if (pageReqDTO.getGid() == null) {
-            throw new ClientException("客户端参数出错");
-        }
         Page<ShortLinkDO> linkPage = Page.of(pageReqDTO.getCurrent(), pageReqDTO.getSize());
         linkPage.addOrder(OrderItem.desc("update_time"));
         LambdaQueryWrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)

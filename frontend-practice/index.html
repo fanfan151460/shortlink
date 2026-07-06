@@ -42,6 +42,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .group-item:hover { background:#f8fafc; }
 .group-item.active { background:#eef2ff; border-left-color:var(--primary); color:var(--primary); font-weight:500; }
 .group-item .name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.group-item.deleted { color:#94a3b8; }
+.group-item.deleted.active { background:#f1f5f9; border-left-color:#94a3b8; color:#94a3b8; }
 .group-item .del { color:#cbd5e1; font-size:16px; cursor:pointer; border:none; background:none; padding:0 4px; visibility:hidden; }
 .group-item:hover .del { visibility:visible; }
 .group-item .del:hover { color:var(--danger); }
@@ -271,7 +273,7 @@ td.stats .today { font-size:11px; color:var(--text2); }
 <div class="toast" id="toast"></div>
 <script>
 const BASE = 'http://127.0.0.1:8000/api/short-link/admin/v1';
-let token = '', username = '', groups = [], currentGid = '', currentView = 'links';
+let token = '', username = '', groups = [], deletedGroups = [], currentGid = '', currentView = 'links';
 let page = 1, hasMore = false, recyclePage = 1, recycleHasMore = false;
 let logShortUrl = '', logGid = '', logPage = 1, logHasMore = false, logStart = '', logEnd = '';
 let statsShortUrl = '', statsGid = '', statsCharts = [];
@@ -282,6 +284,7 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function escQ(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function fmtDate(d) { if(!d) return '-'; return d.split('T')[0] || d.split(' ')[0] || d; }
 function faviconUrl(url) { try { var u=new URL(url); return u.origin+'/favicon.ico'; } catch(e) { return ''; } }
+function findGroup(gid) { return groups.find(function(g){return g.gid===gid}) || deletedGroups.find(function(g){return g.gid===gid}); }
 // ================ auth tabs ================
 function switchAuthTab(tab) {
   var isLogin = tab === 'login';
@@ -356,14 +359,37 @@ async function loadGroups() {
     if (j.code==='0') { groups=j.data; renderGroups(); }
   } catch(e) {}
 }
+async function loadDeletedGroups() {
+  try {
+    var r = await fetch(BASE+'/group/deleted',{headers:hdrs()}); var j = await r.json();
+    if (j.code==='0') {
+      deletedGroups = j.data || [];
+      renderGroups();
+    }
+  } catch(e) {}
+}
 function renderGroups() {
   var el = document.getElementById('groupList');
-  if (!groups.length) { el.innerHTML='<div style="padding:20px;color:var(--text2);font-size:13px;">暂无分组</div>'; return; }
-  el.innerHTML = groups.map(function(g) {
-    return '<div class="group-item'+(g.gid===currentGid&&currentView==='links'?' active':'')+'" onclick="selectGroup(\''+escQ(g.gid)+'\')"><span class="name">'+esc(g.name)+'</span><button class="del" onclick="event.stopPropagation();delGroup(\''+escQ(g.gid)+'\')">&times;</button></div>';
-  }).join('');
+  var hasActive = groups.length > 0;
+  var hasDeleted = currentView === 'recycle' && deletedGroups.length > 0;
+  if (!hasActive && !hasDeleted) { el.innerHTML='<div style="padding:20px;color:var(--text2);font-size:13px;">暂无分组</div>'; return; }
+  var html = '';
+  // active groups
+  groups.forEach(function(g) {
+    var isActive = g.gid===currentGid;
+    html += '<div class="group-item'+(isActive?' active':'')+'" onclick="selectGroup(\''+escQ(g.gid)+'\')"><span class="name">'+esc(g.name)+'</span><button class="del" onclick="event.stopPropagation();delGroup(\''+escQ(g.gid)+'\')">&times;</button></div>';
+  });
+  // deleted groups (grayed, recycle view only)
+  if (hasDeleted) {
+    html += '<div class="section-label">已删除分组</div>';
+    deletedGroups.forEach(function(g) {
+      var isActive = g.gid===currentGid;
+      html += '<div class="group-item deleted'+(isActive?' active':'')+'" onclick="selectGroup(\''+escQ(g.gid)+'\')"><span class="name">'+esc(g.name)+'</span></div>';
+    });
+  }
+  el.innerHTML = html;
 }
-function selectGroup(gid) { currentGid=gid; page=1; renderGroups(); switchView('links'); loadLinks(); }
+function selectGroup(gid) { currentGid=gid; page=1; recyclePage=1; renderGroups(); if (currentView==='recycle') { loadRecycle(); } else { loadLinks(); } }
 async function createGroup() {
   var inp=document.getElementById('newGroupInput'), name=inp.value.trim();
   if(!name) return toast('请输入分组名称','error');
@@ -388,12 +414,14 @@ function switchView(view) {
   currentView = view;
   document.getElementById('btnLinks').classList.toggle('active', view==='links');
   document.getElementById('btnRecycle').classList.toggle('active', view==='recycle');
-  renderGroups();
   if (view==='links') {
-    document.getElementById('viewTitle').textContent = currentGid ? (groups.find(function(g){return g.gid===currentGid})||{}).name||'短链接管理' : '短链接管理';
+    deletedGroups = [];
+    renderGroups();
+    document.getElementById('viewTitle').textContent = currentGid ? (findGroup(currentGid)||{}).name||'短链接管理' : '短链接管理';
     if (currentGid) loadLinks(); else document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';
   } else {
     document.getElementById('viewTitle').textContent = '回收站';
+    loadDeletedGroups();
     if (currentGid) { recyclePage=1; loadRecycle(); }
     else document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">&#128194;</div><p>请从左侧选择一个分组</p></div>';
   }
@@ -409,7 +437,7 @@ async function loadLinks() {
   }catch(e){document.getElementById('content').innerHTML='<div class="empty-state"><p>网络错误</p></div>';}
 }
 function renderLinks(links) {
-  document.getElementById('viewTitle').textContent = (groups.find(function(g){return g.gid===currentGid})||{}).name||'短链接管理';
+  document.getElementById('viewTitle').textContent = (findGroup(currentGid)||{}).name||'短链接管理';
   var h='<div class="toolbar"><button class="btn-primary" onclick="openCreate()">+ 创建短链接</button></div>';
   if(!links||!links.length){ h+='<div class="empty-state"><p>此分组暂无短链接</p></div>'; document.getElementById('content').innerHTML=h; return; }
   h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>描述</th><th>今日PV/UV/IP</th><th>历史PV/UV/IP</th><th style="width:210px">操作</th></tr></thead><tbody>';
@@ -486,7 +514,7 @@ async function loadRecycle() {
   try {
     var r=await fetch(BASE+'/recycle-bin/page?gid='+currentGid+'&current='+recyclePage+'&size=10',{headers:hdrs()}); var j=await r.json();
     if(j.code==='0'){recycleHasMore=j.data.length>=10;renderRecycle(j.data);}
-    else document.getElementById('content').innerHTML='<div class="empty-state"><p>加载失败</p></div>';
+    else document.getElementById('content').innerHTML='<div class="empty-state"><p>'+(j.message||'加载失败')+'</p></div>';
   }catch(e){document.getElementById('content').innerHTML='<div class="empty-state"><p>网络错误</p></div>';}
 }
 function renderRecycle(items) {
@@ -494,7 +522,7 @@ function renderRecycle(items) {
   if(!items||!items.length){h+='<div class="empty-state"><p>回收站为空</p></div>';document.getElementById('content').innerHTML=h;return;}
   h+='<div class="card"><table><thead><tr><th>短链接</th><th>原始链接</th><th>描述</th><th>删除时间</th><th style="width:120px">操作</th></tr></thead><tbody>';
   items.forEach(function(l){
-    var fv=l.favicon||defaultFavicon(l.originUrl);
+    var fv=l.favicon||faviconUrl(l.originUrl);
     var dt=l.updateTime?l.updateTime.substring(0,16).replace('T',' '):'-';
     h+='<tr><td class="url"><img class="favicon-img" src="'+fv+'" onerror="this.style.display=\'none\'">'+esc(l.fullShortUrl)+'</td><td class="origin" title="'+esc(l.originUrl)+'">'+esc(l.originUrl||'-')+'</td><td>'+esc(l.description||'-')+'</td><td>'+dt+'</td>'
       +'<td class="actions-cell"><button onclick="recoverLink(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">恢复</button><button class="danger" onclick="permDelete(\''+escQ(l.fullShortUrl)+'\',\''+escQ(l.gid||'')+'\')">彻底删除</button></td></tr>';

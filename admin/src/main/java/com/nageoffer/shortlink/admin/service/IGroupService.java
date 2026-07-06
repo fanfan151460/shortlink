@@ -30,6 +30,12 @@ public interface IGroupService extends IService<GroupDO> {
     List<GroupLinkDTO> listGroup();
 
     /**
+     * 查询已删除分组
+     * @return 已删除分组列表
+     */
+    List<GroupLinkDTO> listAllGroup();
+
+    /**
      * 更新分组
      * @param groupLinkUpdateDTO
      */
