@@ -19,6 +19,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 
@@ -49,7 +50,7 @@ class ShortLinkServiceImplTest {
     void setUp() {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
-        when(request.getServerName()).thenReturn("xiyl.cn");
+        ReflectionTestUtils.setField(shortLinkService, "domain", "xiyl.cn");
     }
 
     @Test
