@@ -35,7 +35,7 @@ spring:
       suffix: .html
   short-link:
     domain: fan.ink
-    block-domain-list: xiaohongshu.com,taobao.com
+    block-domain-list: xiaohongshu.com,weibo.com
   profiles:
     active: dev
 ---
