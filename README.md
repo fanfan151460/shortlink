@@ -174,7 +174,7 @@ mvn spring-boot:run -pl gateway
 - **`delTime` 字段约定**：活跃链接 `del_time = "0"`，删除时写入毫秒时间戳，恢复时重置为 `"0"`。这是 `(full_short_url, del_time)` 联合唯一索引能正常工作的前提，因为 MySQL 中多个 `NULL` 不算冲突，但多个 `"0"` 算。
 - **短链接跳转端口**：本地开发时短链接域名为 `fan.ink:8082`（带端口），生产部署建议通过 Nginx 反代到 Gateway 统一入口。
 
-## 项目亮点（面试可讲）
+## 项目亮点
 
 1. **微服务拆分**：Admin 作为 BFF 层聚合接口，Project 专注核心逻辑，Gateway 统一鉴权
 2. **分库分表**：ShardingSphere 按 `gid` 哈希分 16 表，支持水平扩展
