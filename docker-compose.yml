@@ -1,0 +1,107 @@
+version: "3.8"
+
+services:
+  # ============================================================
+  # MySQL 8.0 — 短链接数据存储
+  # 端口: 3306  数据库: link  用户: root / 151460
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: shortlink-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "151460"
+      MYSQL_DATABASE: "link"
+      TZ: Asia/Shanghai
+    volumes:
+      # 首次启动自动执行 sql/ 目录下所有 .sql 文件
+      - ./sql:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Redis 7 — 缓存 + 布隆过滤器 + 分布式锁 + Token 存储
+  # 端口: 6379
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: shortlink-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Nacos 2.2 — 服务注册与发现
+  # 端口: 8848（HTTP）, 9848（gRPC）
+  # 控制台: http://localhost:8848/nacos  账号密码: nacos/nacos
+  # ============================================================
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: shortlink-nacos
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+    volumes:
+      - nacos_data:/home/nacos/data
+
+  # ============================================================
+  # RocketMQ NameServer — 路由注册中心
+  # 端口: 9876
+  # ============================================================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: shortlink-rmq-namesrv
+    restart: unless-stopped
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    volumes:
+      - rmq_namesrv_data:/home/rocketmq/logs
+
+  # ============================================================
+  # RocketMQ Broker — 消息存储与投递
+  # 端口: 10911（客户端）, 10909（控制台）
+  # ============================================================
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.4
+    container_name: shortlink-rmq-broker
+    restart: unless-stopped
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: sh mqbroker -n rocketmq-namesrv:9876
+    volumes:
+      - rmq_broker_data:/home/rocketmq/logs
+    depends_on:
+      - rocketmq-namesrv
+
+volumes:
+  mysql_data:
+  redis_data:
+  nacos_data:
+  rmq_namesrv_data:
+  rmq_broker_data:
