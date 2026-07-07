@@ -185,10 +185,5 @@ mvn spring-boot:run -pl gateway
 
 ## 截图
 
-> 待补充：登录页、工作台、回收站、统计仪表盘截图
 > 统计图：![img.png](img.png)
 > 回收站：![img_1.png](img_1.png)
-
-## License
-
-MIT
