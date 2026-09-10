@@ -31,7 +31,7 @@ public class MsgQueueIdempotentHandler {
      * @return 消费结果
      */
     public Boolean isSuccessConsume(String msgKey) {
-        return Objects.equals(stringRedisTemplate.opsForValue().get(msgKey), "1");
+        return Objects.equals(stringRedisTemplate.opsForValue().get(String.format(msgKey, IDEMPOTENT_KEY)), "1");
     }
 
     /**
