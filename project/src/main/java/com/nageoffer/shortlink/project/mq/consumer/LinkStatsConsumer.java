@@ -103,8 +103,6 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             return;
         }
         String gid = gotoDO.getGid();
-
-
         // pv uv uip
         LinkStatsDO statsDO = new LinkStatsDO()
                 .setFullShortUrl(fullShortUrl)
