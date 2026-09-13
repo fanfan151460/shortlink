@@ -381,7 +381,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         AtomicReference<String> uv = new AtomicReference<>();
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         AtomicBoolean uipFirstFlag = new AtomicBoolean();
-        ShortLinkStatsRecordDTO statsRecord = new ShortLinkStatsRecordDTO();
+        ShortLinkStatsRecordDTO statsRecord;
         try {
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
