@@ -45,14 +45,11 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,6 +69,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkStatsProducer linkStatsProducer;
     private final FaviconService faviconService;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -100,13 +98,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setShortUri(shortLink)
                 .setUserName(UserContext.getUserName())
                 .setFavicon(getDefaultFavicon(reqDTO.getOriginUrl()))
-                .setTotalPv(0)
-                .setTotalUip(0)
-                .setTotalUv(0);
+                .setTotalPv(0).setTotalUip(0).setTotalUv(0);
         try {
             baseMapper.insert(shortLinkDO);
-        }
-            catch (DuplicateKeyException e) {
+        } catch (DuplicateKeyException e) {
             log.warn("短链接生成重复:{}，gid:{}", fullShortUrl, reqDTO.getGid());
             fullShortUrl = forceRegenerate(reqDTO.getOriginUrl(), domain);
             shortLink = fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
@@ -139,6 +134,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setDescription(reqDTO.getDescription());
     }
 
+    /**
+     * 分布式锁创建短链接（无线程安全问题）
+     *
+     * @param reqDTO 请求参数
+     * @return 创建短链接结果
+     */
     @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkReqDTO reqDTO) {
         String originUrl = reqDTO.getOriginUrl();
@@ -213,55 +214,69 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     @Override
-    @Transactional
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
-        boolean ifGidDiff = !Objects.equals((lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one().getGid()), reqDTO.getGid());
-        boolean ifOriUrlDiff = !Objects.equals((lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one().getOriginUrl()), reqDTO.getOriginUrl());
-        ShortLinkDO hasShortLinkDO = lambdaQuery()
-                .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
-                .eq(ShortLinkDO::getDelFlag, 0)
-                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
-                .eq(ShortLinkDO::getGid, reqDTO.getGid())
-                .one();
-        if (Objects.isNull(hasShortLinkDO)) {
-            throw new ClientException("短连接不存在");
-        }
-        //当修改gid时
+        ShortLinkDO shortLinkDO = lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one();
+        boolean ifGidDiff = !Objects.equals((shortLinkDO.getGid()), reqDTO.getGid());
+        boolean ifOriUrlDiff = !Objects.equals((shortLinkDO.getOriginUrl()), reqDTO.getOriginUrl());
+        //当修改 gid 时
         if (ifGidDiff) {
             RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, reqDTO.getFullShortUrl()));
             RLock rLock = readWriteLock.writeLock();
             rLock.lock();
             try {
-                lambdaUpdate()
-                        .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
-                        .eq(ShortLinkDO::getDelFlag, 0)
-                        .set(ShortLinkDO::getDelFlag, 1)
-                        .set(ShortLinkDO::getEnableStatus, 1)
-                        .set(ShortLinkDO::getDelTime, System.currentTimeMillis())
-                        .update();
-                ShortLinkDO newShortLinkDO = hasShortLinkDO
-                        .setGid(reqDTO.getGid())
-                        .setDescription(reqDTO.getDescription())
-                        .setValidDateType(reqDTO.getValidDateType())
-                        .setValidDate(reqDTO.getValidDateType() == 0
-                                ? null
-                                : reqDTO.getValidDate())
-                        .setDelFlag(0)
-                        .setDelTime("0")
-                        .setEnableStatus(0);
-                baseMapper.insert(newShortLinkDO);
-                LambdaUpdateWrapper<ShortLinkGoDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkGoDO.class)
-                        .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl())
-                        .set(ShortLinkGoDO::getGid, reqDTO.getGid());
-                shortLinkGoToMapper.update(null,updateWrapper);
-                if (ifOriUrlDiff) {
-                    stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
-                }
+                transactionTemplate.execute(status -> {
+                    // 查询放到锁内保证读到数据后其他线程插入访问，导致访问量增加使得数据迁移前后不一致
+                    ShortLinkDO hasShortLinkDO = lambdaQuery()
+                            .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                            .eq(ShortLinkDO::getDelFlag, 0)
+                            .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                            .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                            .one();
+                    if (Objects.isNull(hasShortLinkDO)) {
+                        throw new ClientException("短连接不存在");
+                    }
+                    lambdaUpdate()
+                            .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                            .eq(ShortLinkDO::getDelFlag, 0)
+                            .set(ShortLinkDO::getDelFlag, 1)
+                            .set(ShortLinkDO::getEnableStatus, 1)
+                            .set(ShortLinkDO::getDelTime, System.currentTimeMillis())
+                            .update();
+                    ShortLinkDO newShortLinkDO = hasShortLinkDO
+                            .setGid(reqDTO.getGid())
+                            .setDescription(reqDTO.getDescription())
+                            .setValidDateType(reqDTO.getValidDateType())
+                            .setValidDate(reqDTO.getValidDateType() == 0
+                                    ? null
+                                    : reqDTO.getValidDate())
+                            .setDelFlag(0)
+                            .setDelTime("0")
+                            .setEnableStatus(0);
+                    baseMapper.insert(newShortLinkDO);
+                    LambdaUpdateWrapper<ShortLinkGoDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkGoDO.class)
+                            .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                            .set(ShortLinkGoDO::getGid, reqDTO.getGid());
+                    shortLinkGoToMapper.update(null, updateWrapper);
+                    if (ifOriUrlDiff) {
+                        stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, reqDTO.getFullShortUrl()));
+                    }
+                    return null;
+                });
             } finally {
                 rLock.unlock();
             }
         }
+        // 不修改 gid 时无需迁移数据
         if (!ifGidDiff) {
+            ShortLinkDO hasShortLinkDO = lambdaQuery()
+                    .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                    .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                    .one();
+            if (Objects.isNull(hasShortLinkDO)) {
+                throw new ClientException("短连接不存在");
+            }
             lambdaUpdate()
                     .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
@@ -381,7 +396,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             uvFirstFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
-               addCookie.run();
+                addCookie.run();
             }
 
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);

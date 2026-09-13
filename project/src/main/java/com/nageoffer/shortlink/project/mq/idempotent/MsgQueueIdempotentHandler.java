@@ -21,7 +21,7 @@ public class MsgQueueIdempotentHandler {
      */
     public Boolean hasConsume(String msgKey) {
         Boolean setIfAbsent = stringRedisTemplate.opsForValue()
-                .setIfAbsent(String.format(IDEMPOTENT_KEY, msgKey), "0", 10, TimeUnit.MINUTES);
+                .setIfAbsent(String.format(IDEMPOTENT_KEY, msgKey), "0", 2, TimeUnit.MINUTES);
         return !Boolean.TRUE.equals(setIfAbsent);
     }
 
@@ -31,7 +31,7 @@ public class MsgQueueIdempotentHandler {
      * @return 消费结果
      */
     public Boolean isSuccessConsume(String msgKey) {
-        return Objects.equals(stringRedisTemplate.opsForValue().get(msgKey), "1");
+        return Objects.equals(stringRedisTemplate.opsForValue().get(String.format(IDEMPOTENT_KEY, msgKey)), "1");
     }
 
     /**
