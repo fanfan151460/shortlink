@@ -71,6 +71,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final TransactionTemplate transactionTemplate;
 
+    private static final long STATS_SET_TTL_DAYS = 2L;
+
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
 
@@ -383,13 +385,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         AtomicBoolean uipFirstFlag = new AtomicBoolean();
         ShortLinkStatsRecordDTO statsRecord;
         try {
+            LocalDate currentDate = LocalDate.now();
+            String uvStatsKey = String.format(LINK_STATS_UV, fullShortUrl, currentDate);
+            String uipStatsKey = String.format(LINK_STATS_UIP, fullShortUrl, currentDate);
+
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
                 Cookie uvCookie = new Cookie("uv", uv.get());
                 uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
-                stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, uv.get());
+                stringRedisTemplate.opsForSet().add(uvStatsKey, uv.get());
+                stringRedisTemplate.expire(uvStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
                 uvFirstFlag.set(true);
             };
 
@@ -401,7 +408,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each -> {
                             uv.set(each);
-                            Long added = stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, each);
+                            Long added = stringRedisTemplate.opsForSet().add(uvStatsKey, each);
+                            stringRedisTemplate.expire(uvStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
                             uvFirstFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
@@ -409,7 +417,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
 
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);
-            Long addedUip = stringRedisTemplate.opsForSet().add(LINK_STATS_UIP + fullShortUrl, clientIp);
+            Long addedUip = stringRedisTemplate.opsForSet().add(uipStatsKey, clientIp);
+            stringRedisTemplate.expire(uipStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
             uipFirstFlag.set(addedUip != null && addedUip > 0L);
 
             String os = LinkUtil.getOs((HttpServletRequest) request);
@@ -427,7 +436,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setUv(uv.get())
                     .setUvFirstFlag(uvFirstFlag.get())
                     .setUipFirstFlag(uipFirstFlag.get())
-                    .setCurrentDate(LocalDate.now());
+                    .setCurrentDate(currentDate);
         } catch (Exception e) {
             log.error("短链接信息收集异常", e);
             return null;
