@@ -1,9 +1,9 @@
 package com.nageoffer.shortlink.admin.common.biz.user;
 
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
+import com.nageoffer.shortlink.framework.result.Result;
 
 public class SentinelBlockUtil {
 

@@ -8,9 +8,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nageoffer.shortlink.framework.exception.ClientException;
+import com.nageoffer.shortlink.framework.exception.ServiceException;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
-import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
-import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.dao.entity.LinkStatsTodayDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkGoDO;
@@ -70,6 +70,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final FaviconService faviconService;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final TransactionTemplate transactionTemplate;
+
+    private static final long STATS_SET_TTL_DAYS = 2L;
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -297,10 +299,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String fullShortUrl = domain + "/" + shortLinkUri;
         String originUrl = stringRedisTemplate.opsForValue()
                 .get(String.format(FULL_SHORT_LINK, fullShortUrl));
+        ShortLinkStatsRecordDTO srDTO = null;
         //有缓存
         if (!StrUtil.isBlank(originUrl)) {
-            addLinkStats(fullShortUrl, request, response);
+            srDTO = addLinkStats(fullShortUrl, request, response);
             GotoUrl(originUrl, response);
+            if (Objects.nonNull(srDTO)) {
+                sendMsg(srDTO);
+            }
             return;
         }
         // 布隆过滤器前置，拦截穿透请求，避免恶意请求竞争锁
@@ -322,7 +328,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .get(String.format(FULL_SHORT_LINK, fullShortUrl)))) {
                 originUrl = stringRedisTemplate.opsForValue()
                         .get(String.format(FULL_SHORT_LINK, fullShortUrl));
-                addLinkStats(fullShortUrl, request, response);
+                srDTO = addLinkStats(fullShortUrl, request, response);
                 GotoUrl(originUrl, response);
                 return;
             }
@@ -362,25 +368,35 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             stringRedisTemplate.opsForValue()
                     .set(String.format(FULL_SHORT_LINK, fullShortUrl)
                             , shortLinkDO.getOriginUrl(), linkExpireTime, TimeUnit.MILLISECONDS);
-            addLinkStats(fullShortUrl, request, response);
+            srDTO = addLinkStats(fullShortUrl, request, response);
             GotoUrl(shortLinkDO.getOriginUrl(), response);
+
         } finally {
             rLock.unlock();
+            if (Objects.nonNull(srDTO)) {
+                sendMsg(srDTO);
+            }
         }
     }
 
-    public void addLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
+    public ShortLinkStatsRecordDTO addLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
         AtomicReference<String> uv = new AtomicReference<>();
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         AtomicBoolean uipFirstFlag = new AtomicBoolean();
+        ShortLinkStatsRecordDTO statsRecord;
         try {
+            LocalDate currentDate = LocalDate.now();
+            String uvStatsKey = String.format(LINK_STATS_UV, fullShortUrl, currentDate);
+            String uipStatsKey = String.format(LINK_STATS_UIP, fullShortUrl, currentDate);
+
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
                 Cookie uvCookie = new Cookie("uv", uv.get());
                 uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
-                stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, uv.get());
+                stringRedisTemplate.opsForSet().add(uvStatsKey, uv.get());
+                stringRedisTemplate.expire(uvStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
                 uvFirstFlag.set(true);
             };
 
@@ -392,7 +408,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each -> {
                             uv.set(each);
-                            Long added = stringRedisTemplate.opsForSet().add(LINK_STATS_UV + fullShortUrl, each);
+                            Long added = stringRedisTemplate.opsForSet().add(uvStatsKey, each);
+                            stringRedisTemplate.expire(uvStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
                             uvFirstFlag.set(added != null && added > 0L);
                         }, addCookie);
             } else {
@@ -400,7 +417,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
 
             String clientIp = LinkUtil.getClientIp((HttpServletRequest) request);
-            Long addedUip = stringRedisTemplate.opsForSet().add(LINK_STATS_UIP + fullShortUrl, clientIp);
+            Long addedUip = stringRedisTemplate.opsForSet().add(uipStatsKey, clientIp);
+            stringRedisTemplate.expire(uipStatsKey, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
             uipFirstFlag.set(addedUip != null && addedUip > 0L);
 
             String os = LinkUtil.getOs((HttpServletRequest) request);
@@ -408,7 +426,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             String device = LinkUtil.getDevice((HttpServletRequest) request);
             String network = LinkUtil.getNetwork((HttpServletRequest) request);
 
-            ShortLinkStatsRecordDTO statsRecord = new ShortLinkStatsRecordDTO()
+            statsRecord = new ShortLinkStatsRecordDTO()
                     .setFullShortUrl(fullShortUrl)
                     .setRemoteAddr(clientIp)
                     .setOs(os)
@@ -418,12 +436,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .setUv(uv.get())
                     .setUvFirstFlag(uvFirstFlag.get())
                     .setUipFirstFlag(uipFirstFlag.get())
-                    .setCurrentDate(LocalDate.now());
-
-            sendMsg(statsRecord);
+                    .setCurrentDate(currentDate);
         } catch (Exception e) {
-            log.error("短链接统计异常", e);
+            log.error("短链接信息收集异常", e);
+            return null;
         }
+        return statsRecord;
     }
 
     public void sendMsg(ShortLinkStatsRecordDTO statsRecord) {

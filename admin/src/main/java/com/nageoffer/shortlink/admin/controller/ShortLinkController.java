@@ -2,8 +2,6 @@ package com.nageoffer.shortlink.admin.controller;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.nageoffer.shortlink.admin.common.biz.user.SentinelBlockUtil;
-import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
@@ -12,6 +10,9 @@ import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
+import com.nageoffer.shortlink.framework.duplicate.NoDuplicateSubmit;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class ShortLinkController {
     @SentinelResource(value = "create_short-link",
             blockHandlerClass = SentinelBlockUtil.class,
             blockHandler = "createShortLinkBlock")
+    @NoDuplicateSubmit
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkReqDTO reqDTO) {
         return Results.success(shortLinkService.createShortLink(reqDTO));
     }

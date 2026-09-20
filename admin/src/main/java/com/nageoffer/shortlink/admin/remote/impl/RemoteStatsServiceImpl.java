@@ -1,12 +1,12 @@
 package com.nageoffer.shortlink.admin.remote.impl;
 
-import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.remote.IRemoteStatsService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.StatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.AccessStatsVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsDashboardVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsItemVO;
+import com.nageoffer.shortlink.framework.result.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
