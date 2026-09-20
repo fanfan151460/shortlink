@@ -1,4 +1,5 @@
-package com.nageoffer.shortlink.project.common.convention.errorcode;
+package com.nageoffer.shortlink.framework.errorcode;
+
 
 public enum BaseErrorCode implements IErrorCode {
     // ========== 一级宏观错误码 客户端错误 ==========

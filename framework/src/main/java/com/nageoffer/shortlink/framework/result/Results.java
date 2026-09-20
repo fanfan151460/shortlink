@@ -1,7 +1,8 @@
-package com.nageoffer.shortlink.admin.common.convention.result;
+package com.nageoffer.shortlink.framework.result;
 
-import com.nageoffer.shortlink.admin.common.convention.errorcode.BaseErrorCode;
-import com.nageoffer.shortlink.admin.common.exception.AbstractException;
+
+import com.nageoffer.shortlink.framework.errorcode.BaseErrorCode;
+import com.nageoffer.shortlink.framework.exception.AbstractException;
 
 import java.util.Optional;
 

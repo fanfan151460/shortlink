@@ -1,4 +1,5 @@
-package com.nageoffer.shortlink.admin.common.convention.result;
+package com.nageoffer.shortlink.framework.result;
+
 
 import lombok.Data;
 import lombok.experimental.Accessors;

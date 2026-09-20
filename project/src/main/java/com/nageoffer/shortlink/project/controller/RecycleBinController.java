@@ -1,7 +1,7 @@
 package com.nageoffer.shortlink.project.controller;
 
-import com.nageoffer.shortlink.project.common.convention.result.Result;
-import com.nageoffer.shortlink.project.common.convention.result.Results;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.project.dto.resp.RecycleBinShortLinkDTO;

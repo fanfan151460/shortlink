@@ -1,16 +1,17 @@
-package com.nageoffer.shortlink.project.common.web;
+package com.nageoffer.shortlink.framework.web;
+
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.nageoffer.shortlink.project.common.convention.errorcode.BaseErrorCode;
-import com.nageoffer.shortlink.project.common.convention.exception.AbstractException;
-import com.nageoffer.shortlink.project.common.convention.result.Result;
-import com.nageoffer.shortlink.project.common.convention.result.Results;
+import com.nageoffer.shortlink.framework.errorcode.BaseErrorCode;
+import com.nageoffer.shortlink.framework.exception.AbstractException;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
+import jodd.util.StringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -66,7 +67,7 @@ public class GlobalExceptionHandler {
     }
 
     private String getUrl(HttpServletRequest request) {
-        if (StringUtils.isEmpty(request.getQueryString())) {
+        if (StringUtil.isEmpty(request.getQueryString())) {
             return request.getRequestURL().toString();
         }
         return request.getRequestURL().toString() + "?" + request.getQueryString();

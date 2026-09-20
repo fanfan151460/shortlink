@@ -1,6 +1,6 @@
 package com.nageoffer.shortlink.admin.common.biz.user;
 
-import com.nageoffer.shortlink.admin.common.exception.ClientException;
+import com.nageoffer.shortlink.framework.exception.ClientException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

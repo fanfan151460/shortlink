@@ -1,8 +1,8 @@
-package com.nageoffer.shortlink.project.common.convention.exception;
+package com.nageoffer.shortlink.framework.exception;
 
 
-import com.nageoffer.shortlink.project.common.convention.errorcode.BaseErrorCode;
-import com.nageoffer.shortlink.project.common.convention.errorcode.IErrorCode;
+import com.nageoffer.shortlink.framework.errorcode.BaseErrorCode;
+import com.nageoffer.shortlink.framework.errorcode.IErrorCode;
 
 public class ClientException extends AbstractException {
 

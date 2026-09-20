@@ -1,7 +1,7 @@
 package com.nageoffer.shortlink.project.controller;
 
-import com.nageoffer.shortlink.project.common.convention.result.Result;
-import com.nageoffer.shortlink.project.common.convention.result.Results;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import com.nageoffer.shortlink.project.dto.req.StatsQueryReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.AccessStatsVO;
 import com.nageoffer.shortlink.project.dto.resp.StatsDashboardRespDTO;
@@ -10,7 +10,10 @@ import com.nageoffer.shortlink.project.service.IStatsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 

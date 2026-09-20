@@ -1,7 +1,8 @@
-package com.nageoffer.shortlink.admin.common.exception;
+package com.nageoffer.shortlink.framework.exception;
 
-import com.nageoffer.shortlink.admin.common.convention.errorcode.BaseErrorCode;
-import com.nageoffer.shortlink.admin.common.convention.errorcode.IErrorCode;
+
+import com.nageoffer.shortlink.framework.errorcode.BaseErrorCode;
+import com.nageoffer.shortlink.framework.errorcode.IErrorCode;
 
 public class RemoteException extends AbstractException {
 
