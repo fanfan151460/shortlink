@@ -93,7 +93,7 @@ services:
   # 官方镜像默认堆 8G，同样必须覆盖
   # ============================================================
   rocketmq-broker:
-    image: apache/rocketmq:5.3.1
+    image: apache/rocketmq:5.1.4
     container_name: shortlink-rmq-broker
     restart: unless-stopped
     ports:
