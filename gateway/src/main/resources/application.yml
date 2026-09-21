@@ -10,6 +10,19 @@ spring:
         server-addr: 127.0.0.1:8848
         ip: 127.0.0.1
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       routes:
         - id: shortlink-admin
           uri: lb://shortlink-admin
@@ -28,11 +41,4 @@ spring:
       host: localhost
       port: 6379
   short-link:
-    white-list:
-      /api/short-link/admin/v1/user/login,
-      /api/short-link/admin/v1/user/has-username,
-      /api/short-link/admin/v1/test,
-      /doc.html,
-      /swagger-ui/**,
-      /v3/**,
-      /webjars/**
+    white-list: /api/short-link/admin/v1/user/login,/api/short-link/admin/v1/user/has-username,/api/short-link/admin/v1/test,/doc.html,/swagger-ui/**,/v3/**,/webjars/**
