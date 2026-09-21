@@ -13,6 +13,7 @@ import com.nageoffer.shortlink.admin.dto.req.GroupLinkOrderDTO;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkUpdateDTO;
 import com.nageoffer.shortlink.admin.service.IGroupService;
 import com.nageoffer.shortlink.framework.exception.ClientException;
+import com.nageoffer.shortlink.framework.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -39,6 +40,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public void saveGroup(String groupName) {
         saveGroup(groupName, UserContext.getUsername());
+        throw new ServiceException("异常拦截测试");
     }
 
     @Override
