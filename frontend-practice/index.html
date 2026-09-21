@@ -272,7 +272,9 @@ td.stats .today { font-size:11px; color:var(--text2); }
 <!-- ======================== TOAST ======================== -->
 <div class="toast" id="toast"></div>
 <script>
-const BASE = location.protocol === 'file:'
+const isLocalPage = location.protocol === 'file:' ||
+  /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const BASE = isLocalPage
   ? 'http://127.0.0.1:8083/api/short-link/admin/v1'
   : '/api/short-link/admin/v1';
 let token = '', username = '', groups = [], deletedGroups = [], currentGid = '', currentView = 'links';
