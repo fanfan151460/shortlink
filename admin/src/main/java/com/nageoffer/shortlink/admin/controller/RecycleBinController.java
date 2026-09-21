@@ -1,12 +1,12 @@
 package com.nageoffer.shortlink.admin.controller;
 
-import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.IRemoteRecycleService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecyclePageDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.RecycleBinShortLinkDTO;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,14 +1,14 @@
 package com.nageoffer.shortlink.admin.controller;
 
 
-import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserUpdateDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.nageoffer.shortlink.admin.service.IUsersService;
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

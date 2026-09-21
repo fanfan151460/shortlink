@@ -1,7 +1,8 @@
 package com.nageoffer.shortlink.project.controller;
 
-import com.nageoffer.shortlink.project.common.convention.result.Result;
-import com.nageoffer.shortlink.project.common.convention.result.Results;
+
+import com.nageoffer.shortlink.framework.result.Result;
+import com.nageoffer.shortlink.framework.result.Results;
 import com.nageoffer.shortlink.project.service.ILinkTitleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

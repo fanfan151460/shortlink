@@ -6,10 +6,9 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nageoffer.shortlink.framework.exception.ClientException;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
-import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
 import com.nageoffer.shortlink.project.dto.req.RecyclePageDTO;
@@ -24,12 +23,12 @@ import java.util.Date;
 import java.util.List;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.FULL_SHORT_LINK;
+import static com.nageoffer.shortlink.project.common.constant.RedisConstant.SHORT_URL_NULL_KEY;
 
 @Service
 @RequiredArgsConstructor
 public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements IRecycleBinService {
     private final StringRedisTemplate stringRedisTemplate;
-    private final ShortLinkGoToMapper shortLinkGOToMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -99,6 +98,7 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         if (!update) {
             throw new ClientException("短链接恢复失败");
         }
+        stringRedisTemplate.delete(String.format(SHORT_URL_NULL_KEY, recycleDTO.getFullShortUrl()));
     }
 
     @Override

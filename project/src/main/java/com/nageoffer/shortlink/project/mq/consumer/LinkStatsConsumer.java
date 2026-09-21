@@ -3,7 +3,7 @@ package com.nageoffer.shortlink.project.mq.consumer;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
+import com.nageoffer.shortlink.framework.exception.ServiceException;
 import com.nageoffer.shortlink.project.dao.entity.*;
 import com.nageoffer.shortlink.project.dao.mapper.*;
 import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
@@ -103,8 +103,6 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             return;
         }
         String gid = gotoDO.getGid();
-
-
         // pv uv uip
         LinkStatsDO statsDO = new LinkStatsDO()
                 .setFullShortUrl(fullShortUrl)

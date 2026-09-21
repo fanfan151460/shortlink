@@ -8,16 +8,16 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
-import com.nageoffer.shortlink.admin.common.exception.ClientException;
 import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.nageoffer.shortlink.admin.dao.mapper.UsersMapper;
-import com.nageoffer.shortlink.admin.service.IGroupService;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserUpdateDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserLoginRespDTO;
+import com.nageoffer.shortlink.admin.service.IGroupService;
 import com.nageoffer.shortlink.admin.service.IUsersService;
+import com.nageoffer.shortlink.framework.exception.ClientException;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
@@ -31,8 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
 import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.LOGIN;
-import static com.nageoffer.shortlink.admin.common.convention.errorcode.BaseErrorCode.USER_REGISTER_ERROR;
-import static com.nageoffer.shortlink.admin.common.enums.UserErrorCode.USER_HAD;
 
 /**
  * <p>
@@ -71,19 +69,19 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, UserDO> implement
     @Override
     public void saveUser(UserRegisterDTO userRegisterDTO) {
         if (!hasUerName(userRegisterDTO.getUsername())) {
-            throw new ClientException(USER_REGISTER_ERROR);
+            throw new ClientException("已有相同用户名的用户");
         }
         /*
          * 防止两个请求使用相同的用户名同时进行注册
          */
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterDTO.getUsername());
         if (!lock.tryLock()) {
-            throw new ClientException(USER_HAD);
+            throw new ClientException("已有相同用户名的用户");
         }
         try {
             int insert = baseMapper.insert(BeanUtil.copyProperties(userRegisterDTO, UserDO.class));
             if (insert < 1) {
-                throw new ClientException(USER_REGISTER_ERROR);
+                throw new ClientException("用户注册失败");
             }
             groupService.saveGroup("默认分组", userRegisterDTO.getUsername());
             userRegisterCachePenetrationBloomFilter.add(userRegisterDTO.getUsername());

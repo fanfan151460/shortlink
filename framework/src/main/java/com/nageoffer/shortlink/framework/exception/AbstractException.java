@@ -1,6 +1,6 @@
-package com.nageoffer.shortlink.project.common.convention.exception;
+package com.nageoffer.shortlink.framework.exception;
 
-import com.nageoffer.shortlink.project.common.convention.errorcode.IErrorCode;
+import com.nageoffer.shortlink.framework.errorcode.IErrorCode;
 import lombok.Getter;
 import org.springframework.util.StringUtils;
 
@@ -16,6 +16,8 @@ public abstract class AbstractException extends RuntimeException {
     public AbstractException(String message, Throwable throwable, IErrorCode errorCode) {
         super(message, throwable);
         this.errorCode = errorCode.code();
-        this.errorMessage = Optional.ofNullable(StringUtils.hasLength(message) ? message : null).orElse(errorCode.message());
+        this.errorMessage = Optional
+                .ofNullable(StringUtils.hasLength(message) ? message : null)
+                .orElse(errorCode.message());
     }
 }

@@ -6,13 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
-import com.nageoffer.shortlink.admin.common.exception.ClientException;
 import com.nageoffer.shortlink.admin.dao.entity.GroupDO;
 import com.nageoffer.shortlink.admin.dao.mapper.GroupMapper;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkDTO;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkOrderDTO;
 import com.nageoffer.shortlink.admin.dto.req.GroupLinkUpdateDTO;
 import com.nageoffer.shortlink.admin.service.IGroupService;
+import com.nageoffer.shortlink.framework.exception.ClientException;
+import com.nageoffer.shortlink.framework.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -39,6 +40,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public void saveGroup(String groupName) {
         saveGroup(groupName, UserContext.getUsername());
+        throw new ServiceException("异常拦截测试");
     }
 
     @Override

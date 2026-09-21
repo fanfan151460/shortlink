@@ -5,6 +5,7 @@ import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.nageoffer.shortlink.project.mq.base.MessageWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -35,13 +36,24 @@ public class LinkStatsProducer {
      * 发送延迟消费短链接统计
      */
     public void send(ShortLinkStatsRecordDTO record) {
-        SendResult sendResult;
+        Message<MessageWrapper<ShortLinkStatsRecordDTO>> message = buildMsg(record);
         try {
-            sendResult = rocketMQTemplate.syncSend(statsSaveTopic, buildMsg(record), 2000L);
-            log.info("[消息访问统计监控] 消息发送结果：{}，消息ID：{}，消息Keys：{}", sendResult.getSendStatus(), sendResult.getMsgId(), buildMsg(record).getPayload().getKeys());
+            rocketMQTemplate.asyncSend(statsSaveTopic, message, new SendCallback() {
+                @Override
+                public void onSuccess(SendResult sendResult) {
+                    log.info("[消息访问统计监控] 消息发送结果：{}，消息ID：{}，消息Keys：{}",
+                            sendResult.getSendStatus(), sendResult.getMsgId(),
+                            message.getPayload().getKeys());
+                }
+
+                @Override
+                public void onException(Throwable e) {
+                    log.error("[消息访问统计监控] 消息发送失败，消息Keys：{}，消息体：{}",
+                            message.getPayload().getKeys(), message.getPayload(), e);
+                }
+            });
         } catch (Throwable ex) {
-            log.error("[消息访问统计监控] 消息发送失败，消息体：{}", buildMsg(record), ex);
-            // 自定义行为...
+            log.error("[消息访问统计监控] 消息发送异常，消息Keys：{}", message.getPayload().getKeys(), ex);
         }
     }
 }

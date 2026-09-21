@@ -12,6 +12,7 @@
         <module>admin</module>
         <module>project</module>
         <module>gateway</module>
+        <module>framework</module>
     </modules>
 
     <dependencies>
@@ -41,6 +42,7 @@
         <guava.version>30.0-jre</guava.version>
         <rocketmq-spring-boot.version>2.3.0</rocketmq-spring-boot.version>
         <knife4j.version>4.3.0</knife4j.version>
+        <Spring-Aop.version>2.7.18</Spring-Aop.version>
     </properties>
 
     <dependencyManagement>
@@ -127,6 +129,12 @@
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <version>${Spring-Aop.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
