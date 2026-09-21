@@ -6,7 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.nageoffer.shortlink.framework",
+        "com.nageoffer.shortlink.admin"})
 @MapperScan("com.nageoffer.shortlink.admin.dao.mapper")
 @EnableFeignClients(basePackages = "com.nageoffer.shortlink.admin.remote")
 public class ShortLinkAdminApplication {

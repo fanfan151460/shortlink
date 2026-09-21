@@ -8,7 +8,6 @@ import com.nageoffer.shortlink.framework.exception.AbstractException;
 import com.nageoffer.shortlink.framework.result.Result;
 import com.nageoffer.shortlink.framework.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
-import jodd.util.StringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -67,7 +66,7 @@ public class GlobalExceptionHandler {
     }
 
     private String getUrl(HttpServletRequest request) {
-        if (StringUtil.isEmpty(request.getQueryString())) {
+        if (StrUtil.isEmpty(request.getQueryString())) {
             return request.getRequestURL().toString();
         }
         return request.getRequestURL().toString() + "?" + request.getQueryString();

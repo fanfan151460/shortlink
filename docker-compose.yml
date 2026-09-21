@@ -10,7 +10,7 @@ services:
     container_name: shortlink-mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "151460"
       MYSQL_DATABASE: "link"
@@ -38,7 +38,7 @@ services:
     container_name: shortlink-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -52,30 +52,37 @@ services:
   # Nacos 2.2 — 服务注册与发现
   # 端口: 8848（HTTP）, 9848（gRPC）
   # 控制台: http://localhost:8848/nacos  账号密码: nacos/nacos
+  # JVM 默认约 1G，这里压到 512M 堆以适配小内存机器
   # ============================================================
   nacos:
     image: nacos/nacos-server:v2.2.3
     container_name: shortlink-nacos
     restart: unless-stopped
     ports:
-      - "8848:8848"
-      - "9848:9848"
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
     environment:
       MODE: standalone
       PREFER_HOST_MODE: hostname
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
     volumes:
       - nacos_data:/home/nacos/data
 
   # ============================================================
   # RocketMQ NameServer — 路由注册中心
   # 端口: 9876
+  # 官方镜像默认堆 4G，必须用 JAVA_OPT_EXT 覆盖（JVM 取最后出现的值）
   # ============================================================
   rocketmq-namesrv:
     image: apache/rocketmq:5.1.4
     container_name: shortlink-rmq-namesrv
     restart: unless-stopped
     ports:
-      - "9876:9876"
+      - "127.0.0.1:9876:9876"
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m -Xmn128m"
     command: sh mqnamesrv
     volumes:
       - rmq_namesrv_data:/home/rocketmq/logs
@@ -83,16 +90,18 @@ services:
   # ============================================================
   # RocketMQ Broker — 消息存储与投递
   # 端口: 10911（客户端）, 10909（控制台）
+  # 官方镜像默认堆 8G，同样必须覆盖
   # ============================================================
   rocketmq-broker:
     image: apache/rocketmq:5.1.4
     container_name: shortlink-rmq-broker
     restart: unless-stopped
     ports:
-      - "10911:10911"
-      - "10909:10909"
+      - "127.0.0.1:10911:10911"
+      - "127.0.0.1:10909:10909"
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
+      JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"
     command: sh mqbroker -n rocketmq-namesrv:9876
     volumes:
       - rmq_broker_data:/home/rocketmq/logs
