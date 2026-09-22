@@ -9,5 +9,5 @@ CREATE TABLE `t_link_os_stats` (
                                    `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0表示删除 1表示未删除',
                                    PRIMARY KEY (`id`),
                                    UNIQUE KEY `idx_unique_locale_stats` (`full_short_url`,`date`,`os`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=40650 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='短链接监控操作系统访问状态'
+) ENGINE=InnoDB AUTO_INCREMENT=40650 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='短链接监控操作系统访问状态';
 

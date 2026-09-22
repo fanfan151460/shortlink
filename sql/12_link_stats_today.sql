@@ -10,7 +10,7 @@ CREATE TABLE `t_link_stats_today_0` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_1` (
@@ -25,7 +25,7 @@ CREATE TABLE `t_link_stats_today_1` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_2` (
@@ -40,7 +40,7 @@ CREATE TABLE `t_link_stats_today_2` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_3` (
@@ -55,7 +55,7 @@ CREATE TABLE `t_link_stats_today_3` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_4` (
@@ -70,7 +70,7 @@ CREATE TABLE `t_link_stats_today_4` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_5` (
@@ -85,7 +85,7 @@ CREATE TABLE `t_link_stats_today_5` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_6` (
@@ -100,7 +100,7 @@ CREATE TABLE `t_link_stats_today_6` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_7` (
@@ -115,7 +115,7 @@ CREATE TABLE `t_link_stats_today_7` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_8` (
@@ -130,7 +130,7 @@ CREATE TABLE `t_link_stats_today_8` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_9` (
@@ -145,7 +145,7 @@ CREATE TABLE `t_link_stats_today_9` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_10` (
@@ -160,7 +160,7 @@ CREATE TABLE `t_link_stats_today_10` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_11` (
@@ -175,7 +175,7 @@ CREATE TABLE `t_link_stats_today_11` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_12` (
@@ -190,7 +190,7 @@ CREATE TABLE `t_link_stats_today_12` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_13` (
@@ -205,7 +205,7 @@ CREATE TABLE `t_link_stats_today_13` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_14` (
@@ -220,7 +220,7 @@ CREATE TABLE `t_link_stats_today_14` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_stats_today_15` (
@@ -235,6 +235,6 @@ CREATE TABLE `t_link_stats_today_15` (
                                         `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 

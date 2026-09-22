@@ -3,7 +3,7 @@ CREATE TABLE `t_link_goto0` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto1` (
@@ -11,7 +11,7 @@ CREATE TABLE `t_link_goto1` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto2` (
@@ -19,7 +19,7 @@ CREATE TABLE `t_link_goto2` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto3` (
@@ -27,7 +27,7 @@ CREATE TABLE `t_link_goto3` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto4` (
@@ -35,7 +35,7 @@ CREATE TABLE `t_link_goto4` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto5` (
@@ -43,7 +43,7 @@ CREATE TABLE `t_link_goto5` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto6` (
@@ -51,7 +51,7 @@ CREATE TABLE `t_link_goto6` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto7` (
@@ -59,7 +59,7 @@ CREATE TABLE `t_link_goto7` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto8` (
@@ -67,7 +67,7 @@ CREATE TABLE `t_link_goto8` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto9` (
@@ -75,7 +75,7 @@ CREATE TABLE `t_link_goto9` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto10` (
@@ -83,7 +83,7 @@ CREATE TABLE `t_link_goto10` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto11` (
@@ -91,7 +91,7 @@ CREATE TABLE `t_link_goto11` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto12` (
@@ -99,7 +99,7 @@ CREATE TABLE `t_link_goto12` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto13` (
@@ -107,7 +107,7 @@ CREATE TABLE `t_link_goto13` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto14` (
@@ -115,7 +115,7 @@ CREATE TABLE `t_link_goto14` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `t_link_goto15` (
@@ -123,6 +123,6 @@ CREATE TABLE `t_link_goto15` (
                                 `gid` varchar(32) DEFAULT 'default' COMMENT '分组标识',
                                 `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
                                 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=8300 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
