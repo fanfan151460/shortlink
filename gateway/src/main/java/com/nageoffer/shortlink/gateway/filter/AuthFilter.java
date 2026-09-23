@@ -39,6 +39,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
         if (request.getMethod() == HttpMethod.OPTIONS) {
             return chain.filter(exchange);
         }
+        // 非 /api 路径（短链跳转、swagger 文档等）不需要鉴权，直接放行
+        if (!path.startsWith("/api/")) {
+            return chain.filter(exchange);
+        }
         if (shortLinkWhiteList.contains(path)) {
             return chain.filter(exchange);
         }
