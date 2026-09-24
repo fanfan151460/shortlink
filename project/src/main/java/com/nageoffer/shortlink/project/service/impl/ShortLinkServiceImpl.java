@@ -504,7 +504,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
             httpServletResponse.setContentType("text/html;charset=UTF-8");
-            httpServletResponse.getWriter().write(NOT_FOUND_PAGE);
+            // 用输出流而不是 writer：Tomcat 里两者互斥，getWriter() 置位 usingWriter 后，
+            // 任何后续 getOutputStream() 都会抛 IllegalStateException，而跳转路径走的正是输出流
+            httpServletResponse.getOutputStream().write(NOT_FOUND_PAGE.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new ClientException("返回notfound页面失败");
         }
