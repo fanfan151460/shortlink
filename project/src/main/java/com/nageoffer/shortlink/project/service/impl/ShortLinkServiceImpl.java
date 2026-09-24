@@ -480,7 +480,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     private void notFound(ServletResponse response) {
         try {
-            ((HttpServletResponse) response).sendRedirect("/page/notFound");
+            // 必须拼绝对地址：相对路径会被容器用 getServerName()/getServerPort() 补全，
+            // 而网关转发到 lb:// 时已把 Host 改写成下游实例，补出来是访客本机的 127.0.0.1:8082
+            ((HttpServletResponse) response).sendRedirect(domain + "/notFound.html");
         } catch (IOException e) {
             throw new ClientException("跳转notfound页面失败");
         }

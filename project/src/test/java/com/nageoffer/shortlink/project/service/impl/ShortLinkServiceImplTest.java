@@ -71,7 +71,7 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).sendRedirect("xiyl.cn/notFound.html");
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -83,7 +83,7 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).sendRedirect("xiyl.cn/notFound.html");
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -107,7 +107,7 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).sendRedirect("xiyl.cn/notFound.html");
         verify(shortLinkGoToMapper, never()).selectOne(any(Wrapper.class));
     }
 }
