@@ -22,7 +22,10 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -46,10 +49,13 @@ class ShortLinkServiceImplTest {
     @InjectMocks
     private ShortLinkServiceImpl shortLinkService;
 
+    private final StringWriter notFoundBody = new StringWriter();
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(response.getWriter()).thenReturn(new PrintWriter(notFoundBody));
         ReflectionTestUtils.setField(shortLinkService, "domain", "xiyl.cn");
     }
 
@@ -71,7 +77,11 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("xiyl.cn/notFound.html");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
+        // 断言拿到的是 jar 里那份页面，而不是加载失败时的兜底文案
+        assertTrue(notFoundBody.toString().contains("pc-container"),
+                "notFound 页面没从 classpath 里读出来");
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -83,7 +93,8 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("xiyl.cn/notFound.html");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -107,7 +118,8 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("xiyl.cn/notFound.html");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
         verify(shortLinkGoToMapper, never()).selectOne(any(Wrapper.class));
     }
 }

@@ -48,6 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +74,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final TransactionTemplate transactionTemplate;
 
     private static final long STATS_SET_TTL_DAYS = 2L;
+
+    /**
+     * 找不到短链时的提示页。走 body 直出而不是重定向：ShortLinkController 的 /{shortLinkUri}
+     * 兜底映射优先于静态资源处理器，任何单段路径（含 .html）都会被它当成短链 code 吃掉，
+     * 重定向到页面 URL 会绕回 notFound 造成死循环
+     */
+    private static final String NOT_FOUND_PAGE = loadNotFoundPage();
+
+    private static String loadNotFoundPage() {
+        try (InputStream in = ShortLinkServiceImpl.class.getResourceAsStream("/static/notFound.html")) {
+            if (in != null) {
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            log.error("static/notFound.html 不在 classpath 里");
+        } catch (Exception e) {
+            log.error("加载 notFound 页面失败", e);
+        }
+        return "<html><body>您访问的页面不存在，请确认链接是否正确</body></html>";
+    }
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -362,7 +383,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (linkExpireTime < 0) {
                 stringRedisTemplate.opsForValue().set(String.format(SHORT_URL_NULL_KEY, fullShortUrl), "1", 1, TimeUnit.MINUTES);
                 notFound(response);
-                throw new ClientException("短链接已经过期");
+                return;
             }
             //存入redis中，并设置有效期
             stringRedisTemplate.opsForValue()
@@ -479,12 +500,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     private void notFound(ServletResponse response) {
+        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         try {
-            // 必须拼绝对地址：相对路径会被容器用 getServerName()/getServerPort() 补全，
-            // 而网关转发到 lb:// 时已把 Host 改写成下游实例，补出来是访客本机的 127.0.0.1:8082
-            ((HttpServletResponse) response).sendRedirect(domain + "/notFound.html");
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            httpServletResponse.setContentType("text/html;charset=UTF-8");
+            httpServletResponse.getWriter().write(NOT_FOUND_PAGE);
         } catch (IOException e) {
-            throw new ClientException("跳转notfound页面失败");
+            throw new ClientException("返回notfound页面失败");
         }
     }
 
