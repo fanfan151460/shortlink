@@ -7,7 +7,11 @@
 ```mermaid
 graph TD
     subgraph 前端
-        A[单页 HTML/JS<br/>无框架纯原生]
+        A[Vue3 + Vite<br/>Element Plus + ECharts]
+    end
+
+    subgraph 反向代理
+        N[Nginx<br/>:80 短链跳转<br/>:8080 管理台托管 + /api 反代]
     end
 
     subgraph 网关层
@@ -26,7 +30,8 @@ graph TD
         H[RocketMQ<br/>异步统计写入]
     end
 
-    A --> B
+    A --> N
+    N --> B
     B --> C
     B --> D
     C --> F
@@ -53,7 +58,7 @@ graph TD
 | API 文档 | Knife4j（OpenAPI 3.0）                | 4.3.0 |
 | 限流 | Sentinel + lua                      | — |
 | 数据库 | MySQL                               | 8.0 |
-| 前端 | 原生 HTML/CSS/JS（零框架依赖）只做简单的联调使用      | — |
+| 前端 | Vue 3 + Vite + Element Plus + ECharts | 3.5 / 5.4 / 2.8 / 5.5 |
 
 ## 模块结构
 
@@ -68,8 +73,9 @@ shortlink/
 │       统计查询、回收站内部逻辑
 ├── gateway/                  # API 网关
 │   └── 路由转发、Token 鉴权、白名单校验
-├── frontend-practice/        # 前端（单页应用）
-│   └── index.html            # 登录/注册/工作台/回收站/统计
+├── frontend/                 # 前端（Vue3 + Vite 单页应用）
+│   └── src/                  # 登录、短链列表、分组、统计、
+│                             回收站、个人中心、接口自检
 └── pom.xml                   # Maven 父 POM
 ```
 
@@ -82,7 +88,7 @@ shortlink/
 
 ### 短链接跳转（高并发核心链路）
 - 四层缓存穿透防护：**Redis → 布隆过滤器 → 空值缓存 → 分布式锁 + MySQL**
-- 返回 307 Temporary Redirect，浏览器不缓存跳转
+- 返回 302 临时重定向（`sendRedirect`），浏览器不缓存跳转
 - 访问日志通过 **RocketMQ 异步写入**，不阻塞跳转响应
 
 ### 回收站
@@ -165,7 +171,15 @@ mvn spring-boot:run -pl gateway
 
 6. **访问前端**
 
-打开 `frontend-practice/index.html`，或部署到网关统一访问。
+前端在 `frontend/` 目录，Vue3 + Vite 工程：
+
+```bash
+cd frontend
+npm install
+npm run dev        # 开发模式，Vite 已配置 /api 代理到网关 8083
+```
+
+生产构建 `npm run build` 产出 `dist/`，交由 Nginx 托管（`location /api/` 反代到网关）。
 
 - Knife4j 文档：`http://localhost:8083/doc.html`
 - Admin 服务：`http://localhost:8000`
@@ -236,5 +250,5 @@ FLUSH PRIVILEGES;
 
 ## 截图
 
-> 统计图：![img.png](img.png)
-> 回收站：![img_1.png](img_1.png)
+> 统计图：![img.png](地区统计.png)
+> 访问量：![img_1.png](访问量统计.png)
