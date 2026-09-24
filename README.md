@@ -123,8 +123,12 @@ shortlink/
 1. **启动基础设施**
 
 ```bash
+# 首次需要准备环境变量（.env 已被 .gitignore 忽略，不会提交）
+cp .env.example .env
+vi .env    # 设置 MYSQL_ROOT_PASSWORD，需与两份 shardingsphere-config.yaml 里的 password 一致
+
 # 一键启动 MySQL、Redis、Nacos、RocketMQ
-docker-compose up -d
+docker compose up -d
 ```
 
 2. **初始化数据库**
@@ -166,6 +170,53 @@ mvn spring-boot:run -pl gateway
 - Knife4j 文档：`http://localhost:8083/doc.html`
 - Admin 服务：`http://localhost:8000`
 - Project 服务：`http://localhost:8082`
+
+## 密码与配置外置
+
+### 本地开发
+
+密码统一放在 `.env`（参考 `.env.example`），`docker compose` 会自动读取同目录下的 `.env`。
+两份 `shardingsphere-config.yaml` 里的 `password` 需要与它保持一致。
+
+### 生产部署
+
+> ⚠️ 不要把真实密码写进 `shardingsphere-config.yaml` 再提交——构建产物和 Git 历史都会留下它。
+
+ShardingSphere 的配置文件是**它自己**从 classpath 读的，不经过 Spring 的属性解析，
+所以 `${MYSQL_PASSWORD}` 这类占位符写在里面不会被替换，会被当成字面密码导致认证失败。
+要让密码离开构建产物，需要换一条读配置的路径：
+
+1. 把配置放到仓库外，权限收紧到 `600`：
+
+```bash
+install -d -m 700 /etc/shortlink
+cp project/src/main/resources/shardingsphere-config.yaml /etc/shortlink/shardingsphere-project.yaml
+vi /etc/shortlink/shardingsphere-project.yaml   # 填入真实密码
+chmod 600 /etc/shortlink/shardingsphere-project.yaml
+```
+
+2. 启动时用命令行参数覆盖数据源地址，指向这个文件
+（`absolutepath:` 前缀由 ShardingSphere 的 `AbsolutePathDriverURLProvider` 识别）：
+
+```bash
+java -jar app/shortlink-project-1.0-SNAPSHOT.jar \
+  --spring.datasource.url="jdbc:shardingsphere:absolutepath:/etc/shortlink/shardingsphere-project.yaml"
+```
+
+`admin` 模块同理，只是换成 `shardingsphere-admin.yaml`。
+
+### 改 MySQL 密码时注意
+
+`docker-compose.yml` 里的 `MYSQL_ROOT_PASSWORD` **只在 `mysql_data` 数据卷首次初始化时生效**。
+数据卷已存在时改这个值不会改数据库中已有的密码，必须手动执行：
+
+```sql
+ALTER USER 'root'@'%'         IDENTIFIED WITH caching_sha2_password BY '<新密码>';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '<新密码>';
+FLUSH PRIVILEGES;
+```
+
+改完同步更新 `/etc/shortlink/` 下的两份外置配置，再逐个重启应用。
 
 ## 注意事项
 

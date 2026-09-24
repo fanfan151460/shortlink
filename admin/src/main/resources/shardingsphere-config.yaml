@@ -5,7 +5,11 @@ dataSources:
     driverClassName: com.mysql.cj.jdbc.Driver
     jdbcUrl: jdbc:mysql://127.0.0.1:3306/link?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 151460
+    # 本地开发默认值，需与 .env 里的 MYSQL_ROOT_PASSWORD 一致。
+    # 生产环境不使用本文件：通过启动参数 --spring.datasource.url 指向仓库外的
+    # 外置配置（absolutepath:/etc/shortlink/shardingsphere-admin.yaml），
+    # 避免把真实密码打进构建产物。详见 README「密码与配置外置」。
+    password: change-me-local-only
 
 rules:
   - !SHARDING
