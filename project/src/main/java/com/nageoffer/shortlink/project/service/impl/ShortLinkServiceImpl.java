@@ -392,7 +392,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
                 Cookie uvCookie = new Cookie("uv", uv.get());
-                uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
+                // 用 lastIndexOf：fullShortUrl 可能带 scheme（http://host:port/code），
+                // indexOf 会命中 "http://" 里的斜杠，切出 //host:port/code 这种非法 cookie 路径，
+                // 导致浏览器永远不回传 uv cookie，UV 去重失效（每次访问都算新访客）。
+                uvCookie.setPath(fullShortUrl.substring(fullShortUrl.lastIndexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
                 stringRedisTemplate.opsForSet().add(uvStatsKey, uv.get());
