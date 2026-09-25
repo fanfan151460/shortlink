@@ -12,7 +12,7 @@ public class LinkUtil {
 
     public static Long getLinkExpireTime(LocalDate validDate) {
         return Optional.ofNullable(validDate)
-                .map(each -> each.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                .map(each -> each.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                         - System.currentTimeMillis())
                 .orElse(2592000000L);
     }

@@ -132,7 +132,7 @@ async function onSubmit() {
       </el-form-item>
 
       <el-form-item v-if="form.validDateType === 1" label="有效期">
-        <el-input v-model="form.validDate" type="datetime-local" />
+        <el-input v-model="form.validDate" type="date" />
       </el-form-item>
 
       <el-form-item label="描述">
