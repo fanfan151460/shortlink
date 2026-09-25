@@ -76,9 +76,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private static final long STATS_SET_TTL_DAYS = 2L;
 
     /**
-     * 找不到短链时的提示页。走 body 直出而不是重定向：ShortLinkController 的 /{shortLinkUri}
-     * 兜底映射优先于静态资源处理器，任何单段路径（含 .html）都会被它当成短链 code 吃掉，
-     * 重定向到页面 URL 会绕回 notFound 造成死循环
+     * 找不到短链时的提示页
      */
     private static final String NOT_FOUND_PAGE = loadNotFoundPage();
 
@@ -509,8 +507,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
             httpServletResponse.setContentType("text/html;charset=UTF-8");
-            // 用输出流而不是 writer：Tomcat 里两者互斥，getWriter() 置位 usingWriter 后，
-            // 任何后续 getOutputStream() 都会抛 IllegalStateException，而跳转路径走的正是输出流
             httpServletResponse.getOutputStream().write(NOT_FOUND_PAGE.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new ClientException("返回notfound页面失败");
