@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 import { createLink, getTitle, updateLink } from '@/api/link'
+import { appStore } from '@/store/app'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -16,6 +17,7 @@ const emit = defineEmits(['update:modelValue', 'saved'])
 
 const form = reactive({
   originUrl: '',
+  gid: '',
   validDateType: 0,
   validDate: '',
   description: ''
@@ -36,6 +38,7 @@ watch(visible, (v) => emit('update:modelValue', v))
 function reset() {
   const isEdit = props.mode === 'edit' && props.link
   form.originUrl = isEdit ? props.link.originUrl || '' : ''
+  form.gid = isEdit ? props.link.gid || props.gid : props.gid
   form.description = isEdit ? props.link.description || '' : ''
   // 编辑接口要么传 validDateType=0（永久），要么传一个具体时间；
   // 不回填旧的有效期，避免把"还有 3 天到期"编辑成"立刻过期"
@@ -69,7 +72,7 @@ async function onSubmit() {
 
   const body = {
     originUrl: form.originUrl,
-    gid: props.gid,
+    gid: form.gid,
     validDateType: form.validDateType,
     description: form.description
   }
@@ -108,6 +111,17 @@ async function onSubmit() {
           <el-input v-model="form.originUrl" placeholder="https://..." />
           <el-button :loading="fetchingTitle" @click="onFetchTitle">获取标题</el-button>
         </div>
+      </el-form-item>
+
+      <el-form-item label="所属分组">
+        <el-select v-model="form.gid" style="width: 100%">
+          <el-option
+            v-for="g in appStore.groups"
+            :key="g.gid"
+            :label="g.name"
+            :value="g.gid"
+          />
+        </el-select>
       </el-form-item>
 
       <el-form-item label="有效期类型">

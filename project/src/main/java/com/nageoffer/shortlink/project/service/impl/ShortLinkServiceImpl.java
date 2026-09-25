@@ -238,7 +238,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
-        ShortLinkDO shortLinkDO = lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one();
+        ShortLinkGoDO linkGoDO = shortLinkGoToMapper.selectOne(Wrappers.lambdaQuery(ShortLinkGoDO.class)
+                .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl()));
+        String gid = linkGoDO.getGid();
+        ShortLinkDO shortLinkDO = lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).eq(ShortLinkDO::getGid, gid).one();
         boolean ifGidDiff = !Objects.equals((shortLinkDO.getGid()), reqDTO.getGid());
         boolean ifOriUrlDiff = !Objects.equals((shortLinkDO.getOriginUrl()), reqDTO.getOriginUrl());
         //当修改 gid 时
@@ -253,13 +256,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                             .eq(ShortLinkDO::getDelFlag, 0)
                             .eq(ShortLinkDO::getUserName, UserContext.getUserName())
-                            .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                            .eq(ShortLinkDO::getGid, gid)
                             .one();
                     if (Objects.isNull(hasShortLinkDO)) {
                         throw new ClientException("短连接不存在");
                     }
                     lambdaUpdate()
                             .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                            .eq(ShortLinkDO::getGid, gid)
                             .eq(ShortLinkDO::getDelFlag, 0)
                             .set(ShortLinkDO::getDelFlag, 1)
                             .set(ShortLinkDO::getEnableStatus, 1)
@@ -295,13 +299,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .eq(ShortLinkDO::getUserName, UserContext.getUserName())
-                    .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                    .eq(ShortLinkDO::getGid, gid)
                     .one();
             if (Objects.isNull(hasShortLinkDO)) {
                 throw new ClientException("短连接不存在");
             }
             lambdaUpdate()
                     .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, gid)
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .set(ShortLinkDO::getValidDateType, reqDTO.getValidDateType())
                     .set(ShortLinkDO::getDescription, reqDTO.getDescription())
