@@ -115,35 +115,11 @@ function onReset() {
         </el-form-item>
       </el-form>
     </el-card>
-
-    <el-alert
-      type="info"
-      :closable="false"
-      show-icon
-      title="关于修改密码"
-      class="note"
-    >
-      <p>修改密码时接口不会校验旧密码，也没有二次确认，注意别在被别人操作时随手改。</p>
-      <p>
-        另外改密码不会让已经登录的会话失效——登录态存在 Redis 的一个 hash 里（key 是用户名，
-        field 是 token），改密码不会动它，要立刻踢掉其它端得重新登录或者去清 Redis。
-      </p>
-    </el-alert>
   </div>
 </template>
 
 <style scoped>
 .card {
   max-width: 560px;
-}
-
-.note {
-  max-width: 560px;
-  margin-top: 16px;
-}
-
-.note p {
-  margin: 4px 0;
-  line-height: 1.6;
 }
 </style>

@@ -165,12 +165,6 @@ function openLinks(gid) {
         </template>
       </el-table-column>
 
-      <el-table-column label="gid" width="140">
-        <template #default="{ row }">
-          <span class="mono muted">{{ row.gid }}</span>
-        </template>
-      </el-table-column>
-
       <el-table-column label="操作" width="260" align="center">
         <template #default="{ row }">
           <template v-if="editingGid === row.gid">
@@ -189,10 +183,6 @@ function openLinks(gid) {
 
       <template #empty>暂无分组</template>
     </el-table>
-
-    <p class="muted" style="margin-top: 12px">
-      排序接口接收的是全量有序列表，所以这里每次上移/下移都会把全部序号按 0 起重新提交一遍。
-    </p>
   </div>
 </template>
 
