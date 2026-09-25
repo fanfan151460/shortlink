@@ -53,12 +53,6 @@ public class ShortLinkController {
         return Results.success();
     }
 
-    /**
-     * 返回 void 而不是 Result：重定向和“页面不存在”都由 service 直接写 ServletResponse，
-     * 返回值一旦非 null，@RestController 的 RequestResponseBodyMethodProcessor 会接着去序列化 body，
-     * 而此时 response 已经被预置成 text/html 且写过输出流，序列化路径拿不到可写的转换器，
-     * 会抛 HttpMediaTypeNotAcceptableException → 错误页再调 getOutputStream → IllegalStateException
-     */
     @Operation(summary = "短链接重定向", description = "四层缓存穿透防护：Redis → 布隆 → 空值缓存 → 分布式锁+MySQL，命中后302跳转")
     @GetMapping("/{shortLinkUri}")
     public void shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
