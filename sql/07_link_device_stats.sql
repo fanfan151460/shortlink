@@ -9,5 +9,5 @@ CREATE TABLE `t_link_device_stats` (
                                        `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
                                        PRIMARY KEY (`id`),
                                        UNIQUE KEY `idx_unique_device_stats` (`full_short_url`,`date`,`device`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=40547 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=40547 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

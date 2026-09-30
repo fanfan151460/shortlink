@@ -7,7 +7,11 @@
 ```mermaid
 graph TD
     subgraph 前端
-        A[单页 HTML/JS<br/>无框架纯原生]
+        A[Vue3 + Vite<br/>Element Plus + ECharts]
+    end
+
+    subgraph 反向代理
+        N[Nginx<br/>:80 短链跳转<br/>:8080 管理台托管 + /api 反代]
     end
 
     subgraph 网关层
@@ -26,7 +30,8 @@ graph TD
         H[RocketMQ<br/>异步统计写入]
     end
 
-    A --> B
+    A --> N
+    N --> B
     B --> C
     B --> D
     C --> F
@@ -53,7 +58,7 @@ graph TD
 | API 文档 | Knife4j（OpenAPI 3.0）                | 4.3.0 |
 | 限流 | Sentinel + lua                      | — |
 | 数据库 | MySQL                               | 8.0 |
-| 前端 | 原生 HTML/CSS/JS（零框架依赖）只做简单的联调使用      | — |
+| 前端 | Vue 3 + Vite + Element Plus + ECharts | 3.5 / 5.4 / 2.8 / 5.5 |
 
 ## 模块结构
 
@@ -68,8 +73,9 @@ shortlink/
 │       统计查询、回收站内部逻辑
 ├── gateway/                  # API 网关
 │   └── 路由转发、Token 鉴权、白名单校验
-├── frontend-practice/        # 前端（单页应用）
-│   └── index.html            # 登录/注册/工作台/回收站/统计
+├── frontend/                 # 前端（Vue3 + Vite 单页应用）
+│   └── src/                  # 登录、短链列表、分组、统计、
+│                             回收站、个人中心、接口自检
 └── pom.xml                   # Maven 父 POM
 ```
 
@@ -82,7 +88,7 @@ shortlink/
 
 ### 短链接跳转（高并发核心链路）
 - 四层缓存穿透防护：**Redis → 布隆过滤器 → 空值缓存 → 分布式锁 + MySQL**
-- 返回 307 Temporary Redirect，浏览器不缓存跳转
+- 返回 302 临时重定向（`sendRedirect`），浏览器不缓存跳转
 - 访问日志通过 **RocketMQ 异步写入**，不阻塞跳转响应
 
 ### 回收站
@@ -123,8 +129,12 @@ shortlink/
 1. **启动基础设施**
 
 ```bash
+# 首次需要准备环境变量（.env 已被 .gitignore 忽略，不会提交）
+cp .env.example .env
+vi .env    # 设置 MYSQL_ROOT_PASSWORD，需与两份 shardingsphere-config.yaml 里的 password 一致
+
 # 一键启动 MySQL、Redis、Nacos、RocketMQ
-docker-compose up -d
+docker compose up -d
 ```
 
 2. **初始化数据库**
@@ -161,11 +171,66 @@ mvn spring-boot:run -pl gateway
 
 6. **访问前端**
 
-打开 `frontend-practice/index.html`，或部署到网关统一访问。
+前端在 `frontend/` 目录，Vue3 + Vite 工程：
+
+```bash
+cd frontend
+npm install
+npm run dev        # 开发模式，Vite 已配置 /api 代理到网关 8083
+```
+
+生产构建 `npm run build` 产出 `dist/`，交由 Nginx 托管（`location /api/` 反代到网关）。
 
 - Knife4j 文档：`http://localhost:8083/doc.html`
 - Admin 服务：`http://localhost:8000`
 - Project 服务：`http://localhost:8082`
+
+## 密码与配置外置
+
+### 本地开发
+
+密码统一放在 `.env`（参考 `.env.example`），`docker compose` 会自动读取同目录下的 `.env`。
+两份 `shardingsphere-config.yaml` 里的 `password` 需要与它保持一致。
+
+### 生产部署
+
+> ⚠️ 不要把真实密码写进 `shardingsphere-config.yaml` 再提交——构建产物和 Git 历史都会留下它。
+
+ShardingSphere 的配置文件是**它自己**从 classpath 读的，不经过 Spring 的属性解析，
+所以 `${MYSQL_PASSWORD}` 这类占位符写在里面不会被替换，会被当成字面密码导致认证失败。
+要让密码离开构建产物，需要换一条读配置的路径：
+
+1. 把配置放到仓库外，权限收紧到 `600`：
+
+```bash
+install -d -m 700 /etc/shortlink
+cp project/src/main/resources/shardingsphere-config.yaml /etc/shortlink/shardingsphere-project.yaml
+vi /etc/shortlink/shardingsphere-project.yaml   # 填入真实密码
+chmod 600 /etc/shortlink/shardingsphere-project.yaml
+```
+
+2. 启动时用命令行参数覆盖数据源地址，指向这个文件
+（`absolutepath:` 前缀由 ShardingSphere 的 `AbsolutePathDriverURLProvider` 识别）：
+
+```bash
+java -jar app/shortlink-project-1.0-SNAPSHOT.jar \
+  --spring.datasource.url="jdbc:shardingsphere:absolutepath:/etc/shortlink/shardingsphere-project.yaml"
+```
+
+`admin` 模块同理，只是换成 `shardingsphere-admin.yaml`。
+
+### 改 MySQL 密码时注意
+
+`docker-compose.yml` 里的 `MYSQL_ROOT_PASSWORD` **只在 `mysql_data` 数据卷首次初始化时生效**。
+数据卷已存在时改这个值不会改数据库中已有的密码，必须手动执行：
+
+```sql
+ALTER USER 'root'@'%'         IDENTIFIED WITH caching_sha2_password BY '<新密码>';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '<新密码>';
+FLUSH PRIVILEGES;
+```
+
+改完同步更新 `/etc/shortlink/` 下的两份外置配置，再逐个重启应用。
 
 ## 注意事项
 
@@ -185,5 +250,5 @@ mvn spring-boot:run -pl gateway
 
 ## 截图
 
-> 统计图：![img.png](img.png)
-> 回收站：![img_1.png](img_1.png)
+> 统计图：![img.png](地区统计.png)
+> 访问量：![img_1.png](访问量统计.png)

@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # ============================================================
   # MySQL 8.0 — 短链接数据存储
-  # 端口: 3306  数据库: link  用户: root / 151460
+  # 端口: 3306  数据库: link  用户: root（密码取自 .env，使用前先 cp .env.example .env）
   # ============================================================
   mysql:
     image: mysql:8.0
@@ -12,7 +12,9 @@ services:
     ports:
       - "127.0.0.1:3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: "151460"
+      # 密码从 .env 读取；未设置时 compose 直接报错退出，避免静默用错密码
+      # 注意：该变量只在数据卷首次初始化时生效，改它不会改已有库的密码
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is not set - copy .env.example to .env first}"
       MYSQL_DATABASE: "link"
       TZ: Asia/Shanghai
     volumes:

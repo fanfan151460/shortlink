@@ -53,11 +53,10 @@ public class ShortLinkController {
         return Results.success();
     }
 
-    @Operation(summary = "短链接重定向", description = "四层缓存穿透防护：Redis → 布隆 → 空值缓存 → 分布式锁+MySQL，最终307跳转")
+    @Operation(summary = "短链接重定向", description = "四层缓存穿透防护：Redis → 布隆 → 空值缓存 → 分布式锁+MySQL，命中后302跳转")
     @GetMapping("/{shortLinkUri}")
-    public Result<Void> shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
+    public void shortLinkGoTo(@PathVariable("shortLinkUri") String shortLinkUri, ServletRequest request, ServletResponse response) {
         shortLinkService.gotoOriginUrl(shortLinkUri, request, response);
-        return Results.success();
     }
 
     @Operation(summary = "删除短链接", description = "软删除移入回收站")

@@ -48,6 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +74,23 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final TransactionTemplate transactionTemplate;
 
     private static final long STATS_SET_TTL_DAYS = 2L;
+
+    /**
+     * 找不到短链时的提示页
+     */
+    private static final String NOT_FOUND_PAGE = loadNotFoundPage();
+
+    private static String loadNotFoundPage() {
+        try (InputStream in = ShortLinkServiceImpl.class.getResourceAsStream("/static/notFound.html")) {
+            if (in != null) {
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            log.error("static/notFound.html 不在 classpath 里");
+        } catch (Exception e) {
+            log.error("加载 notFound 页面失败", e);
+        }
+        return "<html><body>您访问的页面不存在，请确认链接是否正确</body></html>";
+    }
 
     @Value("${spring.short-link.block-domain-list}")
     private String blockDomainList;
@@ -221,7 +240,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
-        ShortLinkDO shortLinkDO = lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).one();
+        ShortLinkGoDO linkGoDO = shortLinkGoToMapper.selectOne(Wrappers.lambdaQuery(ShortLinkGoDO.class)
+                .eq(ShortLinkGoDO::getFullShortUrl, reqDTO.getFullShortUrl()));
+        String gid = linkGoDO.getGid();
+        ShortLinkDO shortLinkDO = lambdaQuery().eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl()).eq(ShortLinkDO::getGid, gid).one();
         boolean ifGidDiff = !Objects.equals((shortLinkDO.getGid()), reqDTO.getGid());
         boolean ifOriUrlDiff = !Objects.equals((shortLinkDO.getOriginUrl()), reqDTO.getOriginUrl());
         //当修改 gid 时
@@ -236,13 +258,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                             .eq(ShortLinkDO::getDelFlag, 0)
                             .eq(ShortLinkDO::getUserName, UserContext.getUserName())
-                            .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                            .eq(ShortLinkDO::getGid, gid)
                             .one();
                     if (Objects.isNull(hasShortLinkDO)) {
                         throw new ClientException("短连接不存在");
                     }
                     lambdaUpdate()
                             .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                            .eq(ShortLinkDO::getGid, gid)
                             .eq(ShortLinkDO::getDelFlag, 0)
                             .set(ShortLinkDO::getDelFlag, 1)
                             .set(ShortLinkDO::getEnableStatus, 1)
@@ -278,13 +301,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .eq(ShortLinkDO::getUserName, UserContext.getUserName())
-                    .eq(ShortLinkDO::getGid, reqDTO.getGid())
+                    .eq(ShortLinkDO::getGid, gid)
                     .one();
             if (Objects.isNull(hasShortLinkDO)) {
                 throw new ClientException("短连接不存在");
             }
             lambdaUpdate()
                     .eq(ShortLinkDO::getFullShortUrl, reqDTO.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, gid)
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .set(ShortLinkDO::getValidDateType, reqDTO.getValidDateType())
                     .set(ShortLinkDO::getDescription, reqDTO.getDescription())
@@ -366,7 +390,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (linkExpireTime < 0) {
                 stringRedisTemplate.opsForValue().set(String.format(SHORT_URL_NULL_KEY, fullShortUrl), "1", 1, TimeUnit.MINUTES);
                 notFound(response);
-                throw new ClientException("短链接已经过期");
+                return;
             }
             //存入redis中，并设置有效期
             stringRedisTemplate.opsForValue()
@@ -396,7 +420,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
                 Cookie uvCookie = new Cookie("uv", uv.get());
-                uvCookie.setPath(fullShortUrl.substring(fullShortUrl.indexOf("/")));
+                // 用 lastIndexOf：fullShortUrl 可能带 scheme（http://host:port/code），
+                // indexOf 会命中 "http://" 里的斜杠，切出 //host:port/code 这种非法 cookie 路径，
+                // 导致浏览器永远不回传 uv cookie，UV 去重失效（每次访问都算新访客）。
+                uvCookie.setPath(fullShortUrl.substring(fullShortUrl.lastIndexOf("/")));
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
                 stringRedisTemplate.opsForSet().add(uvStatsKey, uv.get());
@@ -480,10 +507,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     private void notFound(ServletResponse response) {
+        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         try {
-            ((HttpServletResponse) response).sendRedirect("/page/notFound");
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            httpServletResponse.setContentType("text/html;charset=UTF-8");
+            httpServletResponse.getOutputStream().write(NOT_FOUND_PAGE.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ClientException("跳转notfound页面失败");
+            throw new ClientException("返回notfound页面失败");
         }
     }
 

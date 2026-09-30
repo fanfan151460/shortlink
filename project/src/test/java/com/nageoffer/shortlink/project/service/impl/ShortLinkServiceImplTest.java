@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGoToMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.mq.producer.LinkStatsProducer;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +23,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -46,10 +51,27 @@ class ShortLinkServiceImplTest {
     @InjectMocks
     private ShortLinkServiceImpl shortLinkService;
 
+    private final ByteArrayOutputStream notFoundBody = new ByteArrayOutputStream();
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(response.getOutputStream()).thenReturn(new ServletOutputStream() {
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
+            }
+
+            @Override
+            public void write(int b) {
+                notFoundBody.write(b);
+            }
+        });
         ReflectionTestUtils.setField(shortLinkService, "domain", "xiyl.cn");
     }
 
@@ -71,7 +93,11 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
+        // 断言拿到的是 jar 里那份页面，而不是加载失败时的兜底文案
+        assertTrue(notFoundBody.toString(StandardCharsets.UTF_8).contains("pc-container"),
+                "notFound 页面没从 classpath 里读出来");
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -83,7 +109,8 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
         verify(redissonClient, never()).getLock(anyString());
     }
 
@@ -107,7 +134,8 @@ class ShortLinkServiceImplTest {
 
         shortLinkService.gotoOriginUrl("4d5U", request, response);
 
-        verify(response).sendRedirect("/page/notFound");
+        verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+        verify(response, never()).sendRedirect(anyString());
         verify(shortLinkGoToMapper, never()).selectOne(any(Wrapper.class));
     }
 }

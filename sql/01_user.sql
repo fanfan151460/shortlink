@@ -12,7 +12,7 @@ CREATE TABLE `users_0` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_1` (
@@ -29,7 +29,7 @@ CREATE TABLE `users_1` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_2` (
@@ -46,7 +46,7 @@ CREATE TABLE `users_2` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_3` (
@@ -63,7 +63,7 @@ CREATE TABLE `users_3` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_4` (
@@ -80,7 +80,7 @@ CREATE TABLE `users_4` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_5` (
@@ -97,7 +97,7 @@ CREATE TABLE `users_5` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_6` (
@@ -114,7 +114,7 @@ CREATE TABLE `users_6` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_7` (
@@ -131,7 +131,7 @@ CREATE TABLE `users_7` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_8` (
@@ -148,7 +148,7 @@ CREATE TABLE `users_8` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_9` (
@@ -165,7 +165,7 @@ CREATE TABLE `users_9` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_10` (
@@ -182,7 +182,7 @@ CREATE TABLE `users_10` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_11` (
@@ -199,7 +199,7 @@ CREATE TABLE `users_11` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_12` (
@@ -216,7 +216,7 @@ CREATE TABLE `users_12` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_13` (
@@ -233,7 +233,7 @@ CREATE TABLE `users_13` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_14` (
@@ -250,7 +250,7 @@ CREATE TABLE `users_14` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `users_15` (
@@ -267,6 +267,6 @@ CREATE TABLE `users_15` (
                            PRIMARY KEY (`id`),
                            UNIQUE KEY `users_username_IDX` (`username`) USING BTREE,
                            UNIQUE KEY `users_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

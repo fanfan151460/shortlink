@@ -23,7 +23,7 @@ CREATE TABLE `t_link_0` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -52,7 +52,7 @@ CREATE TABLE `t_link_1` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -81,7 +81,7 @@ CREATE TABLE `t_link_2` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -110,7 +110,7 @@ CREATE TABLE `t_link_3` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -139,7 +139,7 @@ CREATE TABLE `t_link_4` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -168,7 +168,7 @@ CREATE TABLE `t_link_5` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -197,7 +197,7 @@ CREATE TABLE `t_link_6` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -226,7 +226,7 @@ CREATE TABLE `t_link_7` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -255,7 +255,7 @@ CREATE TABLE `t_link_8` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -284,7 +284,7 @@ CREATE TABLE `t_link_9` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -313,7 +313,7 @@ CREATE TABLE `t_link_10` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -342,7 +342,7 @@ CREATE TABLE `t_link_11` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -371,7 +371,7 @@ CREATE TABLE `t_link_12` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -400,7 +400,7 @@ CREATE TABLE `t_link_13` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -429,7 +429,7 @@ CREATE TABLE `t_link_14` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
@@ -458,7 +458,7 @@ CREATE TABLE `t_link_15` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `uk_full_url_del_time` (`full_short_url`,`del_time`),
                             KEY `idx_user_gid_del` (`user_name`,`gid`,`del_flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 
