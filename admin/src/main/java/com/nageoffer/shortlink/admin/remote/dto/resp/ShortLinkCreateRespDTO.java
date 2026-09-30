@@ -27,4 +27,19 @@ public class ShortLinkCreateRespDTO {
      */
     private String description;
 
+    /**
+     * 网站图标
+     */
+    private String favicon;
+
+    /**
+     * 所属活动ID，null 表示普通短链
+     */
+    private Long activityId;
+
+    /**
+     * 推广渠道标识，普通短链为 null
+     */
+    private String channel;
+
 }

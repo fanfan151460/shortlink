@@ -26,4 +26,8 @@ public class LinkPageReqDTO {
      * 排序字段
      */
     private String orderFlag;
+    /**
+     * 活动ID，非空时只查询该活动的渠道短链
+     */
+    private Long activityId;
 }

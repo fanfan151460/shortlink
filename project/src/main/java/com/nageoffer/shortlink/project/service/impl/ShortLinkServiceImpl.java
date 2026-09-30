@@ -133,7 +133,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .setGid(shortLinkDO.getGid())
                 .setOriginUrl(shortLinkDO.getOriginUrl())
                 .setFavicon(getDefaultFavicon(originUrl))
-                .setDescription(reqDTO.getDescription());
+                .setDescription(reqDTO.getDescription())
+                .setActivityId(reqDTO.getActivityId())
+                .setChannel(reqDTO.getChannel());
     }
 
     /**
@@ -185,7 +187,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             return new ShortLinkCreateRespDTO()
                     .setFullShortUrl(fullShortUrl)
                     .setGid(shortLinkDO.getGid())
-                    .setOriginUrl(shortLinkDO.getOriginUrl());
+                    .setOriginUrl(shortLinkDO.getOriginUrl())
+                    .setActivityId(reqDTO.getActivityId())
+                    .setChannel(reqDTO.getChannel());
         } finally {
             lock.unlock();
         }
@@ -194,7 +198,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
         Page<ShortLinkRespDTO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
-        List<ShortLinkRespDTO> records = baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName()).getRecords();
+        List<ShortLinkRespDTO> records = baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName(), linkPageReqDTO.getActivityId()).getRecords();
         if (records.isEmpty()) {
             return records;
         }

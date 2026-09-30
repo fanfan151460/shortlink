@@ -56,4 +56,19 @@ public class ShortLinkRespDTO {
      * 描述
      */
     private String description;
+
+    /**
+     * 所属活动ID，null 表示普通短链
+     */
+    private Long activityId;
+
+    /**
+     * 所属活动名称，普通短链为 null
+     */
+    private String activityName;
+
+    /**
+     * 推广渠道标识，普通短链为 null
+     */
+    private String channel;
 }

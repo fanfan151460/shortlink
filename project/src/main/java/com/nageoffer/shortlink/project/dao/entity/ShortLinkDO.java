@@ -92,7 +92,7 @@ public class ShortLinkDO implements Serializable {
     /**
      * 有效期
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate validDate;
 
     /**
@@ -133,4 +133,14 @@ public class ShortLinkDO implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT)
     private String delTime;
+
+    /**
+     * 所属活动 ID，null 表示普通短链
+     */
+    private Long activityId;
+
+    /**
+     * 推广渠道标识，仅活动渠道短链有值（weixin / douyin / sms ...）
+     */
+    private String channel;
 }

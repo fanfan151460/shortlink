@@ -20,7 +20,8 @@ public interface ProjectFeignClient {
     Result<List<ShortLinkRespDTO>> pageShortLink(@RequestParam String gid,
                                                   @RequestParam Long current,
                                                   @RequestParam Long size,
-                                                  @RequestParam(required = false) String orderFlag);
+                                                  @RequestParam(required = false) String orderFlag,
+                                                  @RequestParam(required = false) Long activityId);
 
     @PutMapping("/api/short-link/v1/update")
     Result<Void> updateShortLink(@RequestBody ShortLinkUpReqDTO reqDTO);
@@ -81,4 +82,25 @@ public interface ProjectFeignClient {
 
     @PostMapping("/api/short-link/v1/stats/access")
     Result<List<AccessStatsVO>> getAccessStats(@RequestBody StatsRemoteReqDTO reqDTO);
+
+    // ========== Activity ==========
+
+    @PostMapping("/api/short-link/v1/activity")
+    Result<Void> addNewActivity(@RequestBody ActivityReqDTO reqDTO);
+
+    @PutMapping("/api/short-link/v1/activity")
+    Result<Void> updateActivity(@RequestBody ActivityUpdateReqDTO reqDTO);
+
+    @DeleteMapping("/api/short-link/v1/activity")
+    Result<Void> removeActivity(@RequestParam Long id);
+
+    @GetMapping("/api/short-link/v1/activity/page")
+    Result<List<ActivityRespDTO>> pageActivity(@RequestParam(required = false) Long current,
+                                               @RequestParam(required = false) Long size,
+                                               @RequestParam(required = false) String gid,
+                                               @RequestParam(required = false) Integer status,
+                                               @RequestParam(required = false) String activityName);
+
+    @PostMapping("/api/short-link/v1/activity/links")
+    Result<List<ShortLinkCreateRespDTO>> addActivityLinks(@RequestBody ActivityLinkCreateReqDTO reqDTO);
 }

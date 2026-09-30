@@ -13,6 +13,9 @@
         <result property="todayPv" column="today_pv"/>
         <result property="todayUv" column="today_uv"/>
         <result property="todayIpCount" column="today_ip_count"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="activityName" column="activity_name"/>
+        <result property="channel" column="channel"/>
     </resultMap>
 
     <select id="pageShortLinkWithStats" resultMap="ShortLinkRespMap">
@@ -23,11 +26,25 @@
             l.description,
             l.total_pv,
             l.total_uv,
-            l.total_uip
+            l.total_uip,
+            l.activity_id,
+            l.channel,
+            a.activity_name
         FROM t_link l
+        <!-- 只 JOIN 未删除的活动：活动被逻辑删除后，它名下的渠道短链会"回落"成普通短链 -->
+        LEFT JOIN t_activity a ON a.id = l.activity_id AND a.del_flag = 0
         WHERE l.gid = #{gid}
             AND l.del_flag = 0
             AND l.user_name = #{userName}
+        <choose>
+            <when test="activityId != null">
+                AND l.activity_id = #{activityId}
+            </when>
+            <otherwise>
+                <!-- a.id IS NULL 同时覆盖两种情况：本来就是普通短链、活动的归属活动已被删除 -->
+                AND a.id IS NULL
+            </otherwise>
+        </choose>
         <choose>
             <when test="orderFlag == 'totalPv'">ORDER BY l.total_pv DESC</when>
             <when test="orderFlag == 'totalUv'">ORDER BY l.total_uv DESC</when>
