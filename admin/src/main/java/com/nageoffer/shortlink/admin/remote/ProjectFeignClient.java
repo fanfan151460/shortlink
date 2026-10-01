@@ -29,6 +29,12 @@ public interface ProjectFeignClient {
     @DeleteMapping("/api/short-link/v1/remove")
     Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO);
 
+    @PostMapping("/api/short-link/v1/batch-disable")
+    Result<Integer> batchDisableShortLink(@RequestBody ShortLinkBatchStatusReqDTO reqDTO);
+
+    @PostMapping("/api/short-link/v1/batch-enable")
+    Result<Integer> batchEnableShortLink(@RequestBody ShortLinkBatchStatusReqDTO reqDTO);
+
     // ========== Recycle ==========
 
     @PostMapping("/api/short-link/v1/recycle-bin/save")

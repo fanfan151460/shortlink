@@ -24,7 +24,7 @@ public class ActivityLinkCreateReqDTO {
     private List<String> channels;
 
     /**
-     * 有效期类型 0：永久有效 1：用户自定义，为空时按永久有效处理
+     * 有效期类型 0：永久有效 1：用户自定义，为空时继承活动自身的有效期
      */
     private Integer validDateType;
 

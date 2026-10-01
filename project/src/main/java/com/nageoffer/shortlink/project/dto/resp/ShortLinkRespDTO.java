@@ -71,4 +71,9 @@ public class ShortLinkRespDTO {
      * 推广渠道标识，普通短链为 null
      */
     private String channel;
+
+    /**
+     * 启用标识 0：已启用 1：未启用
+     */
+    private Integer enableStatus;
 }

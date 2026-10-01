@@ -17,6 +17,7 @@ import com.nageoffer.shortlink.project.dto.req.ActivityLinkCreateReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ActivityPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ActivityReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ActivityUpdateReqDTO;
+import com.nageoffer.shortlink.project.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ActivityRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +52,9 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
         if (blocked) {
             throw new ClientException("该域名下不允许创办活动！");
         }
+        if (Objects.equals(activity.getValidDateType(), 1) && Objects.isNull(activity.getValidDate())) {
+            throw new ClientException("请选择活动有效期");
+        }
         String userName = UserContext.getUserName();
         ActivityDO activityDO = BeanUtil.copyProperties(activity, ActivityDO.class)
                 .setUserName(userName);
@@ -65,8 +70,22 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
         boolean hasActivityName = StrUtil.isNotBlank(reqDTO.getActivityName());
         boolean hasOriginUrl = StrUtil.isNotBlank(reqDTO.getOriginUrl());
         boolean hasStatus = Objects.nonNull(reqDTO.getStatus());
-        if (!hasActivityName && !hasOriginUrl && !hasStatus) {
+        boolean hasValidDateType = Objects.nonNull(reqDTO.getValidDateType());
+        if (!hasActivityName && !hasOriginUrl && !hasStatus && !hasValidDateType) {
             throw new ClientException("没有需要更新的字段");
+        }
+        if (hasValidDateType && Objects.equals(reqDTO.getValidDateType(), 1)
+                && Objects.isNull(reqDTO.getValidDate())) {
+            throw new ClientException("请选择活动有效期");
+        }
+        // 先取当前行：既做归属校验，也要拿 gid（分片键，更新入参里没有）和旧状态
+        ActivityDO current = lambdaQuery()
+                .eq(ActivityDO::getId, reqDTO.getId())
+                .eq(ActivityDO::getUserName, UserContext.getUserName())
+                .eq(ActivityDO::getDelFlag, 0)
+                .one();
+        if (Objects.isNull(current)) {
+            throw new ClientException("活动不存在或不属于当前用户");
         }
         boolean updated = lambdaUpdate()
                 .eq(ActivityDO::getId, reqDTO.getId())
@@ -75,15 +94,39 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
                 .set(hasActivityName, ActivityDO::getActivityName, reqDTO.getActivityName())
                 .set(hasOriginUrl, ActivityDO::getOriginUrl, reqDTO.getOriginUrl())
                 .set(hasStatus, ActivityDO::getStatus, reqDTO.getStatus())
+                .set(hasValidDateType, ActivityDO::getValidDateType, reqDTO.getValidDateType())
+                // 切回永久有效时把 valid_date 一并清空，否则库里留着旧日期，语义变成"永久但有个日期"
+                .set(hasValidDateType, ActivityDO::getValidDate,
+                        Objects.equals(reqDTO.getValidDateType(), 1) ? reqDTO.getValidDate() : null)
                 .set(ActivityDO::getUpdateTime, LocalDateTime.now())
                 .update();
         if (!updated) {
             throw new ClientException("活动不存在或不属于当前用户");
         }
+        // 只有状态真的变了才联动渠道短链。只改名字时前端也会把 status 一起带上，
+        // 不比对旧值就会把渠道短链连带启用/停用。
+        if (hasStatus && !Objects.equals(current.getStatus(), reqDTO.getStatus())) {
+            if (Objects.equals(reqDTO.getStatus(), 1)) {
+                disableActivityChannels(current);
+            } else {
+                enableActivityChannels(current);
+            }
+        }
     }
 
     @Override
     public void removeActivity(Long id) {
+        ActivityDO activityDO = lambdaQuery()
+                .eq(ActivityDO::getId, id)
+                .eq(ActivityDO::getUserName, UserContext.getUserName())
+                .eq(ActivityDO::getDelFlag, 0)
+                .one();
+        if (Objects.isNull(activityDO)) {
+            throw new ClientException("活动不存在或不属于当前用户");
+        }
+        // 先让渠道短链失效，再逻辑删除活动。链接本身不删——分页 SQL 的 a.id IS NULL 会让它们
+        // 回落到短链接列表，只是访问返回 404，需要时可以逐条再启用。
+        disableActivityChannels(activityDO);
         boolean updated = lambdaUpdate()
                 .eq(ActivityDO::getId, id)
                 .eq(ActivityDO::getUserName, UserContext.getUserName())
@@ -94,6 +137,34 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
                 .update();
         if (!updated) {
             throw new ClientException("活动不存在或不属于当前用户");
+        }
+    }
+
+    /** 关闭活动：渠道短链全部停用。也可以被删除活动复用 */
+    private void disableActivityChannels(ActivityDO activityDO) {
+        applyChannelEnableStatus(activityDO, 1);
+    }
+
+    /** 恢复活动：渠道短链全部启用回来，和 disableActivityChannels 对称 */
+    private void enableActivityChannels(ActivityDO activityDO) {
+        applyChannelEnableStatus(activityDO, 0);
+    }
+
+    /**
+     * 按活动批量改渠道短链的 enable_status。
+     * @param enableStatus 0 启用 1 停用
+     */
+    private void applyChannelEnableStatus(ActivityDO activityDO, int enableStatus) {
+        if (StrUtil.isBlank(activityDO.getGid())) {
+            return;
+        }
+        ShortLinkBatchStatusReqDTO reqDTO = new ShortLinkBatchStatusReqDTO()
+                .setGid(activityDO.getGid())
+                .setActivityId(activityDO.getId());
+        if (enableStatus == 1) {
+            shortLinkService.batchDisableShortLink(reqDTO);
+        } else {
+            shortLinkService.batchEnableShortLink(reqDTO);
         }
     }
 
@@ -118,13 +189,23 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
         if (channels.isEmpty()) {
             throw new ClientException("渠道不能为空");
         }
+        // 入参没指定有效期就是"跟随活动"；活动自身也没设过时兜底成永久有效
+        Integer validDateType = Objects.isNull(reqDTO.getValidDateType())
+                ? Optional.ofNullable(activityDO.getValidDateType()).orElse(0)
+                : reqDTO.getValidDateType();
+        LocalDate validDate = Objects.equals(validDateType, 1)
+                ? (Objects.isNull(reqDTO.getValidDateType()) ? activityDO.getValidDate() : reqDTO.getValidDate())
+                : null;
+        if (Objects.equals(validDateType, 1) && Objects.isNull(validDate)) {
+            throw new ClientException("请选择有效期");
+        }
         List<ShortLinkCreateRespDTO> results = new ArrayList<>(channels.size());
         for (String channel : channels) {
             ShortLinkReqDTO linkReqDTO = new ShortLinkReqDTO()
                     .setOriginUrl(activityDO.getOriginUrl())
                     .setGid(activityDO.getGid())
-                    .setValidDateType(reqDTO.getValidDateType())
-                    .setValidDate(reqDTO.getValidDate())
+                    .setValidDateType(validDateType)
+                    .setValidDate(validDate)
                     .setDescription(reqDTO.getDescription())
                     .setActivityId(activityDO.getId())
                     .setChannel(channel);

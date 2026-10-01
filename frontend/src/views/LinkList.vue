@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import { pageLink, removeLink } from '@/api/link'
+import { batchDisableLink, batchEnableLink, pageLink, removeLink } from '@/api/link'
 import { saveRecycleBinAll } from '@/api/recycle'
 import AccessLogTable from '@/components/AccessLogTable.vue'
 import LinkFormDialog from '@/components/LinkFormDialog.vue'
@@ -129,6 +129,33 @@ function go(delta) {
   load()
 }
 
+/**
+ * 启停只切 enableStatus（0 已启用 / 1 未启用），不动删除标识——回收站那条链路完全独立。
+ * 后端会在 UPDATE 之后删对应方向的缓存，所以停用/启用都是立刻生效的。
+ */
+async function onToggleStatus(row) {
+  const disabling = row.enableStatus !== 1
+  try {
+    await ElMessageBox.confirm(
+      disabling
+        ? `确定停用 ${row.fullShortUrl}？停用后访问会返回 404，链接不会被删除。`
+        : `确定启用 ${row.fullShortUrl}？`,
+      disabling ? '停用' : '启用',
+      { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+  try {
+    const body = { gid: row.gid || appStore.currentGid, fullShortUrls: [row.fullShortUrl] }
+    await (disabling ? batchDisableLink(body) : batchEnableLink(body))
+    ElMessage.success(disabling ? '已停用' : '已启用')
+    load()
+  } catch {
+    /* 拦截器已经提示过了 */
+  }
+}
+
 async function onEmptyGroup() {
   const gid = appStore.currentGid
   try {
@@ -210,11 +237,31 @@ async function onEmptyGroup() {
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="260" align="center">
+        <!--
+          enableStatus 语义以 Java 为准：0 = 已启用，1 = 未启用
+          （sql/03_link.sql 的 DDL 注释写反了，别抄）。
+        -->
+        <el-table-column label="状态" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.enableStatus === 1 ? 'info' : 'success'" size="small">
+              {{ row.enableStatus === 1 ? '已停用' : '已启用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="320" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
             <el-button link type="primary" size="small" @click="openStats(row)">统计</el-button>
             <el-button link type="primary" size="small" @click="openLogs(row)">访问记录</el-button>
+            <el-button
+              link
+              :type="row.enableStatus === 1 ? 'success' : 'warning'"
+              size="small"
+              @click="onToggleStatus(row)"
+            >
+              {{ row.enableStatus === 1 ? '启用' : '停用' }}
+            </el-button>
             <el-button link type="danger" size="small" @click="onRemove(row)">删除</el-button>
           </template>
         </el-table-column>

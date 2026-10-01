@@ -1,9 +1,11 @@
 package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -20,6 +22,7 @@ import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.project.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
@@ -493,6 +496,74 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             throw new ClientException("短链接删除失败");
         }
         stringRedisTemplate.delete(String.format(FULL_SHORT_LINK, recycleDTO.getFullShortUrl()));
+    }
+
+    @Override
+    public Integer batchDisableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        return batchChangeEnableStatus(reqDTO, 1);
+    }
+
+    @Override
+    public Integer batchEnableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        return batchChangeEnableStatus(reqDTO, 0);
+    }
+
+    /**
+     * 批量改 enable_status。
+     * <p>
+     * 范围为空时的处理分两种：按 fullShortUrls 传时抛异常（说明传进来的短链接一条都没匹配上，
+     * 多半是选中的行已被删、或串了别人的 token）；按 activityId 传时返回 0
+     * （活动可能还没建渠道，那也必须能正常关闭活动，见 ActivityServiceImpl.updateActivity）。
+     *
+     * @param enableStatus 0 启用 1 停用
+     */
+    private Integer batchChangeEnableStatus(ShortLinkBatchStatusReqDTO reqDTO, int enableStatus) {
+        String gid = reqDTO.getGid();
+        if (StrUtil.isBlank(gid)) {
+            throw new ClientException("分组标识不能为空");
+        }
+        boolean byActivity = Objects.nonNull(reqDTO.getActivityId());
+        List<String> urls = byActivity ? null : CollUtil.emptyIfNull(reqDTO.getFullShortUrls()).stream()
+                .map(StrUtil::trim)
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .toList();
+        if (!byActivity && CollUtil.isEmpty(urls)) {
+            throw new ClientException("请传入短链接或活动");
+        }
+        LambdaQueryWrapper<ShortLinkDO> query = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .select(ShortLinkDO::getFullShortUrl)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getGid, gid)
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(byActivity, ShortLinkDO::getActivityId, reqDTO.getActivityId())
+                .in(!byActivity, ShortLinkDO::getFullShortUrl, urls);
+        List<ShortLinkDO> targets = baseMapper.selectList(query);
+        if (CollUtil.isEmpty(targets) && !byActivity) {
+            throw new ClientException("没有可操作的短链接");
+        }
+        // 按活动批量时一条都没捞到不算错：活动可以还没有渠道，直接返回 0，连 UPDATE 都省掉
+        if (CollUtil.isEmpty(targets)) {
+            return 0;
+        }
+        LambdaUpdateWrapper<ShortLinkDO> update = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getGid, gid)
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(byActivity, ShortLinkDO::getActivityId, reqDTO.getActivityId())
+                .in(!byActivity, ShortLinkDO::getFullShortUrl, urls)
+                .set(ShortLinkDO::getEnableStatus, enableStatus);
+        int affected = baseMapper.update(null, update);
+
+        List<String> keys = targets.stream()
+                .map(each -> String.format(enableStatus == 1 ? FULL_SHORT_LINK : SHORT_URL_NULL_KEY, each.getFullShortUrl()))
+                .toList();
+        try {
+            stringRedisTemplate.delete(keys);
+        } catch (Exception e) {
+            log.error("批量{}短链接清理缓存失败，keys={}", enableStatus == 1 ? "停用" : "启用", keys, e);
+        }
+        return affected;
     }
 
     /**

@@ -2,14 +2,14 @@
 /**
  * 接口自检页（验收工具，不是业务功能）
  *
- * 目的：一次把 admin 的全部 37 个接口打一遍，把 HTTP 状态码、耗时、返回码摊开，
- * 给出一句"通过 N/37"。后端每次改动跑一遍就是最便宜的回归。
+ * 目的：一次把 admin 的全部 39 个接口打一遍，把 HTTP 状态码、耗时、返回码摊开，
+ * 给出一句"通过 N/39"。后端每次改动跑一遍就是最便宜的回归。
  *
  * 分成三类，是因为副作用差别很大：
  *   A 只读（18）—— 不动任何数据，随时可跑
  *   B 会话（2）  —— 登录会挤占 token 名额、登出会直接退出，只能手动单点
  *   C 账号（2）  —— 注册会真的建一个用户，只能手动单点
- *   D 数据（15） —— 会在"自检临时分组"下建链接再清掉，跑完自动回收
+ *   D 数据（17） —— 会在"自检临时分组"下建链接再清掉，跑完自动回收
  *
  * D 组唯一"删不干净"的是活动：删除是逻辑删除，行还留在 t_activity 里（del_flag=1，
  * 页面上看不到）。渠道短链不受影响，会随最后的删分组动作进回收站。
@@ -75,7 +75,7 @@ const statsBody = () => ({
   endDate: today()
 })
 
-// ---------------------------------------------------------------- A 只读 17 个
+// ---------------------------------------------------------------- A 只读 18 个
 const readOnly = [
   { method: 'GET', path: '/test', desc: '服务存活探针（网关白名单）', run: () => call('get', '/test') },
   {
@@ -200,7 +200,7 @@ const account = [
   }
 ]
 
-// ---------------------------------------------------------------- D 数据 11 个
+// ---------------------------------------------------------------- D 数据 17 个
 // 顺序有依赖，共享 ctx：先建临时分组，再在里面建链接，最后清干净
 const ctx = { gid: '', fullShortUrl: '', activityId: '' }
 
@@ -342,9 +342,31 @@ const writeFlow = [
       })
   },
   {
+    method: 'POST',
+    path: '/batch-disable',
+    desc: '批量停用（fullShortUrls 形式）。顺序：先按列表停用，再按活动启用，两条入参都覆盖到',
+    run: async () => {
+      const list = await request.get('/page', {
+        params: { gid: ctx.gid, activityId: ctx.activityId, current: 1, size: 10 },
+        silent: true
+      })
+      const urls = (list || []).map((l) => l.fullShortUrl)
+      if (!urls.length) {
+        return { ok: false, status: 'ERR', ms: 0, summary: '该活动下没有渠道短链，测不了 fullShortUrls 形式' }
+      }
+      return call('post', '/batch-disable', { data: { gid: ctx.gid, fullShortUrls: urls } })
+    }
+  },
+  {
+    method: 'POST',
+    path: '/batch-enable',
+    desc: '批量启用（activityId 形式）。传活动ID不传列表——渠道列表是分页的，前端只有当前页',
+    run: () => call('post', '/batch-enable', { data: { gid: ctx.gid, activityId: ctx.activityId } })
+  },
+  {
     method: 'PUT',
     path: '/activity',
-    desc: '改活动名称与状态（gid 不可改；空 body 会被后端拒掉）',
+    desc: '改活动名称与状态（gid 不可改；空 body 会被后端拒掉）。进行中→已结束会连带停用该活动下全部渠道短链',
     run: () =>
       call('put', '/activity', {
         data: {
@@ -358,7 +380,7 @@ const writeFlow = [
   {
     method: 'DELETE',
     path: '/activity',
-    desc: '逻辑删除活动（不带走渠道短链，它们会回落到短链接列表）',
+    desc: '逻辑删除活动：先把它下面的渠道短链全部停用，再逻辑删除活动。链接本身不删，会回落到短链接列表',
     run: () => call('delete', '/activity', { params: { id: ctx.activityId } })
   },
   {
@@ -472,7 +494,7 @@ recount()
 
     <el-alert type="warning" :closable="false" show-icon class="tip">
       <p>D 组会以当前登录用户（{{ username }}）的身份建一个"自检临时分组"，在里面建链接、走一遍回收站流程，最后把分组删掉。</p>
-      <p>D 组还会建一个"自检活动"、生成 weixin / douyin 两条渠道短链、改一次名、再把它逻辑删除掉。</p>
+      <p>D 组还会建一个"自检活动"、生成 weixin / douyin 两条渠道短链、把它们批量停用再启用、改一次名、再把这个活动逻辑删除掉。</p>
       <p>B / C 两组不会自动跑：登录会挤占 token 名额，登出会把你踢出去，注册会真的往库里写一个用户。</p>
     </el-alert>
 

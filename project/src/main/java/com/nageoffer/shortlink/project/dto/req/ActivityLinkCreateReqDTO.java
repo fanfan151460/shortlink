@@ -26,7 +26,10 @@ public class ActivityLinkCreateReqDTO {
     private List<String> channels;
 
     /**
-     * 有效期类型 0：永久有效 1：用户自定义，为空时按永久有效处理
+     * 有效期类型 0：永久有效 1：用户自定义。
+     * <p>
+     * 为空时继承活动自身的有效期（而不是默认永久）——自检页/curl/第三方调用方漏传时，
+     * 拿到的是"跟随活动"这个安全默认值。
      */
     private Integer validDateType;
 

@@ -4,6 +4,7 @@ import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -67,5 +68,22 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
         }
     }
 
+    @Override
+    public Integer batchDisableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        Result<Integer> result = projectFeignClient.batchDisableShortLink(reqDTO);
+        if (!result.isSuccess()) {
+            throw new ServiceException(result.getMessage());
+        }
+        return result.getData();
+    }
+
+    @Override
+    public Integer batchEnableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        Result<Integer> result = projectFeignClient.batchEnableShortLink(reqDTO);
+        if (!result.isSuccess()) {
+            throw new ServiceException(result.getMessage());
+        }
+        return result.getData();
+    }
 
 }

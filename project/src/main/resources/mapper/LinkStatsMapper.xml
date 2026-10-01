@@ -16,6 +16,7 @@
         <result property="activityId" column="activity_id"/>
         <result property="activityName" column="activity_name"/>
         <result property="channel" column="channel"/>
+        <result property="enableStatus" column="enable_status"/>
     </resultMap>
 
     <select id="pageShortLinkWithStats" resultMap="ShortLinkRespMap">
@@ -29,6 +30,7 @@
             l.total_uip,
             l.activity_id,
             l.channel,
+            l.enable_status,
             a.activity_name
         FROM t_link l
         <!-- 只 JOIN 未删除的活动：活动被逻辑删除后，它名下的渠道短链会"回落"成普通短链 -->

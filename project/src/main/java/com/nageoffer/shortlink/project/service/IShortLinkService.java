@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.project.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
@@ -46,4 +47,18 @@ public interface IShortLinkService extends IService<ShortLinkDO> {
      * @param recycleDTO 请求参数
      */
     void removeShortLink(RecycleDTO recycleDTO);
+
+    /**
+     * 批量停用短链接
+     * @param reqDTO 入参（fullShortUrls 或 activityId 二选一）
+     * @return 实际改动的条数
+     */
+    Integer batchDisableShortLink(ShortLinkBatchStatusReqDTO reqDTO);
+
+    /**
+     * 批量启用短链接
+     * @param reqDTO 入参（fullShortUrls 或 activityId 二选一）
+     * @return 实际改动的条数
+     */
+    Integer batchEnableShortLink(ShortLinkBatchStatusReqDTO reqDTO);
 }

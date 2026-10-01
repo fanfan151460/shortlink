@@ -1,11 +1,13 @@
 package com.nageoffer.shortlink.project.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -48,6 +50,21 @@ public class ActivityDO implements Serializable {
      * 活动状态 0：进行中 1：已结束（未设置时由 DDL 默认值 0 兜底）
      */
     private Integer status;
+
+    /**
+     * 有效期类型 0：永久有效 1：用户自定义
+     * <p>
+     * fill = INSERT 是必需的：BeanUtil.copyProperties 会把入参里的 null 一起拷进来，
+     * 不标注则自动填充不生效，null 反而覆盖掉 DDL 的 DEFAULT '0'，库里落成 NULL。
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private Integer validDateType;
+
+    /**
+     * 有效期（仅自定义日期时有值）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate validDate;
 
     /**
      * 创建时间

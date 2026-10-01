@@ -1,8 +1,10 @@
 package com.nageoffer.shortlink.admin.remote.dto.resp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -41,6 +43,17 @@ public class ActivityRespDTO {
      * 活动状态 0：进行中 1：已结束
      */
     private Integer status;
+
+    /**
+     * 有效期类型 0：永久有效 1：用户自定义
+     */
+    private Integer validDateType;
+
+    /**
+     * 有效期（仅自定义日期时有值）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate validDate;
 
     /**
      * 创建时间
