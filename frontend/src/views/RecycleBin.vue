@@ -15,8 +15,12 @@ const hasMore = ref(false)
 
 onMounted(loadDeletedGroups)
 
+// 只盯 currentGid。曾经把 deletedGroups.length 也放进来，但它的唯一生产者就是
+// 本页 onMounted 里的 loadDeletedGroups() 自己 —— 赋完新数组立刻触发这个 watch，
+// 于是进一次回收站发两遍分页请求（回收站为空时就是两条一模一样的报错）。
+// 恢复/删除后本来就会显式 load()，不需要靠 deletedGroups 变化来驱动。
 watch(
-  () => [appStore.currentGid, appStore.deletedGroups.length],
+  () => appStore.currentGid,
   () => {
     current.value = 1
     load()
