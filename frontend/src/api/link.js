@@ -18,9 +18,15 @@ export function createLink(data) {
  *
  * activityId 传值时只返回该活动下的渠道短链；不传则只返回"普通短链"
  * （后端是二分逻辑：activity_id IS NULL，不是在全部结果里筛掉活动短链）。
+ *
+ * includeActivity 只在 activityId 为空时生效：true 时连活动名下的渠道短链一起返回。
+ * 判据是 activity_id 本身，不是"活动还在不在"——活动被删后链接仍带 activity_id，
+ * 按活动存活与否决定可见性会让链接凭空冒出来。列表页表头那个开关控制的就是它。
  */
-export function pageLink({ gid, current = 1, size = 10, orderFlag, activityId }) {
-  return request.get('/page', { params: { gid, current, size, orderFlag, activityId } })
+export function pageLink({ gid, current = 1, size = 10, orderFlag, activityId, includeActivity }) {
+  return request.get('/page', {
+    params: { gid, current, size, orderFlag, activityId, includeActivity }
+  })
 }
 
 /** 更新短链接 PUT /update */

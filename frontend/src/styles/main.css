@@ -1,3 +1,57 @@
+/* ---------------------------------------------------------------------------
+   设计令牌。改主题只动这里，别在组件里写死色值。
+   命名沿用 Element Plus 的语义（brand-50 最浅），方便和它自己的变量对上。
+--------------------------------------------------------------------------- */
+:root {
+  --brand: #4f46e5;
+  --brand-dark: #4338ca;
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+
+  --ink-900: #0f172a;
+  --ink-700: #334155;
+  --ink-500: #64748b;
+  --ink-400: #94a3b8;
+
+  --line: #e2e8f0;
+  --line-soft: #eef2f7;
+  --surface: #ffffff;
+  /* 语义色：成功/启用 */
+  --ok: #22c55e;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+
+  /* 层叠的柔和背景，比纯色 #f1f5f9 有层次但不抢内容 */
+  --page-bg: radial-gradient(1200px 600px at 0% 0%, #eef2ff 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #ecfeff 0%, transparent 50%), #f6f8fc;
+
+  /* --- Element Plus 主题对齐 ---
+     默认主色是蓝 #409eff，而布局用的是靛蓝 #4f46e5，主按钮和导航激活态一直不同色。
+     这里把整族浅色变体一起换掉：只改 --el-color-primary 的话，hover/disabled
+     那些 --el-color-primary-light-N 还是蓝的，会出现"主色靛蓝、悬停变蓝"的脏效果。 */
+  --el-color-primary: #4f46e5;
+  --el-color-primary-light-3: #847eed;
+  --el-color-primary-light-5: #a7a3f2;
+  --el-color-primary-light-7: #cac8f7;
+  --el-color-primary-light-8: #dcdaf9;
+  --el-color-primary-light-9: #ededfc;
+  --el-color-primary-dark-2: #3f38b7;
+
+  --el-border-radius-base: 8px;
+  --el-border-color: #e2e8f0;
+  --el-border-color-light: #eef2f7;
+  --el-text-color-primary: #0f172a;
+  --el-text-color-regular: #334155;
+  --el-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei',
+    sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,35 +64,74 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif;
-  background: #f1f5f9;
-  color: #1e293b;
+  font-family: var(--el-font-family);
+  background: var(--page-bg);
+  color: var(--ink-900);
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ---------------------------------------------------------------------------
+   页面骨架
+--------------------------------------------------------------------------- */
 .page {
-  padding: 20px 24px;
+  padding: 20px 24px 28px;
 }
 
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .page-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--ink-900);
 }
 
+/* 标题前的图标徽章。用渐变方块而不是裸图标，视觉重量才压得住 19px 的字 */
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.title-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #7c6ef0 100%);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.28);
+}
+
+.page-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-400);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------------------
+   通用工具类
+--------------------------------------------------------------------------- */
 .muted {
-  color: #64748b;
+  color: var(--ink-500);
   font-size: 13px;
 }
 
 .mono {
   font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 12.5px;
 }
 
 .ellipsis {
@@ -55,12 +148,95 @@ body {
   height: 16px;
   vertical-align: middle;
   margin-right: 6px;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .empty {
-  padding: 60px 0;
+  padding: 56px 0;
   text-align: center;
-  color: #94a3b8;
+  color: var(--ink-400);
   font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+   Element Plus 外观微调
+   --------------------------------------- */
+.el-card {
+  border-radius: var(--radius-lg) !important;
+  border-color: var(--line-soft) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* 卡片头加一条细分隔线，比默认的纯文字更能撑起卡片结构 */
+.el-card__header {
+  padding: 14px 18px !important;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-900);
+  border-bottom: 1px solid var(--line-soft) !important;
+  background: linear-gradient(180deg, #fbfcfe 0%, #fff 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.el-card__body {
+  padding: 18px !important;
+}
+
+.el-table {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.el-table th.el-table__cell {
+  background: #f8fafc !important;
+  color: var(--ink-700) !important;
+  font-weight: 600 !important;
+}
+
+/* 表格和卡片头部一样用 14px 序号色，行高给一点呼吸感 */
+.el-table .el-table__cell {
+  padding: 9px 0;
+}
+
+.el-table__row:hover > td.el-table__cell {
+  background: #f8faff !important;
+}
+
+.el-button {
+  font-weight: 500;
+}
+
+/* 表格里的纯图标按钮：默认行内元素的点击区太小，撑到 28px 才好点 */
+.el-table .el-button.is-link {
+  padding: 4px 6px;
+  height: auto;
+  font-size: 14px;
+}
+
+/* 图标跟着按钮的 size 走，small 出来只有 12px 太小，统一提到 16px */
+.el-table .el-button.is-link .el-icon {
+  font-size: 16px;
+}
+
+/* 默认的相邻按钮间距是 12px，5 个图标一排会把最后一个挤到第二行，收紧成 6px */
+.el-table .el-button.is-link + .el-button.is-link {
+  margin-left: 6px;
+}
+
+/* 表头里的问号：解释 PV/UV 这类缩写，平时低调，悬停才显眼 */
+.help-icon {
+  margin-left: 4px;
+  font-size: 14px;
+  vertical-align: -2px;
+  color: var(--ink-400);
+  cursor: help;
+}
+
+.help-icon:hover {
+  color: var(--brand);
+}
+
+/* 启停开关：开 = 绿（启用），关 = 灰。受控写法，见各页面的 onToggleStatus */
+.switch-enable {
+  --el-switch-on-color: var(--ok);
 }

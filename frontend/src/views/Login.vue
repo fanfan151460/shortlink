@@ -101,7 +101,25 @@ async function onRegister() {
 <template>
   <div class="auth-wrap">
     <el-card class="auth-card" shadow="always">
-      <h1 class="title">SaaS短链系统</h1>
+      <div class="brand">
+        <span class="brand-mark">
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.1"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </span>
+        <h1 class="title">SaaS短链系统</h1>
+        <p class="subtitle">短链生成 · 访问统计 · 营销活动</p>
+      </div>
 
       <el-tabs v-model="tab" stretch>
         <el-tab-pane label="登录" name="login">
@@ -169,22 +187,50 @@ async function onRegister() {
 </template>
 
 <style scoped>
+/* 登录页是"门面"，比内页多铺一层更明显的渐变，卡片浮在上面 */
 .auth-wrap {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  background: radial-gradient(900px 500px at 15% 0%, #e0e7ff 0%, transparent 55%),
+    radial-gradient(800px 500px at 90% 100%, #cffafe 0%, transparent 55%), #f6f8fc;
 }
 
 .auth-card {
   width: 400px;
 }
 
-.title {
-  margin: 0 0 12px;
-  font-size: 20px;
+.brand {
   text-align: center;
+  margin-bottom: 6px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #7c6ef0 100%);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.32);
+}
+
+.title {
+  margin: 12px 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--ink-900);
+}
+
+.subtitle {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--ink-400);
 }
 
 .submit {

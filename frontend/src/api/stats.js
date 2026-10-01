@@ -40,6 +40,17 @@ export function getAccessStats(data) {
   return request.post('/stats/access', data)
 }
 
+/**
+ * 活动跨渠道去重统计 POST /stats/activity
+ *
+ * 返回 [{ date, activityUv, channelUv }]：
+ * activityUv 是活动维度去重（同一访客当天多触达只算一次），channelUv 是各渠道 UV 之和。
+ * 差额 = 当天被多渠道重复触达的访客数。
+ */
+export function getActivityStats(data) {
+  return request.post('/stats/activity', data)
+}
+
 /** 访问明细记录 POST /stats/access-record */
 export function getAccessRecords(data) {
   return request.post('/stats/access-record', data)

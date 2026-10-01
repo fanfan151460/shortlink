@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, ArrowRight, Delete, Refresh, RefreshLeft } from '@element-plus/icons-vue'
 
 import { deleteRecycleBin, pageRecycle, recoverRecycleBin } from '@/api/recycle'
 import { appStore, groupName, loadDeletedGroups, loadGroups } from '@/store/app'
@@ -107,8 +108,16 @@ function go(delta) {
 
     <template v-else>
       <div class="page-header">
-        <h2>回收站 · {{ groupName(appStore.currentGid) || '已删除分组' }}</h2>
-        <el-button size="small" @click="refreshBoth">刷新</el-button>
+        <div class="page-title">
+          <span class="title-badge"><el-icon :size="17"><Delete /></el-icon></span>
+          <div>
+            <h2>回收站 · {{ groupName(appStore.currentGid) || '已删除分组' }}</h2>
+            <p class="page-sub">这里的短链接仍保留数据，可恢复回原分组，也可永久删除</p>
+          </div>
+        </div>
+        <el-tooltip content="刷新" placement="top" :show-after="400">
+          <el-button size="small" :icon="Refresh" @click="refreshBoth" />
+        </el-tooltip>
       </div>
 
       <el-table v-loading="loading" :data="rows" border>
@@ -139,10 +148,20 @@ function go(delta) {
           <template #default="{ row }">{{ fmtDateTime(row.updateTime) }}</template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" align="center">
+        <el-table-column label="操作" width="150" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="onRecover(row)">恢复</el-button>
-            <el-button link type="danger" size="small" @click="onDelete(row)">彻底删除</el-button>
+            <el-tooltip content="恢复" placement="top" :show-after="400">
+              <el-button
+                link
+                type="primary"
+                size="small"
+                :icon="RefreshLeft"
+                @click="onRecover(row)"
+              />
+            </el-tooltip>
+            <el-tooltip content="彻底删除" placement="top" :show-after="400">
+              <el-button link type="danger" size="small" :icon="Delete" @click="onDelete(row)" />
+            </el-tooltip>
           </template>
         </el-table-column>
 
@@ -150,9 +169,13 @@ function go(delta) {
       </el-table>
 
       <div class="pager">
-        <el-button size="small" :disabled="current <= 1" @click="go(-1)">上一页</el-button>
-        <span class="muted">第 {{ current }} 页</span>
-        <el-button size="small" :disabled="!hasMore" @click="go(1)">下一页</el-button>
+        <el-tooltip content="上一页" placement="top" :show-after="400">
+          <el-button size="small" :icon="ArrowLeft" :disabled="current <= 1" @click="go(-1)" />
+        </el-tooltip>
+        <span class="muted">{{ current }}</span>
+        <el-tooltip content="下一页" placement="top" :show-after="400">
+          <el-button size="small" :icon="ArrowRight" :disabled="!hasMore" @click="go(1)" />
+        </el-tooltip>
       </div>
     </template>
   </div>

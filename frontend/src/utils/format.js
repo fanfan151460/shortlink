@@ -31,6 +31,15 @@ export function today() {
   return toISODate(new Date())
 }
 
+/**
+ * 链接是否已过期：只有自定义有效期（validDateType=1）且到期日早于今天才算，当日仍有效。
+ * 后端给的是 "YYYY-MM-DD"，字符串比大小就是日期比大小，不用建 Date。
+ */
+export function isExpired(link) {
+  if (!link || link.validDateType !== 1 || !link.validDate) return false
+  return String(link.validDate).slice(0, 10) < today()
+}
+
 function toISODate(d) {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')

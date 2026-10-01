@@ -1,11 +1,14 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
+import { TrendCharts } from '@element-plus/icons-vue'
 
+import { pageActivity } from '@/api/activity'
 import { pageLink } from '@/api/link'
 import {
   getAccessStats,
+  getActivityStats,
   getBrowserStats,
   getDashboard,
   getDeviceStats,
@@ -38,14 +41,41 @@ function ensureChinaMap() {
 }
 
 const gid = ref('')
+// 从活动行「统计」跳进来时带 activityId。此时页面切到"活动模式"：
+// 只渲染活动跨渠道去重对比图，不再走单链接的那几张图（它们都依赖 fullShortUrl）。
+const activityId = ref('')
 const fullShortUrl = ref('')
 const linkOptions = ref([])
+const activityOptions = ref([])
 const dateRange = ref([daysAgo(7), today()])
+// 没有 UI 入口了（页面太挤），但保留取数分支：对比"1 次聚合 vs 6 次并发扇出"时
+// 在控制台改成 true 即可，不用再写一遍那几个接口调用。
 const splitMode = ref(false)
 const loading = ref(false)
 
 /** { locale, os, browser, device, network, access } */
 const data = ref({})
+
+/** 活动模式： [{ date, activityUv, channelUv }] */
+const activityData = ref([])
+
+// 短链接和活动共用同一个下拉，靠 value 前缀区分两类选项：活动前面挂 "activity:"。
+// 不加前缀会撞车——活动 id 是纯数字串，而 fullShortUrl 是完整 URL，虽然实际不会重，
+// 但显式前缀让 set 分支的判断一目了然。选中一类就把另一类清空，保证只有一个统计对象。
+const statTarget = computed({
+  get() {
+    return activityId.value ? `activity:${activityId.value}` : fullShortUrl.value
+  },
+  set(v) {
+    if (typeof v === 'string' && v.startsWith('activity:')) {
+      activityId.value = v.slice('activity:'.length)
+      fullShortUrl.value = ''
+    } else {
+      fullShortUrl.value = v || ''
+      activityId.value = ''
+    }
+  }
+})
 
 const dims = [
   { key: 'os', title: '操作系统' },
@@ -63,6 +93,7 @@ const CHART_COLORS = [
 const pieEls = {}
 const mapEl = ref(null)
 const trendEl = ref(null)
+const activityEl = ref(null)
 const charts = []
 
 // onMounted 里的程序性赋值一样会触发下面两个 watch。用这个标志跳过"切分组就清空已选短链接"
@@ -74,11 +105,12 @@ onMounted(async () => {
   window.addEventListener('resize', onResize)
   await loadGroups()
   gid.value = route.query.gid || appStore.currentGid || ''
+  activityId.value = route.query.activityId || ''
   fullShortUrl.value = route.query.fullShortUrl || ''
-  if (gid.value) await loadLinkOptions()
+  if (gid.value) await Promise.all([loadLinkOptions(), loadActivityOptions()])
   await nextTick()
   initializing = false
-  if (fullShortUrl.value) load()
+  if (activityId.value || fullShortUrl.value) load()
 })
 
 onBeforeUnmount(() => {
@@ -90,14 +122,18 @@ watch(gid, async (v) => {
   appStore.currentGid = v
   if (initializing) return
   fullShortUrl.value = ''
+  activityId.value = ''
   data.value = {}
+  activityData.value = []
   disposeAll()
-  if (v) await loadLinkOptions()
+  if (v) await Promise.all([loadLinkOptions(), loadActivityOptions()])
 })
 
-watch([fullShortUrl, dateRange], () => {
+// activityId 也要盯：合并下拉里选中活动走的是 set 分支，改的是 activityId 而不是 fullShortUrl，
+// 只盯 fullShortUrl 的话切活动不会重新取数。
+watch([fullShortUrl, activityId, dateRange], () => {
   if (initializing) return
-  if (fullShortUrl.value) load()
+  if (fullShortUrl.value || activityId.value) load()
 })
 
 async function loadLinkOptions() {
@@ -105,6 +141,14 @@ async function loadLinkOptions() {
     linkOptions.value = (await pageLink({ gid: gid.value, current: 1, size: 50 })) || []
   } catch {
     linkOptions.value = []
+  }
+}
+
+async function loadActivityOptions() {
+  try {
+    activityOptions.value = (await pageActivity({ gid: gid.value, current: 1, size: 50 })) || []
+  } catch {
+    activityOptions.value = []
   }
 }
 
@@ -122,7 +166,15 @@ async function load() {
   loading.value = true
   disposeAll()
   try {
-    if (splitMode.value) {
+    if (activityId.value) {
+      activityData.value =
+        (await getActivityStats({
+          gid: gid.value,
+          activityId: activityId.value,
+          startDate: dateRange.value[0],
+          endDate: dateRange.value[1]
+        })) || []
+    } else if (splitMode.value) {
       // 6 个独立接口并发扇出 —— 用来和 dashboard 的 1 次聚合做对比
       const [locale, os, browser, device, network, access] = await Promise.all([
         getLocaleStats(body),
@@ -137,11 +189,12 @@ async function load() {
       data.value = (await getDashboard(body)) || {}
     }
     // 地图数据按需加载，第一次打开统计页会多等一下这个 chunk
-    if (items('locale').length) await ensureChinaMap()
+    if (!activityId.value && items('locale').length) await ensureChinaMap()
     await nextTick()
     renderCharts()
   } catch {
-    data.value = {}
+    if (activityId.value) activityData.value = []
+    else data.value = {}
   } finally {
     loading.value = false
   }
@@ -159,9 +212,36 @@ function items(key) {
 }
 
 function renderCharts() {
+  if (activityId.value) {
+    renderActivity()
+    return
+  }
   renderMap()
   dims.forEach((d) => renderPie(d.key))
   renderTrend()
+}
+
+function renderActivity() {
+  const list = activityData.value
+  if (!activityEl.value || !list.length) return
+  const chart = echarts.init(activityEl.value)
+  charts.push(chart)
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, itemWidth: 12, textStyle: { fontSize: 11 } },
+    grid: { left: 44, right: 20, top: 40, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: list.map((i) => i.date || ''),
+      axisLabel: { fontSize: 10 }
+    },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+      trendLine('活动去重 UV', list.map((i) => i.activityUv || 0), '#4f46e5'),
+      trendLine('渠道求和 UV', list.map((i) => i.channelUv || 0), '#f59e0b')
+    ]
+  })
 }
 
 function renderMap() {
@@ -285,7 +365,13 @@ function onResize() {
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>数据统计</h2>
+      <div class="page-title">
+        <span class="title-badge"><el-icon :size="17"><TrendCharts /></el-icon></span>
+        <div>
+          <h2>数据统计</h2>
+          <p class="page-sub">按分组与统计对象查看访问趋势与受众画像</p>
+        </div>
+      </div>
     </div>
 
     <el-card shadow="never" class="filters">
@@ -295,20 +381,30 @@ function onResize() {
           <el-option v-for="g in appStore.groups" :key="g.gid" :label="g.name" :value="g.gid" />
         </el-select>
 
-        <span class="label">短链接</span>
+        <span class="label">统计对象</span>
         <el-select
-          v-model="fullShortUrl"
-          placeholder="选择短链接"
+          v-model="statTarget"
+          placeholder="请选择统计对象"
           size="small"
-          style="width: 250px"
+          style="width: 280px"
           :disabled="!gid"
         >
-          <el-option
-            v-for="l in linkOptions"
-            :key="l.fullShortUrl"
-            :label="l.fullShortUrl"
-            :value="l.fullShortUrl"
-          />
+          <el-option-group label="短链接">
+            <el-option
+              v-for="l in linkOptions"
+              :key="l.fullShortUrl"
+              :label="l.fullShortUrl"
+              :value="l.fullShortUrl"
+            />
+          </el-option-group>
+          <el-option-group label="营销活动">
+            <el-option
+              v-for="a in activityOptions"
+              :key="a.id"
+              :label="a.activityName"
+              :value="'activity:' + a.id"
+            />
+          </el-option-group>
         </el-select>
       </div>
 
@@ -327,18 +423,23 @@ function onResize() {
         <el-button size="small" @click="preset(90)">近 90 天</el-button>
       </div>
 
-      <div class="filter-row">
-        <!--
-          同一个页面两种取数方式：默认走 /stats/dashboard 一次拿全，
-          勾上则改成 6 个独立接口并发扇出。开关打开后能在浏览器 Network 里
-          直接看到"1 次聚合请求"和"6 次并发请求"的差别。
-        -->
-        <el-checkbox v-model="splitMode" size="small">分开请求（6 个接口并发）</el-checkbox>
-        <span class="muted">默认用 /stats/dashboard 聚合接口，1 次请求拿全 5 个维度 + 访问趋势</span>
-      </div>
     </el-card>
 
-    <div v-if="!gid || !fullShortUrl" class="empty">请先选择分组和短链接</div>
+    <div v-if="!gid || (!fullShortUrl && !activityId)" class="empty">请先选择分组和统计对象</div>
+
+    <!-- 活动模式：只画跨渠道去重对比，其余依赖 fullShortUrl 的图表不渲染 -->
+    <template v-else-if="activityId">
+      <el-card v-loading="loading" shadow="never" class="block">
+        <template #header>活动跨渠道去重 UV</template>
+        <div v-if="!activityData.length" class="empty">暂无数据</div>
+        <template v-else>
+          <div ref="activityEl" class="trend"></div>
+          <div class="muted" style="margin-top: 8px">
+            两条线口径一致（均为每日去重数之和），差额 = 当天被多渠道重复触达的访客数；不承诺跨天精确去重。
+          </div>
+        </template>
+      </el-card>
+    </template>
 
     <template v-else>
       <el-card v-loading="loading" shadow="never" class="block">
@@ -397,7 +498,7 @@ function onResize() {
 
 .filter-row .label {
   font-size: 13px;
-  color: #64748b;
+  color: var(--ink-500);
 }
 
 .block {

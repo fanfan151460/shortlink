@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { User } from '@element-plus/icons-vue'
 
 import { getUser, updateUser } from '@/api/user'
 import { getUsername } from '@/utils/auth'
@@ -79,10 +80,24 @@ function onReset() {
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>个人中心</h2>
+      <div class="page-title">
+        <span class="title-badge"><el-icon :size="17"><User /></el-icon></span>
+        <div>
+          <h2>个人中心</h2>
+          <p class="page-sub">账号资料与密码，留空的字段不会被修改</p>
+        </div>
+      </div>
     </div>
 
     <el-card v-loading="loading" shadow="never" class="card">
+      <div class="profile">
+        <span class="profile-avatar">{{ (form.username || '?').charAt(0).toUpperCase() }}</span>
+        <div class="profile-meta">
+          <div class="profile-name">{{ form.realName || form.username || '-' }}</div>
+          <div class="profile-sub">登录名：{{ form.username || '-' }}</div>
+        </div>
+      </div>
+
       <el-form label-width="90px" style="max-width: 460px">
         <el-form-item label="用户名">
           <el-input v-model="form.username" disabled />
@@ -121,5 +136,42 @@ function onReset() {
 <style scoped>
 .card {
   max-width: 560px;
+}
+
+/* 表单上方一条简短的账号概览，让这张卡片不只是一排输入框 */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 19px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #7c6ef0 100%);
+  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.28);
+}
+
+.profile-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.profile-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--ink-400);
 }
 </style>

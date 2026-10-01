@@ -2,11 +2,22 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Delete,
+  Edit,
+  Plus,
+  Promotion,
+  QuestionFilled,
+  Refresh,
+  TrendCharts
+} from '@element-plus/icons-vue'
 
 import { addActivity, addActivityLinks, pageActivity, removeActivity, updateActivity } from '@/api/activity'
 import { batchDisableLink, batchEnableLink, pageLink, removeLink } from '@/api/link'
 import { appStore, groupName, loadGroups } from '@/store/app'
-import { faviconUrl, fmtDate, fmtDateTime } from '@/utils/format'
+import { faviconUrl, fmtDate, fmtDateTime, isExpired } from '@/utils/format'
 
 const router = useRouter()
 
@@ -43,41 +54,30 @@ const createForm = reactive({
 
 const editVisible = ref(false)
 const savingEdit = ref(false)
+// 只有名称和状态可改，目标链接 / 有效期创建后就定死了（后端 DTO 里也没有这两个字段）
 const editForm = reactive({
   id: null,
   activityName: '',
-  originUrl: '',
-  status: 0,
-  validDateType: 0,
-  validDate: ''
+  status: 0
 })
 
 function openEdit(row) {
   editForm.id = row.id
   editForm.activityName = row.activityName || ''
-  editForm.originUrl = row.originUrl || ''
   editForm.status = row.status === 1 ? 1 : 0
-  editForm.validDateType = row.validDateType === 1 ? 1 : 0
-  editForm.validDate = row.validDate || ''
   editVisible.value = true
 }
 
 async function submitEdit() {
   if (!editForm.activityName.trim()) return ElMessage.warning('请输入活动名称')
-  if (!editForm.originUrl.trim()) return ElMessage.warning('请输入活动目标链接')
-  if (editForm.validDateType === 1 && !editForm.validDate) {
-    return ElMessage.warning('请选择活动有效期')
-  }
 
   const body = {
     id: editForm.id,
     activityName: editForm.activityName.trim(),
-    originUrl: editForm.originUrl.trim(),
-    status: editForm.status,
-    validDateType: editForm.validDateType
+    status: editForm.status
   }
-  // 永久有效时不要把空的 validDate 发过去，null 会被后端的有效期校验拦下
-  if (editForm.validDateType === 1) body.validDate = editForm.validDate
+  // 改状态同样会级联到名下渠道，先把行记住（load() 会把 activities 整个换掉）
+  const row = activities.value.find((a) => a.id === editForm.id)
 
   savingEdit.value = true
   try {
@@ -85,6 +85,7 @@ async function submitEdit() {
     ElMessage.success('修改成功')
     editVisible.value = false
     await load()
+    await reloadChannelsIfExpanded(row)
   } catch {
     /* 拦截器已经提示过了 */
   } finally {
@@ -135,6 +136,8 @@ async function onToggleActivityStatus(row, nextOn) {
   try {
     await updateActivity({ id: row.id, status: nextStatus })
     ElMessage.success(nextStatus === 1 ? '活动已结束' : '活动已恢复')
+    // 活动级联改了名下渠道的启停，展开面板若开着得立刻跟着变，不然要手动刷新
+    await reloadChannelsIfExpanded(row)
   } catch {
     /* 拦截器已经提示过了 */
   } finally {
@@ -303,6 +306,16 @@ async function loadChannels(row) {
   }
 }
 
+/**
+ * 活动级联改了名下渠道的启停后，把展开面板里那份数据也重拉一遍。
+ * 列表页看到的活动状态会立刻变，但渠道行是另一份数据，不重拉就得手动点"刷新"。
+ * 只在面板展开过（channelState 里有这个活动的 key）时才发请求 —— 用 stateOf 反而会凭空造一份。
+ */
+async function reloadChannelsIfExpanded(row) {
+  if (!row || !channelState[row.id]) return
+  await loadChannels(row)
+}
+
 function channelsGo(row, delta) {
   const st = stateOf(row.id)
   const next = st.current + delta
@@ -367,8 +380,8 @@ async function submitChannelCreate() {
  * 启停只切 enableStatus（0 已启用 / 1 未启用），不动删除标识——回收站那条链路完全独立。
  * 后端会在 UPDATE 之后删对应方向的缓存，所以停用/启用都是立刻生效的。
  */
-async function onChannelToggleStatus(c, act) {
-  const disabling = c.enableStatus !== 1
+async function onChannelToggleStatus(c, act, nextEnabled) {
+  const disabling = !nextEnabled
   try {
     await ElMessageBox.confirm(
       disabling
@@ -419,12 +432,26 @@ function openStats(row, act) {
     query: { gid: row.gid || act.gid, fullShortUrl: row.fullShortUrl }
   })
 }
+
+/** 活动级统计：看跨渠道去重后的活动 UV，与各渠道 UV 之和对比 */
+function openActivityStats(row) {
+  router.push({
+    name: 'stats',
+    query: { gid: row.gid, activityId: row.id }
+  })
+}
 </script>
 
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>营销活动</h2>
+      <div class="page-title">
+        <span class="title-badge"><el-icon :size="17"><Promotion /></el-icon></span>
+        <div>
+          <h2>营销活动</h2>
+          <p class="page-sub">一个活动下挂多个渠道短链，可整体启停与对比效果</p>
+        </div>
+      </div>
       <div class="toolbar">
         <el-select v-model="filters.gid" placeholder="全部分组" clearable size="small" style="width: 150px">
           <el-option v-for="g in appStore.groups" :key="g.gid" :label="g.name" :value="g.gid" />
@@ -443,7 +470,7 @@ function openStats(row, act) {
         />
         <el-button size="small" @click="search">查询</el-button>
         <el-button size="small" @click="resetFilters">重置</el-button>
-        <el-button type="primary" size="small" @click="openCreate">+ 新建活动</el-button>
+        <el-button type="primary" size="small" :icon="Plus" @click="openCreate">新建活动</el-button>
       </div>
     </div>
 
@@ -458,9 +485,11 @@ function openStats(row, act) {
         <template #default="{ row }">
           <div class="expand-panel">
             <div class="toolbar" style="margin-bottom: 12px">
-              <el-button size="small" @click="loadChannels(row)">刷新</el-button>
-              <el-button type="primary" size="small" @click="openChannelCreate(row)">
-                + 批量建渠道
+              <el-tooltip content="刷新" placement="top" :show-after="400">
+                <el-button size="small" :icon="Refresh" @click="loadChannels(row)" />
+              </el-tooltip>
+              <el-button type="primary" size="small" :icon="Plus" @click="openChannelCreate(row)">
+                批量建渠道
               </el-button>
               <el-button size="small" @click="onToggleAllChannels(row, true)">全部停用</el-button>
               <el-button size="small" @click="onToggleAllChannels(row, false)">全部启用</el-button>
@@ -481,7 +510,18 @@ function openStats(row, act) {
                 </template>
               </el-table-column>
 
-              <el-table-column label="历史 PV / UV / IP" width="170" align="center">
+              <el-table-column width="200" align="center">
+                <template #header>
+                  <span>历史 PV / UV / IP</span>
+                  <el-tooltip placement="top" :show-after="200">
+                    <template #content>
+                      PV：访问量，每打开一次算一次<br />
+                      UV：独立访客，同一个人当天只算一次<br />
+                      IP：独立 IP 数，同一个 IP 当天只算一次
+                    </template>
+                    <el-icon class="help-icon"><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </template>
                 <template #default="{ row: c }">
                   <span class="mono">
                     {{ c.totalPv || 0 }} / {{ c.totalUv || 0 }} / {{ c.totalUip || 0 }}
@@ -489,31 +529,47 @@ function openStats(row, act) {
                 </template>
               </el-table-column>
 
-              <!-- enableStatus 语义以 Java 为准：0 = 已启用，1 = 未启用 -->
+              <!--
+                enableStatus 语义以 Java 为准：0 = 已启用，1 = 未启用。受控写法，见 onChannelToggleStatus。
+                过期判定与 LinkList 一致：后端只看 enable_status，到期了仍显示"已启用"，前端按禁用显示。
+              -->
               <el-table-column label="状态" width="90" align="center">
                 <template #default="{ row: c }">
-                  <el-tag :type="c.enableStatus === 1 ? 'info' : 'success'" size="small">
-                    {{ c.enableStatus === 1 ? '已停用' : '已启用' }}
-                  </el-tag>
+                  <el-tooltip
+                    :content="
+                      isExpired(c)
+                        ? '已过期，无法启用'
+                        : c.enableStatus === 1
+                          ? '点击启用'
+                          : '点击停用'
+                    "
+                    placement="top"
+                    :show-after="400"
+                  >
+                    <el-switch
+                      class="switch-enable"
+                      :model-value="c.enableStatus !== 1 && !isExpired(c)"
+                      :disabled="isExpired(c)"
+                      @change="(v) => onChannelToggleStatus(c, row, v)"
+                    />
+                  </el-tooltip>
                 </template>
               </el-table-column>
 
-              <el-table-column label="操作" width="200" align="center">
+              <el-table-column label="操作" width="130" align="center">
                 <template #default="{ row: c }">
-                  <el-button link type="primary" size="small" @click="openStats(c, row)">
-                    统计
-                  </el-button>
-                  <el-button
-                    link
-                    :type="c.enableStatus === 1 ? 'success' : 'warning'"
-                    size="small"
-                    @click="onChannelToggleStatus(c, row)"
-                  >
-                    {{ c.enableStatus === 1 ? '启用' : '停用' }}
-                  </el-button>
-                  <el-button link type="danger" size="small" @click="onChannelRemove(c, row)">
-                    删除
-                  </el-button>
+                  <el-tooltip content="数据统计" placement="top" :show-after="400">
+                    <el-button
+                      link
+                      type="primary"
+                      size="small"
+                      :icon="TrendCharts"
+                      @click="openStats(c, row)"
+                    />
+                  </el-tooltip>
+                  <el-tooltip content="删除" placement="top" :show-after="400">
+                    <el-button link type="danger" size="small" :icon="Delete" @click="onChannelRemove(c, row)" />
+                  </el-tooltip>
                 </template>
               </el-table-column>
 
@@ -521,22 +577,24 @@ function openStats(row, act) {
             </el-table>
 
             <!-- 用箭头而不是"上一页/下一页"文字，免得和外层活动列表的分页看起来重复 -->
-            <div class="pager pager-arrows">
-              <el-button
-                size="small"
-                :disabled="stateOf(row.id).current <= 1"
-                @click="channelsGo(row, -1)"
-              >
-                ←
-              </el-button>
-              <span class="muted">第 {{ stateOf(row.id).current }} 页</span>
-              <el-button
-                size="small"
-                :disabled="!stateOf(row.id).hasMore"
-                @click="channelsGo(row, 1)"
-              >
-                →
-              </el-button>
+            <div class="pager">
+              <el-tooltip content="上一页" placement="top" :show-after="400">
+                <el-button
+                  size="small"
+                  :icon="ArrowLeft"
+                  :disabled="stateOf(row.id).current <= 1"
+                  @click="channelsGo(row, -1)"
+                />
+              </el-tooltip>
+              <span class="muted">{{ stateOf(row.id).current }}</span>
+              <el-tooltip content="下一页" placement="top" :show-after="400">
+                <el-button
+                  size="small"
+                  :icon="ArrowRight"
+                  :disabled="!stateOf(row.id).hasMore"
+                  @click="channelsGo(row, 1)"
+                />
+              </el-tooltip>
             </div>
           </div>
         </template>
@@ -564,16 +622,19 @@ function openStats(row, act) {
       </el-table-column>
 
       <!-- 开 = 进行中(0)，关 = 已结束(1)。受控写法，见 onToggleActivityStatus -->
-      <el-table-column label="状态" width="110" align="center">
+      <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
-          <el-switch
-            :model-value="row.status !== 1"
-            :width="64"
-            inline-prompt
-            active-text="进行中"
-            inactive-text="已结束"
-            @change="(v) => onToggleActivityStatus(row, v)"
-          />
+          <el-tooltip
+            :content="row.status === 1 ? '点击恢复进行中' : '点击结束活动'"
+            placement="top"
+            :show-after="400"
+          >
+            <el-switch
+              class="switch-enable"
+              :model-value="row.status !== 1"
+              @change="(v) => onToggleActivityStatus(row, v)"
+            />
+          </el-tooltip>
         </template>
       </el-table-column>
 
@@ -591,10 +652,23 @@ function openStats(row, act) {
       </el-table-column>
 
       <!-- 建渠道的入口只在展开面板里（行内展开的「+ 批量建渠道」），这里不再重复一个 -->
-      <el-table-column label="操作" width="120" align="center">
+      <el-table-column label="操作" width="140" align="center">
         <template #default="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="onRemove(row)">删除</el-button>
+          <el-tooltip content="活动统计（跨渠道去重）" placement="top" :show-after="400">
+            <el-button
+              link
+              type="primary"
+              size="small"
+              :icon="TrendCharts"
+              @click="openActivityStats(row)"
+            />
+          </el-tooltip>
+          <el-tooltip content="编辑" placement="top" :show-after="400">
+            <el-button link type="primary" size="small" :icon="Edit" @click="openEdit(row)" />
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top" :show-after="400">
+            <el-button link type="danger" size="small" :icon="Delete" @click="onRemove(row)" />
+          </el-tooltip>
         </template>
       </el-table-column>
 
@@ -602,9 +676,13 @@ function openStats(row, act) {
     </el-table>
 
     <div class="pager">
-      <el-button size="small" :disabled="current <= 1" @click="go(-1)">上一页</el-button>
-      <span class="muted">第 {{ current }} 页</span>
-      <el-button size="small" :disabled="!hasMore" @click="go(1)">下一页</el-button>
+      <el-tooltip content="上一页" placement="top" :show-after="400">
+        <el-button size="small" :icon="ArrowLeft" :disabled="current <= 1" @click="go(-1)" />
+      </el-tooltip>
+      <span class="muted">{{ current }}</span>
+      <el-tooltip content="下一页" placement="top" :show-after="400">
+        <el-button size="small" :icon="ArrowRight" :disabled="!hasMore" @click="go(1)" />
+      </el-tooltip>
     </div>
 
     <!-- 新建活动 -->
@@ -646,17 +724,15 @@ function openStats(row, act) {
       </template>
     </el-dialog>
 
-    <!-- 编辑活动 -->
+    <!--
+      编辑活动只开放「名称 + 状态」。目标链接和有效期创建后不可改：
+      渠道短链在创建那一刻就把它们复制走了，事后改活动不回溯已有渠道，
+      改了只会让"活动上写的"和"渠道实际的"对不上。后端 DTO 里也已经没有这两个字段。
+    -->
     <el-dialog v-model="editVisible" title="编辑营销活动" width="520px">
       <el-form label-position="top">
         <el-form-item label="活动名称">
           <el-input v-model="editForm.activityName" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="目标链接">
-          <el-input v-model="editForm.originUrl" placeholder="https://..." />
-          <div class="form-hint">
-            已生成的渠道短链不会跟着改：它们在创建时就复制走了当时的目标链接，这里只影响之后新建的渠道短链。
-          </div>
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="editForm.status">
@@ -666,18 +742,6 @@ function openStats(row, act) {
           <div class="form-hint">
             改成「已结束」会把该活动下的渠道短链一并停用（访问返回 404），改回「进行中」则重新启用；链接本身不会被删除。
           </div>
-        </el-form-item>
-        <el-form-item label="有效期">
-          <el-radio-group v-model="editForm.validDateType">
-            <el-radio :value="0">永久有效</el-radio>
-            <el-radio :value="1">自定义日期</el-radio>
-          </el-radio-group>
-          <div class="form-hint">
-            改这里只影响之后新建的渠道短链：已有渠道短链在创建时就复制走了当时的活动有效期。
-          </div>
-        </el-form-item>
-        <el-form-item v-if="editForm.validDateType === 1" label="到期日期">
-          <el-input v-model="editForm.validDate" type="date" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -763,20 +827,14 @@ function openStats(row, act) {
   padding: 16px 0;
 }
 
-.pager-arrows .el-button {
-  padding: 5px 10px;
-  font-size: 14px;
-  line-height: 1;
-}
-
 .section-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--ink-400);
   margin-bottom: 6px;
 }
 
 .result {
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--line);
   padding-top: 12px;
 }
 
@@ -789,7 +847,7 @@ function openStats(row, act) {
 
 .form-hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--ink-400);
   line-height: 1.5;
   margin-top: 4px;
 }

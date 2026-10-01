@@ -2,6 +2,18 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  ArrowDown,
+  ArrowUp,
+  Close,
+  Delete,
+  Edit,
+  Finished,
+  Link,
+  Promotion,
+  TrendCharts,
+  User
+} from '@element-plus/icons-vue'
 
 import { addGroup, deleteGroup, sortGroup, updateGroup } from '@/api/group'
 import { logout as logoutApi } from '@/api/user'
@@ -36,12 +48,24 @@ const titles = {
 
 // 分组管理不再是独立页面，相关的增删改排序都收在左侧「我的分组」里
 const navs = [
-  { name: 'links', label: '短链接' },
-  { name: 'activity', label: '营销活动' },
-  { name: 'stats', label: '数据统计' },
-  { name: 'recycle', label: '回收站' },
-  { name: 'user', label: '个人中心' }
+  { name: 'links', label: '短链接', icon: Link },
+  { name: 'activity', label: '营销活动', icon: Promotion },
+  { name: 'stats', label: '数据统计', icon: TrendCharts },
+  { name: 'recycle', label: '回收站', icon: Delete },
+  { name: 'user', label: '个人中心', icon: User }
 ]
+
+const pageIcons = {
+  links: Link,
+  activity: Promotion,
+  stats: TrendCharts,
+  recycle: Delete,
+  user: User,
+  'self-check': Finished
+}
+
+const crumbIcon = computed(() => pageIcons[route.name] || Link)
+const avatarLetter = computed(() => (getUsername() || '?').charAt(0).toUpperCase())
 
 onMounted(async () => {
   await reloadGroups()
@@ -164,7 +188,25 @@ async function onLogout() {
 <template>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">SaaS短链系统</div>
+      <!-- 内联 SVG 而不是图片：不占额外请求、不落图片文件、能跟着 currentColor 变色 -->
+      <div class="brand">
+        <span class="logo">
+          <svg
+            viewBox="0 0 24 24"
+            width="17"
+            height="17"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.1"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </span>
+        <span class="brand-text">SaaS短链系统</span>
+      </div>
 
       <div class="sidebar-body">
         <div class="section-label">我的分组</div>
@@ -196,19 +238,23 @@ async function onLogout() {
                 :class="{ disabled: index === 0 }"
                 title="上移"
                 @click="move(index, -1)"
-                >&uarr;</span
               >
+                <el-icon :size="13"><ArrowUp /></el-icon>
+              </span>
               <span
                 class="op"
                 :class="{ disabled: index === appStore.groups.length - 1 }"
                 title="下移"
                 @click="move(index, 1)"
-                >&darr;</span
               >
-              <span class="op" title="重命名" @click="startRename(g)">改</span>
-              <span class="op del" title="删除分组" @click="onDeleteGroup(g.gid)"
-                >&times;</span
-              >
+                <el-icon :size="13"><ArrowDown /></el-icon>
+              </span>
+              <span class="op" title="重命名" @click="startRename(g)">
+                <el-icon :size="13"><Edit /></el-icon>
+              </span>
+              <span class="op del" title="删除分组" @click="onDeleteGroup(g.gid)">
+                <el-icon :size="13"><Close /></el-icon>
+              </span>
             </span>
           </template>
         </div>
@@ -251,7 +297,10 @@ async function onLogout() {
 
     <div class="main">
       <header class="topbar">
-        <div class="breadcrumb">{{ titles[route.name] || '' }}</div>
+        <div class="crumb">
+          <el-icon class="crumb-icon" :size="15"><component :is="crumbIcon" /></el-icon>
+          <span class="crumb-text">{{ titles[route.name] || '' }}</span>
+        </div>
         <nav class="nav">
           <router-link
             v-for="n in navs"
@@ -260,11 +309,15 @@ async function onLogout() {
             class="nav-link"
             :class="{ active: route.name === n.name }"
           >
-            {{ n.label }}
+            <el-icon :size="15"><component :is="n.icon" /></el-icon>
+            <span>{{ n.label }}</span>
           </router-link>
         </nav>
         <div class="actions">
-          <span class="muted">{{ getUsername() }}</span>
+          <span class="user-chip">
+            <span class="avatar">{{ avatarLetter }}</span>
+            <span class="uname">{{ getUsername() }}</span>
+          </span>
           <el-button link type="danger" size="small" @click="onLogout">退出</el-button>
         </div>
       </header>
@@ -286,17 +339,38 @@ async function onLogout() {
   width: 250px;
   flex-shrink: 0;
   background: #fff;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
 }
 
+/* 品牌区用渐变方块 + 文字，和内页的 .title-badge 是同一套视觉语言 */
 .brand {
-  padding: 18px 20px;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand .logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #7c6ef0 100%);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.28);
+}
+
+.brand-text {
+  font-size: 15.5px;
   font-weight: 700;
-  color: #4f46e5;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: -0.2px;
+  color: var(--ink-900);
 }
 
 .sidebar-body {
@@ -306,26 +380,30 @@ async function onLogout() {
 }
 
 .section-label {
-  padding: 8px 20px 4px;
+  padding: 10px 20px 4px;
   font-size: 11px;
-  letter-spacing: 0.5px;
-  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: var(--ink-400);
 }
 
 .sidebar-hint {
   padding: 12px 20px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--ink-400);
 }
 
 .group-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 1px 0;
   padding: 9px 20px;
   font-size: 14px;
+  color: var(--ink-700);
   cursor: pointer;
   border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
 }
 
 .group-item:hover {
@@ -333,15 +411,18 @@ async function onLogout() {
 }
 
 .group-item.active {
-  background: #eef2ff;
-  border-left-color: #4f46e5;
-  color: #4f46e5;
+  background: linear-gradient(90deg, var(--brand-50) 0%, rgba(238, 242, 255, 0.35) 100%);
+  border-left-color: var(--brand);
+  color: var(--brand);
   font-weight: 500;
 }
 
 .group-item.deleted,
 .group-item.deleted.active {
-  color: #94a3b8;
+  color: var(--ink-400);
+  background: none;
+  border-left-color: transparent;
+  font-weight: 400;
 }
 
 .group-item .name {
@@ -365,22 +446,23 @@ async function onLogout() {
 }
 
 .group-item .op {
-  color: #94a3b8;
-  font-size: 13px;
-  line-height: 1;
-  padding: 3px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-400);
+  padding: 3px;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .group-item .op:hover {
-  background: #e2e8f0;
-  color: #4f46e5;
+  background: var(--line);
+  color: var(--brand);
 }
 
 .group-item .op.disabled,
 .group-item .op.disabled:hover {
-  color: #e2e8f0;
+  color: var(--line);
   background: transparent;
   cursor: default;
 }
@@ -398,7 +480,7 @@ async function onLogout() {
   display: flex;
   gap: 6px;
   padding: 12px 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--line);
 }
 
 .limit-tip {
@@ -415,48 +497,107 @@ async function onLogout() {
 }
 
 .topbar {
-  height: 56px;
+  height: 58px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   padding: 0 24px;
   background: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-xs);
 }
 
-.breadcrumb {
-  font-size: 14px;
-  font-weight: 500;
+/* 当前页标题：图标 + 文字，图标跟着主题色走 */
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.crumb .crumb-icon {
+  color: var(--brand);
+}
+
+.crumb-text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--ink-900);
+  white-space: nowrap;
 }
 
 .nav {
   flex: 1;
   display: flex;
   gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .nav-link {
-  padding: 6px 12px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--ink-500);
   text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 }
 
 .nav-link:hover {
-  background: #f1f5f9;
+  background: var(--brand-50);
+  color: var(--brand);
 }
 
 .nav-link.active {
-  background: #4f46e5;
+  background: linear-gradient(135deg, var(--brand) 0%, #6d63ee 100%);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.24);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* 用户名做成胶囊：首字母圆形头像 + 名字，比裸文字更像"登录了" */
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 3px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.user-chip .avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #7c6ef0 100%);
+}
+
+.user-chip .uname {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--ink-700);
 }
 
 .content {
