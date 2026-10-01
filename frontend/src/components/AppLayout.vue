@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import { addGroup, deleteGroup } from '@/api/group'
+import { addGroup, deleteGroup, sortGroup, updateGroup } from '@/api/group'
 import { logout as logoutApi } from '@/api/user'
 import { appStore, loadDeletedGroups, loadGroups } from '@/store/app'
 import { clearSession, getToken, getUsername } from '@/utils/auth'
@@ -14,6 +14,10 @@ const router = useRouter()
 const newGroupName = ref('')
 const creating = ref(false)
 
+// 侧栏里就地重命名：editingGid 非空时那一行换成输入框
+const editingGid = ref('')
+const editingName = ref('')
+
 // 后端 saveGroup 是 `if (count > 10) throw`，即已有 11 个时再建第 12 个才报错。
 // 前端按服务端真实行为把上限设在 11，而不是错误提示里写的 10。
 const GROUP_LIMIT = 11
@@ -23,7 +27,6 @@ const atGroupLimit = computed(() => appStore.groups.length >= GROUP_LIMIT)
 
 const titles = {
   links: '短链接管理',
-  groups: '分组管理',
   activity: '营销活动',
   stats: '数据统计',
   recycle: '回收站',
@@ -31,9 +34,9 @@ const titles = {
   'self-check': '接口自检'
 }
 
+// 分组管理不再是独立页面，相关的增删改排序都收在左侧「我的分组」里
 const navs = [
   { name: 'links', label: '短链接' },
-  { name: 'groups', label: '分组管理' },
   { name: 'activity', label: '营销活动' },
   { name: 'stats', label: '数据统计' },
   { name: 'recycle', label: '回收站' },
@@ -54,6 +57,8 @@ async function reloadGroups() {
 }
 
 async function selectGroup(gid) {
+  // 点别的分组时顺手收掉正在编辑的输入框，免得它一直挂在那儿
+  if (editingGid.value) cancelRename()
   appStore.currentGid = gid
   if (route.name !== 'links' && route.name !== 'recycle') {
     router.push({ name: 'links' })
@@ -96,6 +101,53 @@ async function onDeleteGroup(gid) {
   }
 }
 
+function startRename(g) {
+  editingGid.value = g.gid
+  editingName.value = g.name
+}
+
+function cancelRename() {
+  editingGid.value = ''
+  editingName.value = ''
+}
+
+async function submitRename(g) {
+  const name = editingName.value.trim()
+  if (!name) return ElMessage.warning('分组名称不能为空')
+  if (name === g.name) return cancelRename()
+  try {
+    await updateGroup(g.gid, name)
+    ElMessage.success('已重命名')
+    cancelRename()
+    await reloadGroups()
+  } catch {
+    /* 拦截器已经提示过了 */
+  }
+}
+
+/**
+ * 上移 / 下移。
+ *
+ * GET /group 只返回 gid / name / delFlag，不返回 sortOrder，所以没法做"只改这两个的序号"
+ * 的增量更新，只能把整个列表按新顺序从 0 重新编号后整体提交。接口字段名是 groupId 不是 gid。
+ */
+async function move(index, delta) {
+  const target = index + delta
+  const list = appStore.groups
+  if (target < 0 || target >= list.length) return
+  const reordered = list.slice()
+  ;[reordered[index], reordered[target]] = [reordered[target], reordered[index]]
+
+  // 先本地生效，避免等接口回来才看到位移
+  appStore.groups = reordered
+  try {
+    const orders = reordered.map((g, i) => ({ groupId: g.gid, sortOrder: i }))
+    appStore.groups = (await sortGroup(orders)) || reordered
+  } catch {
+    await reloadGroups()
+  }
+}
+
 async function onLogout() {
   const username = getUsername()
   const token = getToken()
@@ -117,15 +169,48 @@ async function onLogout() {
       <div class="sidebar-body">
         <div class="section-label">我的分组</div>
         <div v-if="!appStore.groups.length" class="sidebar-hint">暂无分组</div>
+        <!-- 分组管理收在这一行里：悬停出 ↑ ↓ 改名 ×，不再单开一个页面 -->
         <div
-          v-for="g in appStore.groups"
+          v-for="(g, index) in appStore.groups"
           :key="g.gid"
           class="group-item"
           :class="{ active: g.gid === appStore.currentGid }"
           @click="selectGroup(g.gid)"
         >
-          <span class="name">{{ g.name }}</span>
-          <span class="del" title="删除分组" @click.stop="onDeleteGroup(g.gid)">&times;</span>
+          <el-input
+            v-if="editingGid === g.gid"
+            v-model="editingName"
+            class="rename-input"
+            size="small"
+            maxlength="20"
+            autofocus
+            @click.stop
+            @keyup.enter="submitRename(g)"
+            @keyup.esc="cancelRename"
+          />
+          <template v-else>
+            <span class="name">{{ g.name }}</span>
+            <span class="ops" @click.stop>
+              <span
+                class="op"
+                :class="{ disabled: index === 0 }"
+                title="上移"
+                @click="move(index, -1)"
+                >&uarr;</span
+              >
+              <span
+                class="op"
+                :class="{ disabled: index === appStore.groups.length - 1 }"
+                title="下移"
+                @click="move(index, 1)"
+                >&darr;</span
+              >
+              <span class="op" title="重命名" @click="startRename(g)">改</span>
+              <span class="op del" title="删除分组" @click="onDeleteGroup(g.gid)"
+                >&times;</span
+              >
+            </span>
+          </template>
         </div>
 
         <template v-if="inRecycle && appStore.deletedGroups.length">
@@ -266,20 +351,47 @@ async function onLogout() {
   white-space: nowrap;
 }
 
-.group-item .del {
+/* 用 visibility 而不是 display 切换：分组名不会因为悬停导致的宽度变化而左右跳 */
+.group-item .ops {
   visibility: hidden;
-  color: #cbd5e1;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
 }
 
-.group-item:hover .del {
+.group-item:hover .ops {
   visibility: visible;
+}
+
+.group-item .op {
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.group-item .op:hover {
+  background: #e2e8f0;
+  color: #4f46e5;
+}
+
+.group-item .op.disabled,
+.group-item .op.disabled:hover {
+  color: #e2e8f0;
+  background: transparent;
+  cursor: default;
 }
 
 .group-item .del:hover {
   color: #ef4444;
+}
+
+.rename-input {
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-footer {

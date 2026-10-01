@@ -20,9 +20,7 @@ const nameHint = ref({ text: '', type: '' })
 let checkTimer = null
 
 onMounted(async () => {
-  if (route.query.reason === 'expired') {
-    ElMessage.warning('登录态已失效，请重新登录')
-  }
+  // 登录态失效的提示由 request.js 的 401 拦截器统一给，这里不再重复弹一条
   // 带着旧 token 直接打开 /login 时，先跟服务端确认一下还有效没有。
   // check-login 在网关上，前端这里不能只信 localStorage。
   const token = getToken()
