@@ -16,7 +16,7 @@ const routes = [
     children: [
       { path: '', redirect: '/links' },
       { path: 'links', name: 'links', component: () => import('@/views/LinkList.vue') },
-      { path: 'groups', name: 'groups', component: () => import('@/views/GroupManage.vue') },
+      { path: 'activity', name: 'activity', component: () => import('@/views/ActivityManage.vue') },
       { path: 'stats', name: 'stats', component: () => import('@/views/Stats.vue') },
       { path: 'recycle', name: 'recycle', component: () => import('@/views/RecycleBin.vue') },
       { path: 'user', name: 'user', component: () => import('@/views/UserCenter.vue') },

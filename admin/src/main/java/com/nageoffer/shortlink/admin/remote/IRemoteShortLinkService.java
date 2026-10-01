@@ -2,6 +2,7 @@ package com.nageoffer.shortlink.admin.remote;
 
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -36,5 +37,19 @@ public interface IRemoteShortLinkService {
      * @param recycleDTO 请求参数
      */
     void removeShortLink(RecycleDTO recycleDTO);
+
+    /**
+     * 远程批量停用短链接
+     * @param reqDTO 请求参数
+     * @return 实际改动的条数
+     */
+    Integer batchDisableShortLink(ShortLinkBatchStatusReqDTO reqDTO);
+
+    /**
+     * 远程批量启用短链接
+     * @param reqDTO 请求参数
+     * @return 实际改动的条数
+     */
+    Integer batchEnableShortLink(ShortLinkBatchStatusReqDTO reqDTO);
 
 }

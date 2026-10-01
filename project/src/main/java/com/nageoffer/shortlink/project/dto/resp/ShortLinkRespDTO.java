@@ -56,4 +56,24 @@ public class ShortLinkRespDTO {
      * 今日IP数
      */
     private Integer todayIpCount;
+
+    /**
+     * 所属活动ID，null 表示普通短链
+     */
+    private Long activityId;
+
+    /**
+     * 所属活动名称，普通短链为 null
+     */
+    private String activityName;
+
+    /**
+     * 推广渠道标识，普通短链为 null
+     */
+    private String channel;
+
+    /**
+     * 启用标识 0：已启用 1：未启用
+     */
+    private Integer enableStatus;
 }

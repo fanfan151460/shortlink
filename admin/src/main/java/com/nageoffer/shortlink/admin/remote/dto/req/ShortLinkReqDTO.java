@@ -40,4 +40,14 @@ public class ShortLinkReqDTO implements Serializable {
     @TableField("`describe`")
     private String description;
 
+    /**
+     * 所属活动 ID，null 表示普通短链
+     */
+    private Long activityId;
+
+    /**
+     * 推广渠道标识，仅活动渠道短链有值（weixin / douyin / sms ...）
+     */
+    private String channel;
+
 }

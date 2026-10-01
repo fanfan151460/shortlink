@@ -4,12 +4,14 @@ import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkRespDTO;
 import com.nageoffer.shortlink.admin.service.IGroupService;
 import com.nageoffer.shortlink.framework.exception.ClientException;
+import com.nageoffer.shortlink.framework.exception.ServiceException;
 import com.nageoffer.shortlink.framework.result.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
         }
         Result<ShortLinkCreateRespDTO> result = projectFeignClient.createShortLink(reqDTO);
         if (!result.isSuccess()) {
-            throw new RuntimeException(result.getMessage());
+            throw new ServiceException(result.getMessage());
         }
         return result.getData();
     }
@@ -41,10 +43,11 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 linkPageReqDTO.getGid(),
                 linkPageReqDTO.getCurrent(),
                 linkPageReqDTO.getSize(),
-                linkPageReqDTO.getOrderFlag()
+                linkPageReqDTO.getOrderFlag(),
+                linkPageReqDTO.getActivityId()
         );
         if (!result.isSuccess()) {
-            throw new RuntimeException(result.getMessage());
+            throw new ServiceException(result.getMessage());
         }
         return result.getData();
     }
@@ -53,7 +56,7 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
     public void updateShortLink(ShortLinkUpReqDTO reqDTO) {
         Result<Void> result = projectFeignClient.updateShortLink(reqDTO);
         if (!result.isSuccess()) {
-            throw new RuntimeException(result.getMessage());
+            throw new ServiceException(result.getMessage());
         }
     }
 
@@ -61,9 +64,26 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
     public void removeShortLink(RecycleDTO recycleDTO) {
         Result<Void> result = projectFeignClient.removeShortLink(recycleDTO);
         if (!result.isSuccess()) {
-            throw new RuntimeException(result.getMessage());
+            throw new ServiceException(result.getMessage());
         }
     }
 
+    @Override
+    public Integer batchDisableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        Result<Integer> result = projectFeignClient.batchDisableShortLink(reqDTO);
+        if (!result.isSuccess()) {
+            throw new ServiceException(result.getMessage());
+        }
+        return result.getData();
+    }
+
+    @Override
+    public Integer batchEnableShortLink(ShortLinkBatchStatusReqDTO reqDTO) {
+        Result<Integer> result = projectFeignClient.batchEnableShortLink(reqDTO);
+        if (!result.isSuccess()) {
+            throw new ServiceException(result.getMessage());
+        }
+        return result.getData();
+    }
 
 }

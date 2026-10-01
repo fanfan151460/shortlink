@@ -14,9 +14,10 @@ app.use(ElementPlus, { locale: zhCn })
 
 // 401 时统一踢回登录页。在 main.js 里注入，避免 request.js 直接依赖 router
 // （router → views → api → request → router 会成环）
+// 提示语由 request.js 的拦截器负责，这里只跳转，不再带 reason 参数
 setUnauthorizedHandler(() => {
   if (router.currentRoute.value.name !== 'login') {
-    router.replace({ name: 'login', query: { reason: 'expired' } })
+    router.replace({ name: 'login' })
   }
 })
 

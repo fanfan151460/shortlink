@@ -65,12 +65,19 @@ const mapEl = ref(null)
 const trendEl = ref(null)
 const charts = []
 
+// onMounted 里的程序性赋值一样会触发下面两个 watch。用这个标志跳过"切分组就清空已选短链接"
+// 那段交互逻辑 —— 否则 query 刚带进来的 fullShortUrl 会在挂载瞬间被 gid 的 watch 清掉：
+// 分组是选好的、短链接却是空的，表现就是从列表点「统计」跳过来还得自己再挑一次短链接。
+let initializing = true
+
 onMounted(async () => {
   window.addEventListener('resize', onResize)
   await loadGroups()
   gid.value = route.query.gid || appStore.currentGid || ''
   fullShortUrl.value = route.query.fullShortUrl || ''
   if (gid.value) await loadLinkOptions()
+  await nextTick()
+  initializing = false
   if (fullShortUrl.value) load()
 })
 
@@ -81,6 +88,7 @@ onBeforeUnmount(() => {
 
 watch(gid, async (v) => {
   appStore.currentGid = v
+  if (initializing) return
   fullShortUrl.value = ''
   data.value = {}
   disposeAll()
@@ -88,6 +96,7 @@ watch(gid, async (v) => {
 })
 
 watch([fullShortUrl, dateRange], () => {
+  if (initializing) return
   if (fullShortUrl.value) load()
 })
 

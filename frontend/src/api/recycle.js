@@ -15,9 +15,18 @@ export function saveRecycleBinAll(gid) {
   return request.get(`/recycle-bin/save-all/${encodeURIComponent(gid)}`)
 }
 
-/** 回收站分页 GET /recycle-bin/page */
+/**
+ * 回收站分页 GET /recycle-bin/page
+ *
+ * silent："回收站是空的"是正常状态，后端却在 records 为空时抛 ClientException。
+ * 表格自己的 #empty 已经写了「回收站为空」，再弹一条 error 纯属噪音。
+ * 只静默这一条 —— 同页的 listAllGroup 没静默，真正的网络/500 故障照样会提示。
+ */
 export function pageRecycle({ gid, current = 1, size = 10 }) {
-  return request.get('/recycle-bin/page', { params: { gid, current, size } })
+  return request.get('/recycle-bin/page', {
+    params: { gid, current, size },
+    silent: true
+  })
 }
 
 /** 从回收站恢复 POST /recycle-bin/recover */

@@ -6,6 +6,7 @@ import com.nageoffer.shortlink.admin.remote.IRemoteShortLinkService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
 import com.nageoffer.shortlink.admin.remote.dto.req.LinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.RecycleDTO;
+import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkBatchStatusReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -65,5 +66,17 @@ public class ShortLinkController {
     public Result<Void> removeShortLink(@RequestBody RecycleDTO recycleDTO) {
         shortLinkService.removeShortLink(recycleDTO);
         return Results.success();
+    }
+
+    @Operation(summary = "批量停用短链接", description = "按 fullShortUrls 或 activityId 批量停用")
+    @PostMapping("/batch-disable")
+    public Result<Integer> batchDisableShortLink(@RequestBody ShortLinkBatchStatusReqDTO reqDTO) {
+        return Results.success(shortLinkService.batchDisableShortLink(reqDTO));
+    }
+
+    @Operation(summary = "批量启用短链接", description = "按 fullShortUrls 或 activityId 批量启用")
+    @PostMapping("/batch-enable")
+    public Result<Integer> batchEnableShortLink(@RequestBody ShortLinkBatchStatusReqDTO reqDTO) {
+        return Results.success(shortLinkService.batchEnableShortLink(reqDTO));
     }
 }
