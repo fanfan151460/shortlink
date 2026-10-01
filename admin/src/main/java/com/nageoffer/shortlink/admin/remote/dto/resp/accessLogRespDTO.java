@@ -2,6 +2,8 @@ package com.nageoffer.shortlink.admin.remote.dto.resp;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class accessLogRespDTO {
     /**
@@ -53,5 +55,10 @@ public class accessLogRespDTO {
      * 访问地区
      */
     private String locale;
+
+    /**
+     * 访问时间
+     */
+    private LocalDateTime createTime;
 
 }

@@ -2,8 +2,10 @@ package com.nageoffer.shortlink.admin.remote.impl;
 
 import com.nageoffer.shortlink.admin.remote.IRemoteStatsService;
 import com.nageoffer.shortlink.admin.remote.ProjectFeignClient;
+import com.nageoffer.shortlink.admin.remote.dto.req.ActivityStatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.StatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.AccessStatsVO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ActivityStatsVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsDashboardVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsItemVO;
 import com.nageoffer.shortlink.framework.result.Result;
@@ -75,6 +77,15 @@ public class RemoteStatsServiceImpl implements IRemoteStatsService {
     @Override
     public List<AccessStatsVO> getAccessStats(StatsRemoteReqDTO reqDTO) {
         Result<List<AccessStatsVO>> result = projectFeignClient.getAccessStats(reqDTO);
+        if (!result.isSuccess()) {
+            throw new RuntimeException(result.getMessage());
+        }
+        return result.getData();
+    }
+
+    @Override
+    public List<ActivityStatsVO> getActivityStats(ActivityStatsRemoteReqDTO reqDTO) {
+        Result<List<ActivityStatsVO>> result = projectFeignClient.getActivityStats(reqDTO);
         if (!result.isSuccess()) {
             throw new RuntimeException(result.getMessage());
         }

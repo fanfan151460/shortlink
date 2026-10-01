@@ -44,7 +44,8 @@ public class RemoteShortLinkServiceImpl implements IRemoteShortLinkService {
                 linkPageReqDTO.getCurrent(),
                 linkPageReqDTO.getSize(),
                 linkPageReqDTO.getOrderFlag(),
-                linkPageReqDTO.getActivityId()
+                linkPageReqDTO.getActivityId(),
+                linkPageReqDTO.getIncludeActivity()
         );
         if (!result.isSuccess()) {
             throw new ServiceException(result.getMessage());

@@ -35,6 +35,12 @@ public class RecycleBinController {
         return Results.success(remoteRecycleService.saveRecycleBinAll(gid));
     }
 
+    @Operation(summary = "整组移入回收站会扫走多少条", description = "只数未删除的；含活动名下的渠道短链")
+    @GetMapping("/recycle-bin/count/{gid}")
+    public Result<Long> countRecycleBinAll(@PathVariable String gid) {
+        return Results.success(remoteRecycleService.countRecycleBinAll(gid));
+    }
+
 
     @Operation(summary = "分页查询回收站")
     @GetMapping("/recycle-bin/page")

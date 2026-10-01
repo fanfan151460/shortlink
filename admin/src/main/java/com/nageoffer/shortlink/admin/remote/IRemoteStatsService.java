@@ -1,7 +1,9 @@
 package com.nageoffer.shortlink.admin.remote;
 
+import com.nageoffer.shortlink.admin.remote.dto.req.ActivityStatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.StatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.AccessStatsVO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ActivityStatsVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsDashboardVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsItemVO;
 
@@ -43,4 +45,9 @@ public interface IRemoteStatsService {
      * 远程查询按天PV/UV/UIP访问统计
      */
     List<AccessStatsVO> getAccessStats(StatsRemoteReqDTO reqDTO);
+
+    /**
+     * 远程查询活动级跨渠道去重统计（活动去重UV / 各渠道UV之和）
+     */
+    List<ActivityStatsVO> getActivityStats(ActivityStatsRemoteReqDTO reqDTO);
 }

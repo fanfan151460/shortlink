@@ -38,7 +38,7 @@ public class ActivityController {
         return Results.success();
     }
 
-    @Operation(summary = "更新营销活动", description = "改名称、目标链接、状态；gid 不可改")
+    @Operation(summary = "更新营销活动", description = "只能改名称和状态；gid、目标链接、有效期都不可改")
     @PutMapping
     public Result<Void> updateActivity(@RequestBody ActivityUpdateReqDTO reqDTO) {
         activityService.updateActivity(reqDTO);

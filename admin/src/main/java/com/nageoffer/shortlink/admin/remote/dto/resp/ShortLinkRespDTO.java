@@ -1,7 +1,10 @@
 package com.nageoffer.shortlink.admin.remote.dto.resp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDate;
 
 @Data
 @Accessors(chain = true)
@@ -76,4 +79,15 @@ public class ShortLinkRespDTO {
      * 启用标识 0：已启用 1：未启用
      */
     private Integer enableStatus;
+
+    /**
+     * 有效期类型 0：永久有效 1：用户自定义
+     */
+    private Integer validDateType;
+
+    /**
+     * 有效期（仅自定义时有值）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate validDate;
 }

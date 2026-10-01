@@ -29,4 +29,10 @@ public interface IRemoteRecycleService {
      * @return true=分组下有短链接，false=空分组
      */
     boolean saveRecycleBinAll(String gid);
+
+    /**
+     * 预览"整组移入回收站"会扫走多少条（只数 del_flag = 0 的）
+     * @param gid 分组标识
+     */
+    Long countRecycleBinAll(String gid);
 }
