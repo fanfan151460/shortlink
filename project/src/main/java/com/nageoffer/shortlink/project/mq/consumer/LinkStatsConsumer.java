@@ -19,13 +19,18 @@ import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LINK_ACTIVITY_STATS_UV;
 import static com.nageoffer.shortlink.project.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
+import static com.nageoffer.shortlink.project.common.constant.RedisConstant.STATS_SET_TTL_DAYS;
 
 @Component
 @RequiredArgsConstructor
@@ -45,6 +50,8 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final ActivityStatsMapper activityStatsMapper;
+    private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final IShortLinkService shortLinkService;
     private final MsgQueueIdempotentHandler idempotentHandler;
@@ -62,13 +69,21 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
             RLock rLock = readWriteLock.readLock();
             rLock.lock();
+            // 本次消费往活动去重集合里 SADD 成功的 (key, member)。SADD 是 Redis 操作、不随事务回滚，
+            // 所以回滚后必须补偿删除 —— 否则重投时 SADD 返回 0 → 判定"非首次" → 这次去重永远少算 1。
+            // 只在"确实由本次新增"（added > 0）时才记录：added == 0 说明该成员属于更早的一次访问，不能删。
+            AtomicReference<String> activitySetKey = new AtomicReference<>();
+            AtomicReference<String> activitySetMember = new AtomicReference<>();
             try {
                 transactionTemplate.execute(status -> {
-                    consume(message.getMessage());
+                    consume(message.getMessage(), activitySetKey, activitySetMember);
                     return null;
                 });
                 idempotentHandler.successConsume(msgKey);  // "0" → "1"
             } catch (Throwable e) {
+                if (activitySetKey.get() != null) {
+                    stringRedisTemplate.opsForSet().remove(activitySetKey.get(), activitySetMember.get());
+                }
                 idempotentHandler.delConsume(msgKey);
                 throw e;
             } finally {
@@ -82,7 +97,9 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
         throw new ServiceException("消息消费失败，消息队列重试");
     }
 
-    private void consume(ShortLinkStatsRecordDTO dto) {
+    private void consume(ShortLinkStatsRecordDTO dto,
+                         AtomicReference<String> activitySetKey,
+                         AtomicReference<String> activitySetMember) {
         String fullShortUrl = dto.getFullShortUrl();
 
         // 数据解析
@@ -103,6 +120,28 @@ public class LinkStatsConsumer implements RocketMQListener<MessageWrapper<ShortL
             return;
         }
         String gid = gotoDO.getGid();
+
+        ShortLinkDO link = shortLinkService.lambdaQuery()
+                .select(ShortLinkDO::getActivityId)
+                .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
+                .eq(ShortLinkDO::getGid, gid)
+                .one();
+        Long activityId = link == null ? null : link.getActivityId();
+        if (activityId != null) {
+            String activitySetKeyStr = String.format(LINK_ACTIVITY_STATS_UV, activityId, today);
+            Long activityAdded = stringRedisTemplate.opsForSet().add(activitySetKeyStr, uv);
+            stringRedisTemplate.expire(activitySetKeyStr, STATS_SET_TTL_DAYS, TimeUnit.DAYS);
+            boolean activityFirstFlag = activityAdded != null && activityAdded > 0L;
+            if (activityFirstFlag) {
+                activitySetKey.set(activitySetKeyStr);
+                activitySetMember.set(uv);
+            }
+            activityStatsMapper.insertActivityStats(new ActivityStatsDO()
+                    .setActivityId(activityId)
+                    .setDate(today)
+                    .setUv(activityFirstFlag ? 1 : 0));
+        }
+
         // pv uv uip
         LinkStatsDO statsDO = new LinkStatsDO()
                 .setFullShortUrl(fullShortUrl)

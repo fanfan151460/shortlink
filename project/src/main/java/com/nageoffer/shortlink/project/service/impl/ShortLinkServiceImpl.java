@@ -76,8 +76,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final TransactionTemplate transactionTemplate;
 
-    private static final long STATS_SET_TTL_DAYS = 2L;
-
     /**
      * 找不到短链时的提示页
      */
@@ -220,7 +218,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public List<ShortLinkRespDTO> pageShortLink(LinkPageReqDTO linkPageReqDTO) {
         Page<ShortLinkRespDTO> linkPage = Page.of(linkPageReqDTO.getCurrent(), linkPageReqDTO.getSize());
-        List<ShortLinkRespDTO> records = baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName(), linkPageReqDTO.getActivityId()).getRecords();
+        List<ShortLinkRespDTO> records = baseMapper.pageShortLinkWithStats(linkPage, linkPageReqDTO.getGid(), linkPageReqDTO.getOrderFlag(), UserContext.getUserName(), linkPageReqDTO.getActivityId(), linkPageReqDTO.getIncludeActivity()).getRecords();
         if (records.isEmpty()) {
             return records;
         }
@@ -422,11 +420,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             Runnable addCookie = () -> {
                 uv.set(UUID.fastUUID().toString());
-                Cookie uvCookie = new Cookie("uv", uv.get());
-                // 用 lastIndexOf：fullShortUrl 可能带 scheme（http://host:port/code），
-                // indexOf 会命中 "http://" 里的斜杠，切出 //host:port/code 这种非法 cookie 路径，
-                // 导致浏览器永远不回传 uv cookie，UV 去重失效（每次访问都算新访客）。
-                uvCookie.setPath(fullShortUrl.substring(fullShortUrl.lastIndexOf("/")));
+                Cookie uvCookie = new Cookie("uvid", uv.get());
+                uvCookie.setPath("/");
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 ((HttpServletResponse) response).addCookie(uvCookie);
                 stringRedisTemplate.opsForSet().add(uvStatsKey, uv.get());
@@ -437,7 +432,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             Cookie[] cookies = ((HttpServletRequest) request).getCookies();
             if (ArrayUtil.isNotEmpty(cookies)) {
                 Arrays.stream(cookies)
-                        .filter(each -> Objects.equals(each.getName(), "uv"))
+                        .filter(each -> Objects.equals(each.getName(), "uvid"))
                         .findFirst()
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each -> {
