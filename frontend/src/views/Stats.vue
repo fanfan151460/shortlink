@@ -434,9 +434,6 @@ function onResize() {
         <div v-if="!activityData.length" class="empty">暂无数据</div>
         <template v-else>
           <div ref="activityEl" class="trend"></div>
-          <div class="muted" style="margin-top: 8px">
-            两条线口径一致（均为每日去重数之和），差额 = 当天被多渠道重复触达的访客数；不承诺跨天精确去重。
-          </div>
         </template>
       </el-card>
     </template>

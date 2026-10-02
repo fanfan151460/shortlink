@@ -403,29 +403,6 @@ async function onChannelToggleStatus(c, act, nextEnabled) {
   }
 }
 
-/** 整活动的渠道一起启停：传 activityId 而不是列表——渠道列表是分页的，前端只有当前页 */
-async function onToggleAllChannels(row, disabling) {
-  try {
-    await ElMessageBox.confirm(
-      disabling
-        ? `确定停用「${row.activityName}」下的全部渠道短链？停用后访问返回 404，链接不会被删除。`
-        : `确定启用「${row.activityName}」下的全部渠道短链？`,
-      disabling ? '全部停用' : '全部启用',
-      { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
-    )
-  } catch {
-    return
-  }
-  try {
-    const body = { gid: row.gid, activityId: row.id }
-    const affected = await (disabling ? batchDisableLink(body) : batchEnableLink(body))
-    ElMessage.success(`已${disabling ? '停用' : '启用'} ${affected} 条`)
-    await loadChannels(row)
-  } catch {
-    /* 拦截器已经提示过了 */
-  }
-}
-
 function openStats(row, act) {
   router.push({
     name: 'stats',
@@ -491,8 +468,6 @@ function openActivityStats(row) {
               <el-button type="primary" size="small" :icon="Plus" @click="openChannelCreate(row)">
                 批量建渠道
               </el-button>
-              <el-button size="small" @click="onToggleAllChannels(row, true)">全部停用</el-button>
-              <el-button size="small" @click="onToggleAllChannels(row, false)">全部启用</el-button>
             </div>
 
             <el-table v-loading="stateOf(row.id).loading" :data="stateOf(row.id).rows" border>

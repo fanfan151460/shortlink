@@ -303,8 +303,9 @@ async function onEmptyGroup() {
         </el-table-column>
 
         <!--
-          只有累计统计，没有"今日"列：ShortLinkRespDTO 里虽然有 todayPv / todayUv /
-          todayIpCount 三个字段，但分页 SQL 根本没 select 它们，值恒为 null。
+          列表只展示累计统计，不展示"今日"列。后端是给值的：分页 SQL 里确实没有
+          today_pv（那三列在 t_link_stats_today，分片表不和 t_link 同表），但
+          pageShortLink 随后单独查了一次补进 DTO。这里不渲染只是列表的取舍。
         -->
         <el-table-column width="200" align="center">
           <template #header>
