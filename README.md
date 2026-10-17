@@ -1,6 +1,14 @@
-# ShortLink — SaaS 短链接管理系统
+# 知跃 LinkLeap
 
 基于 Spring Cloud Alibaba 微服务架构的 SaaS 短链接平台，支持短链接生成、管理、统计分析、回收站等功能。
+
+## 在线体验
+
+- 控制台：[知跃 LinkLeap](http://8.149.237.177/linkleap/)，页面与 API 共用 80 端口。
+- 短链接继续使用 `http://8.149.237.177/{短码}`；控制台子路径不参与短码解析。
+- Vue 资源及路由前缀为 `/linkleap/`，控制台请求 `/linkleap/api/`，Nginx 只移除 `/linkleap`，保留网关需要的 `/api`。
+- 旧 8080 控制台入口跳转到新路径；跨端口属于不同浏览器来源，新入口需要重新登录。
+
 
 ## 架构概览
 
@@ -11,7 +19,7 @@ graph TD
     end
 
     subgraph 反向代理
-        N[Nginx<br/>:80 短链跳转<br/>:8080 管理台托管 + /api 反代]
+        N[Nginx :80<br/>短链跳转 + /linkleap/ 控制台<br/>/linkleap/api/ 反代]
     end
 
     subgraph 网关层
@@ -176,10 +184,10 @@ mvn spring-boot:run -pl gateway
 ```bash
 cd frontend
 npm install
-npm run dev        # 开发模式，Vite 已配置 /api 代理到网关 8083
+npm run dev        # 开发模式，Vite 已配置 /linkleap/api 代理到服务器 80 端口
 ```
 
-生产构建 `npm run build` 产出 `dist/`，交由 Nginx 托管（`location /api/` 反代到网关）。
+生产构建 `npm run build` 产出 `dist/`，交由 Nginx 在 `/linkleap/` 托管（`location /linkleap/api/` 保留 `/api` 后反代到网关）。
 
 - Knife4j 文档：`http://localhost:8083/doc.html`
 - Admin 服务：`http://localhost:8000`

@@ -117,7 +117,7 @@ async function onRegister() {
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
         </span>
-        <h1 class="title">SaaS短链系统</h1>
+        <h1 class="title">知跃 LinkLeap</h1>
         <p class="subtitle">短链生成 · 访问统计 · 营销活动</p>
       </div>
 

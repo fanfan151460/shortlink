@@ -205,7 +205,7 @@ async function onLogout() {
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
         </span>
-        <span class="brand-text">SaaS短链系统</span>
+        <span class="brand-text">知跃 LinkLeap</span>
       </div>
 
       <div class="sidebar-body">
