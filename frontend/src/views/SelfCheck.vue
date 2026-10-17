@@ -19,6 +19,7 @@
  */
 import { computed, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Finished } from '@element-plus/icons-vue'
 
 import request from '@/api/request'
 import { appStore, loadGroups } from '@/store/app'
@@ -301,6 +302,12 @@ const writeFlow = [
     run: () => call('get', `/recycle-bin/save-all/${encodeURIComponent(ctx.gid)}`)
   },
   {
+    method: 'GET',
+    path: '/recycle-bin/count/{gid}',
+    desc: '预览整组移入会扫走多少条（只数未删除的，含活动渠道短链）',
+    run: () => call('get', `/recycle-bin/count/${encodeURIComponent(ctx.gid)}`)
+  },
+  {
     method: 'DELETE',
     path: '/recycle-bin/delete',
     desc: '永久删除',
@@ -366,13 +373,12 @@ const writeFlow = [
   {
     method: 'PUT',
     path: '/activity',
-    desc: '改活动名称与状态（gid 不可改；空 body 会被后端拒掉）。进行中→已结束会连带停用该活动下全部渠道短链',
+    desc: '改活动名称与状态（gid / 目标链接 / 有效期都不可改；空 body 会被后端拒掉）。进行中→已结束会连带停用该活动下全部渠道短链',
     run: () =>
       call('put', '/activity', {
         data: {
           id: ctx.activityId,
           activityName: `${ctx.name}-活动已改名`,
-          originUrl: 'https://www.baidu.com',
           status: 1
         }
       })
@@ -476,7 +482,13 @@ recount()
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>接口自检</h2>
+      <div class="page-title">
+        <span class="title-badge"><el-icon :size="17"><Finished /></el-icon></span>
+        <div>
+          <h2>接口自检</h2>
+          <p class="page-sub">一次打完全部 admin 接口，状态码与耗时摊开，可按组跑也可单点</p>
+        </div>
+      </div>
       <div class="actions">
         <span class="score" :class="{ ok: allPass }">
           通过 {{ summary.pass }} / {{ summary.total }}

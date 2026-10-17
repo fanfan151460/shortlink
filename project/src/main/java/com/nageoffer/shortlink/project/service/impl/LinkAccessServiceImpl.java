@@ -2,6 +2,7 @@ package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -42,6 +43,9 @@ public class LinkAccessServiceImpl extends ServiceImpl<LinkAccessLogsMapper, Lin
         }
         // 分页查询访问日志
         Page<LinkAccessLogsDO> page = Page.of(accessLogReqDTO.getCurrent(), accessLogReqDTO.getSize());
+        // 访问日志按时间倒序，最近的在第一页。补 id 兜底：同一秒写入的多条记录
+        // create_time 完全相同，只按时间排序时跨页可能重复或漏掉。
+        page.addOrder(OrderItem.desc("create_time"), OrderItem.desc("id"));
         LambdaQueryWrapper<LinkAccessLogsDO> wrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
                 .eq(LinkAccessLogsDO::getFullShortUrl, accessLogReqDTO.getFullShortUrl())
                 .eq(LinkAccessLogsDO::getGid, accessLogReqDTO.getGid());

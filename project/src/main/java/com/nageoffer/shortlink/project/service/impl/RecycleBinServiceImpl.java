@@ -68,6 +68,20 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         return true;
     }
 
+    /**
+     * 只数 del_flag = 0 的：这才是"整组移入回收站"实际会扫走的范围。
+     * 注意别和 saveRecycleBinAll 里那个判断"分组下有没有短链接"的 count 混用 ——
+     * 那个不带 del_flag 条件，连回收站里的也算，语义不同。
+     */
+    @Override
+    public Long countRecycleBinAll(String gid) {
+        return lambdaQuery()
+                .eq(ShortLinkDO::getGid, gid)
+                .eq(ShortLinkDO::getUserName, UserContext.getUserName())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .count();
+    }
+
     @Override
     public List<RecycleBinShortLinkDTO> pageRecycle(RecyclePageDTO pageReqDTO) {
         Page<ShortLinkDO> linkPage = Page.of(pageReqDTO.getCurrent(), pageReqDTO.getSize());

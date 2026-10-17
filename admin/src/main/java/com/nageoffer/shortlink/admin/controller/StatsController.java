@@ -1,8 +1,10 @@
 package com.nageoffer.shortlink.admin.controller;
 
 import com.nageoffer.shortlink.admin.remote.IRemoteStatsService;
+import com.nageoffer.shortlink.admin.remote.dto.req.ActivityStatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.StatsRemoteReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.AccessStatsVO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ActivityStatsVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsDashboardVO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.StatsItemVO;
 import com.nageoffer.shortlink.framework.result.Result;
@@ -65,5 +67,11 @@ public class StatsController {
     @PostMapping("/stats/access")
     public Result<List<AccessStatsVO>> getAccessStats(@RequestBody StatsRemoteReqDTO reqDTO) {
         return Results.success(remoteStatsService.getAccessStats(reqDTO));
+    }
+
+    @Operation(summary = "活动跨渠道去重统计（活动去重UV / 各渠道UV之和）")
+    @PostMapping("/stats/activity")
+    public Result<List<ActivityStatsVO>> getActivityStats(@RequestBody ActivityStatsRemoteReqDTO reqDTO) {
+        return Results.success(remoteStatsService.getActivityStats(reqDTO));
     }
 }

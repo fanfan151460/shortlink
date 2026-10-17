@@ -16,6 +16,16 @@ export function saveRecycleBinAll(gid) {
 }
 
 /**
+ * 预览整组移入会扫走多少条 GET /recycle-bin/count/{gid}
+ *
+ * 列表页默认只显示普通短链，但整组移入是无差别全扫，活动名下的渠道短链也会被带走。
+ * 确认框先调它把真实条数写清楚，免得"界面上 7 条、实际移走 11 条"。
+ */
+export function countRecycleBinAll(gid) {
+  return request.get(`/recycle-bin/count/${encodeURIComponent(gid)}`)
+}
+
+/**
  * 回收站分页 GET /recycle-bin/page
  *
  * silent："回收站是空的"是正常状态，后端却在 records 为空时抛 ClientException。

@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 
 import { getAccessRecords } from '@/api/stats'
+import { fmtDateTime } from '@/utils/format'
 
 const props = defineProps({
   gid: { type: String, required: true },
@@ -95,7 +96,17 @@ function go(delta) {
     </div>
 
     <el-table v-loading="loading" :data="rows" size="small" border>
+      <el-table-column label="访问时间" width="140">
+        <template #default="{ row }">{{ fmtDateTime(row.createTime) }}</template>
+      </el-table-column>
       <el-table-column prop="ip" label="IP" width="130" />
+      <el-table-column label="访客类型" width="100">
+        <template #default="{ row }">
+          <el-tag :type="row.userType === '新访客' ? 'success' : 'info'" size="small" effect="plain">
+            {{ row.userType || '新访客' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="browser" label="浏览器" width="110" />
       <el-table-column prop="os" label="操作系统" width="110" />
       <el-table-column prop="device" label="设备" width="100" />
@@ -106,7 +117,7 @@ function go(delta) {
 
     <div class="log-pager">
       <el-button size="small" :disabled="current <= 1" @click="go(-1)">上一页</el-button>
-      <span class="muted">第 {{ current }} 页</span>
+      <span class="muted">{{ current }}</span>
       <el-button size="small" :disabled="!hasMore" @click="go(1)">下一页</el-button>
     </div>
   </div>

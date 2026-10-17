@@ -13,12 +13,7 @@ import com.nageoffer.shortlink.framework.exception.ServiceException;
 import com.nageoffer.shortlink.project.common.biz.user.UserContext;
 import com.nageoffer.shortlink.project.dao.entity.ActivityDO;
 import com.nageoffer.shortlink.project.dao.mapper.ActivityMapper;
-import com.nageoffer.shortlink.project.dto.req.ActivityLinkCreateReqDTO;
-import com.nageoffer.shortlink.project.dto.req.ActivityPageReqDTO;
-import com.nageoffer.shortlink.project.dto.req.ActivityReqDTO;
-import com.nageoffer.shortlink.project.dto.req.ActivityUpdateReqDTO;
-import com.nageoffer.shortlink.project.dto.req.ShortLinkBatchStatusReqDTO;
-import com.nageoffer.shortlink.project.dto.req.ShortLinkReqDTO;
+import com.nageoffer.shortlink.project.dto.req.*;
 import com.nageoffer.shortlink.project.dto.resp.ActivityRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.service.IActivityService;
@@ -30,11 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -68,17 +59,11 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
     @Override
     public void updateActivity(ActivityUpdateReqDTO reqDTO) {
         boolean hasActivityName = StrUtil.isNotBlank(reqDTO.getActivityName());
-        boolean hasOriginUrl = StrUtil.isNotBlank(reqDTO.getOriginUrl());
         boolean hasStatus = Objects.nonNull(reqDTO.getStatus());
-        boolean hasValidDateType = Objects.nonNull(reqDTO.getValidDateType());
-        if (!hasActivityName && !hasOriginUrl && !hasStatus && !hasValidDateType) {
+        if (!hasActivityName && !hasStatus) {
             throw new ClientException("没有需要更新的字段");
         }
-        if (hasValidDateType && Objects.equals(reqDTO.getValidDateType(), 1)
-                && Objects.isNull(reqDTO.getValidDate())) {
-            throw new ClientException("请选择活动有效期");
-        }
-        // 先取当前行：既做归属校验，也要拿 gid（分片键，更新入参里没有）和旧状态
+        // 先取当前行：既做归属校验，也要拿旧状态判断要不要连带启停渠道
         ActivityDO current = lambdaQuery()
                 .eq(ActivityDO::getId, reqDTO.getId())
                 .eq(ActivityDO::getUserName, UserContext.getUserName())
@@ -92,19 +77,12 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityDO>
                 .eq(ActivityDO::getUserName, UserContext.getUserName())
                 .eq(ActivityDO::getDelFlag, 0)
                 .set(hasActivityName, ActivityDO::getActivityName, reqDTO.getActivityName())
-                .set(hasOriginUrl, ActivityDO::getOriginUrl, reqDTO.getOriginUrl())
                 .set(hasStatus, ActivityDO::getStatus, reqDTO.getStatus())
-                .set(hasValidDateType, ActivityDO::getValidDateType, reqDTO.getValidDateType())
-                // 切回永久有效时把 valid_date 一并清空，否则库里留着旧日期，语义变成"永久但有个日期"
-                .set(hasValidDateType, ActivityDO::getValidDate,
-                        Objects.equals(reqDTO.getValidDateType(), 1) ? reqDTO.getValidDate() : null)
                 .set(ActivityDO::getUpdateTime, LocalDateTime.now())
                 .update();
         if (!updated) {
             throw new ClientException("活动不存在或不属于当前用户");
         }
-        // 只有状态真的变了才联动渠道短链。只改名字时前端也会把 status 一起带上，
-        // 不比对旧值就会把渠道短链连带启用/停用。
         if (hasStatus && !Objects.equals(current.getStatus(), reqDTO.getStatus())) {
             if (Objects.equals(reqDTO.getStatus(), 1)) {
                 disableActivityChannels(current);

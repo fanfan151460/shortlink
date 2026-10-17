@@ -63,4 +63,13 @@ public class RemoteRecycleServiceImpl implements IRemoteRecycleService {
         }
         return result.getData();
     }
+
+    @Override
+    public Long countRecycleBinAll(String gid) {
+        Result<Long> result = projectFeignClient.countRecycleBinAll(gid);
+        if (!result.isSuccess()) {
+            throw new ClientException(result.getMessage());
+        }
+        return result.getData();
+    }
 }

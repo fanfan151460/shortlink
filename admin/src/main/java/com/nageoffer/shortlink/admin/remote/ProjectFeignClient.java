@@ -21,7 +21,8 @@ public interface ProjectFeignClient {
                                                   @RequestParam Long current,
                                                   @RequestParam Long size,
                                                   @RequestParam(required = false) String orderFlag,
-                                                  @RequestParam(required = false) Long activityId);
+                                                  @RequestParam(required = false) Long activityId,
+                                                  @RequestParam(required = false) Boolean includeActivity);
 
     @PutMapping("/api/short-link/v1/update")
     Result<Void> updateShortLink(@RequestBody ShortLinkUpReqDTO reqDTO);
@@ -47,6 +48,9 @@ public interface ProjectFeignClient {
 
     @GetMapping("/api/short-link/v1/recycle-bin/save-all/{gid}")
     Result<Boolean> saveRecycleBinAll(@PathVariable String gid);
+
+    @GetMapping("/api/short-link/v1/recycle-bin/count/{gid}")
+    Result<Long> countRecycleBinAll(@PathVariable String gid);
 
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     Result<Void> rmRecycleBin(@RequestBody RecycleDTO recycleDTO);
@@ -88,6 +92,9 @@ public interface ProjectFeignClient {
 
     @PostMapping("/api/short-link/v1/stats/access")
     Result<List<AccessStatsVO>> getAccessStats(@RequestBody StatsRemoteReqDTO reqDTO);
+
+    @PostMapping("/api/short-link/v1/stats/activity")
+    Result<List<ActivityStatsVO>> getActivityStats(@RequestBody ActivityStatsRemoteReqDTO reqDTO);
 
     // ========== Activity ==========
 

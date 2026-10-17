@@ -17,6 +17,8 @@
         <result property="activityName" column="activity_name"/>
         <result property="channel" column="channel"/>
         <result property="enableStatus" column="enable_status"/>
+        <result property="validDateType" column="valid_date_type"/>
+        <result property="validDate" column="valid_date"/>
     </resultMap>
 
     <select id="pageShortLinkWithStats" resultMap="ShortLinkRespMap">
@@ -31,10 +33,13 @@
             l.activity_id,
             l.channel,
             l.enable_status,
+            l.valid_date_type,
+            l.valid_date,
             a.activity_name
         FROM t_link l
-        <!-- 只 JOIN 未删除的活动：活动被逻辑删除后，它名下的渠道短链会"回落"成普通短链 -->
-        LEFT JOIN t_activity a ON a.id = l.activity_id AND a.del_flag = 0
+        <!-- 不按 del_flag 过滤活动：活动被逻辑删除后，渠道短链仍带 activity_id，
+             这里照样把活动名带出来，列表页才标得出"这条是哪个活动的渠道" -->
+        LEFT JOIN t_activity a ON a.id = l.activity_id
         WHERE l.gid = #{gid}
             AND l.del_flag = 0
             AND l.user_name = #{userName}
@@ -43,8 +48,10 @@
                 AND l.activity_id = #{activityId}
             </when>
             <otherwise>
-                <!-- a.id IS NULL 同时覆盖两种情况：本来就是普通短链、活动的归属活动已被删除 -->
-                AND a.id IS NULL
+                <!-- 默认只给普通短链。判 activity_id 本身而不是 a.id：活动被删与否不该影响可见性 -->
+                <if test="includeActivity == null or includeActivity == false">
+                    AND l.activity_id IS NULL
+                </if>
             </otherwise>
         </choose>
         <choose>

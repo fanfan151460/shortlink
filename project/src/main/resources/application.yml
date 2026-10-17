@@ -34,6 +34,7 @@ spring:
       prefix: /templates/
       suffix: .html
   short-link:
+    #你的项目域名，如果没有请使用公网ip，否则无法跳转
     domain: fan.ink
     block-domain-list: xiaohongshu.com,weibo.com
   profiles:

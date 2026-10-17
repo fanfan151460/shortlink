@@ -5,12 +5,12 @@ import { clearSession, getToken, getUsername } from '@/utils/auth'
 
 // 开发默认走 vite 的 server.proxy（浏览器端零跨域）；
 // VITE_API_MODE=direct 时直连网关，可以看到真实的 OPTIONS 预检请求。
-// 生产构建两者都不选，走相对路径 /api/...，由 nginx 反向代理转发到网关。
+// 生产构建两者都不选，走 /linkleap/api/...，由 nginx 反向代理转发到网关。
 const GATEWAY = 'http://8.149.237.177:8083'
 const BASE_URL =
   import.meta.env.VITE_API_MODE === 'direct'
     ? `${GATEWAY}/api/short-link/admin/v1`
-    : '/api/short-link/admin/v1'
+    : `${import.meta.env.BASE_URL}api/short-link/admin/v1`
 
 // 401 处理由 main.js 注入，避免 request -> router -> views -> request 的循环依赖
 let onUnauthorized = null

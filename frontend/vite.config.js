@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 
 // 网关地址。开发时通过 dev server 代理转发，生产时由 nginx 反向代理转发，
 // 两者都保持 /api 前缀不变——网关的 Path 断言是 /api/short-link/admin/**。
-const GATEWAY = 'http://8.149.237.177:8083'
+const GATEWAY = 'http://8.149.237.177'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const direct = env.VITE_API_MODE === 'direct'
 
   return {
+    base: '/linkleap/',
     plugins: [vue()],
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
@@ -23,10 +24,11 @@ export default defineConfig(({ mode }) => {
       proxy: direct
         ? {}
         : {
-            '/api': {
+            '/linkleap/api': {
               target: GATEWAY,
-              changeOrigin: true
-              // 不写 rewrite：网关的 Path 断言带 /api 前缀，剥掉就会 404
+              changeOrigin: true,
+              // 只移除控制台前缀，保留网关需要的 /api。
+              rewrite: path => path.replace(/^\/linkleap/, '')
             }
           }
     },

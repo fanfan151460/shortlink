@@ -29,7 +29,7 @@ const routes = [
 
 const router = createRouter({
   // history 模式：生产环境需要 nginx 配 try_files 兜底，否则刷新深链接会 404
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 

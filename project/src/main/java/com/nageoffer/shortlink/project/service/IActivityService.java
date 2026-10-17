@@ -19,7 +19,7 @@ public interface IActivityService extends IService<ActivityDO> {
     void addNewActivity(ActivityReqDTO activity);
 
     /**
-     * 更新活动名称 / 目标链接 / 状态
+     * 更新活动名称 / 状态。目标链接与有效期创建后不可改，入参里也没有这两个字段
      * @param reqDTO 活动ID + 待更新字段（null 或空串表示不改该字段）
      */
     void updateActivity(ActivityUpdateReqDTO reqDTO);
